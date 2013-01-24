@@ -87,6 +87,14 @@ class custom_build_ext(sipdistutils.build_ext):
         elif self.compiler.compiler_type == 'mingw32':
             for e in self.extensions:
                 e.extra_compile_args += ['-DWIN32']
+                
+            # see http://bugs.python.org/issue12641
+            if 'NO_MINGW_HACK' not in os.environ:
+                keys = ['compiler', 'compiler_so', 'compiler_cxx', 'linker_exe', 'linker_so']
+                for key in keys:
+                    attr = getattr(self.compiler, key)
+                    if '-mno-cygwin' in attr:
+                        del attr[attr.index('-mno-cygwin')]
         
         sipdistutils.build_ext.build_extensions(self)
 
