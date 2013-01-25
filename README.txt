@@ -52,10 +52,12 @@ Tested Platforms
 ================
     
     Windows 7 x64
-        - Python 3.2, MSVC
+        - Python 3.2 x64, MSVC
     
-    Linux x64
+    It is not currently recommended to use MinGW to build pynetworktables
+    
+    Linux x64 (Ubuntu 12.10)
         - Python 3.2
 
-
+    
 
