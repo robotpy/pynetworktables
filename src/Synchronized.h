@@ -6,7 +6,7 @@
 #ifdef WIN32
     #include <Windows.h>
 #else
-    #error "Not implemented yet"
+    #include <pthread.h>
 #endif
 
 
@@ -46,7 +46,32 @@ public:
         
     #else
     
-        #error "Not implemented yet"
+        explicit ReentrantSemaphore()
+        {
+            pthread_mutexattr_t attr;
+            
+            pthread_mutexattr_init(&attr);
+            pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+            
+            pthread_mutex_init(&m_mutex, &attr);
+        }
+        
+        ~ReentrantSemaphore() 
+        {
+            pthread_mutex_destroy(&m_mutex);
+        }
+        
+        int take() {
+            pthread_mutex_lock(&m_mutex);
+            return 0;
+        }
+
+        int give() {
+            pthread_mutex_unlock(&m_mutex);
+            return 0;
+        }
+        
+        pthread_mutex_t m_mutex;
     
     #endif
     

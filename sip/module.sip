@@ -23,6 +23,8 @@ typedef unsigned long long UINT64;
     #if WIN32
         #include <Windows.h>
     #endif
+    
+    #include "vxWorks.h"
 %End
 
 %InitialisationCode

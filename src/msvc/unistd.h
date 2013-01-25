@@ -1,6 +1,6 @@
 
 #ifndef WIN32
-    #include <unistd.h>
+    #error "This file should have never been included"
 #else
 
     // compensate for network tables unixisms... 

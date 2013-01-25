@@ -17,7 +17,7 @@ if 'ROBOTPY' not in os.environ:
     sys.stderr.write("ERROR: You must specify the path to the RobotPy source via the ROBOTPY environment variable!\n")
     exit(1)
     
-robotpy_path = os.environ['ROBOTPY']
+robotpy_path = os.path.abspath(os.environ['ROBOTPY'])
 
 # check that it's actually valid
 wpilib_base = os.path.join(robotpy_path, 'Packages', 'wpilib')
@@ -75,14 +75,16 @@ for i, (dirpath, dirnames, filenames) in enumerate(os.walk(sip_base)):
 
 class custom_build_ext(sipdistutils.build_ext):
 
-    def initialize_options(self):
-        sipdistutils.build_ext.initialize_options(self)
-        self.sip_opts = '-g -e -I "%s" -I "%s"' % (sip_dir, sip_base)
+    def finalize_options(self):
+        sipdistutils.build_ext.finalize_options(self)
+        self.sip_opts += ['-g', '-e', '-I', sip_dir, '-I', sip_base]
         
     def build_extensions(self):
+    
         if self.compiler.compiler_type == 'msvc':
             for e in self.extensions:
-                e.extra_compile_args += ['/DWIN32', '/EHsc'] #, '/Od']
+                e.include_dirs += [os.path.join(src_dir, 'msvc')]
+                e.extra_compile_args += ['/DWIN32', '/EHsc'] #, '/Zi', '/Od']
                 
         elif self.compiler.compiler_type == 'mingw32':
             for e in self.extensions:
