@@ -3,7 +3,7 @@ What is this?
 =============
 
 This is a python wrapper for NetworkTables (and SmartDashboard) found in 
-the WPILib for FIRST Robotics. This can be run on any PC running python 3.
+the WPILib for FIRST Robotics. This can be run on any PC running python.
 
 You can use this library to be either a client or a server.
 
@@ -52,8 +52,10 @@ Tested Platforms
 ================
     
     Windows 7 x64
+        - Python 3.2, MSVC
     
-    TODO: Linux
+    Linux x64
+        - Python 3.2
 
 
 
