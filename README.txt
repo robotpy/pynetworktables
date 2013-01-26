@@ -31,7 +31,7 @@ Build Instructions
 Use the following commands to build pynetworktables. Do the following on 
 Windows:
 
-    set ROBOTPY=c:\path\to\robotpy\src
+    set ROBOTPY=c:\path\to\robotpy
     c:\python33\python.exe setup.py build
     
 Do the following on Linux:
