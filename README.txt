@@ -24,6 +24,9 @@ You can do this using git:
 
     git clone https://github.com/robotpy/robotpy.git
 
+WARNING: pynetworktables is generally tested against the very latest build
+of robotpy, and may not work correctly against older versions! 
+
 
 Build Instructions
 ==================
