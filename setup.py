@@ -84,7 +84,7 @@ class custom_build_ext(sipdistutils.build_ext):
         if self.compiler.compiler_type == 'msvc':
             for e in self.extensions:
                 e.include_dirs += [os.path.join(src_dir, 'msvc')]
-                e.extra_compile_args += ['/DWIN32', '/EHsc'] #, '/Zi', '/Od']
+                e.extra_compile_args += ['/DWIN32', '/EHsc']
                 
         elif self.compiler.compiler_type == 'mingw32':
             for e in self.extensions:
@@ -104,16 +104,28 @@ class custom_build_ext(sipdistutils.build_ext):
 source_files = extra_src_files + cpp_files
 include_dirs = [src_dir, sip_dir, wpilib_base, cpp_base]
 libraries = None
+extra_compile_args = None
+extra_link_args = None
 
 if sys.platform == 'win32':
     libraries = ['ws2_32']
 
+    # Generate pdb files for debugging on msvc only
+    if True:
+        # TODO: figure out output directory name
+        pdb_file = os.path.join(os.path.dirname(__file__),"pynetworktables.pdb")
+        extra_link_args = ['/DEBUG', '/PDB:"%s"' % pdb_file]
+        extra_compile_args = ['/Zi', '/Od']
 
 setup(
     name = 'pynetworktables',
     version = '1.0',
     ext_modules=[
-    Extension("pynetworktables", source_files, include_dirs=include_dirs, libraries=libraries),
+        Extension("pynetworktables", source_files,
+                  include_dirs=include_dirs,
+                  libraries=libraries,
+                  extra_compile_args=extra_compile_args,
+                  extra_link_args=extra_link_args),
     ],
 
     cmdclass = {'build_ext': custom_build_ext}
