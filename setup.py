@@ -111,7 +111,7 @@ if sys.platform == 'win32':
     libraries = ['ws2_32']
 
     # Generate pdb files for debugging on msvc only
-    if True:
+    if False:
         # TODO: figure out output directory name
         pdb_file = os.path.join(os.path.dirname(__file__),"pynetworktables.pdb")
         extra_link_args = ['/DEBUG', '/PDB:"%s"' % pdb_file]
