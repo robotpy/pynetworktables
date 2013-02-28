@@ -13,8 +13,15 @@ from pynetworktables import *
 # wpilib crashes if you don't do this.. 
 SmartDashboard.init()
 
+chooser = SendableChooser()
+chooser.AddObject('choice 1', 'number1')
+chooser.AddDefault('choice 2', 'number2')
+
+SmartDashboard.PutData('choose', chooser)
+
 i = 0
 while True:
+    print(chooser.GetSelected())
     SmartDashboard.PutNumber('test', i)
     time.sleep(1)
     i += 1
