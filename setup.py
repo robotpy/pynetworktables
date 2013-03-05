@@ -3,6 +3,7 @@ import os
 import os.path
 import sys
 from distutils.core import setup, Extension
+from distutils.command.install_lib import install_lib
 
 try:
     import sipdistutils
@@ -100,6 +101,21 @@ class custom_build_ext(sipdistutils.build_ext):
         
         sipdistutils.build_ext.build_extensions(self)
 
+
+# if PYNET_INCLUDE_SIP is in the environment, then include SIP
+# -> This is intended for building windows installers, so we can include
+#    sip as a dependency. SIP must have been built with --sip-module=pynetworktables_sip,
+#    otherwise this will fail
+class custom_install(install_lib):
+    if 'PYNET_INCLUDE_SIP' in os.environ:
+        def install(self):
+            # copy the custom sip module to the build directory so it gets
+            # picked up by the bdist_wininst :)
+            import pynetworktables_sip
+            self.copy_file(pynetworktables_sip.__file__, self.build_dir)
+            return install_lib.install(self)
+
+
 # setup stuff for extension
 source_files = extra_src_files + cpp_files
 include_dirs = [src_dir, sip_dir, wpilib_base, cpp_base]
@@ -119,7 +135,7 @@ if sys.platform == 'win32':
 
 setup(
     name = 'pynetworktables',
-    version = '1.0',
+    version = '1.0.1',
     ext_modules=[
         Extension("pynetworktables", source_files,
                   include_dirs=include_dirs,
@@ -128,7 +144,8 @@ setup(
                   extra_link_args=extra_link_args),
     ],
 
-    cmdclass = {'build_ext': custom_build_ext}
+    cmdclass = {'build_ext': custom_build_ext,
+                'install_lib': custom_install }
 )
 
 
