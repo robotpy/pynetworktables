@@ -83,6 +83,7 @@ class Synchronized
 {
 public:
 	explicit Synchronized(ReentrantSemaphore& sem)
+        : m_sem(sem)
     {
         m_sem.take();
     }
@@ -94,7 +95,7 @@ public:
 
     
 private:
-    ReentrantSemaphore m_sem;
+    ReentrantSemaphore &m_sem;
 };
 
 #endif
