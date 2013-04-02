@@ -61,6 +61,8 @@ See the 'samples' directory for sample programs.
 
 - Python 2.7 Note
 
+    NOTE: This is no longer true as of RobotPy sip bindings after 4/1/2013
+
     pynetworktables will compile and run on Python 2.7 and 3.x, but the SIP
     bindings it uses treats all strings as unicode, so on python 2.7 you 
     need to pass strings to it in the form of u'String' instead of 'String', 
