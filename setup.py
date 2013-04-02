@@ -1,6 +1,7 @@
 
 import os
 import os.path
+import platform
 import sys
 from distutils.core import setup, Extension
 from distutils.command.install_lib import install_lib
@@ -107,7 +108,7 @@ class custom_build_ext(sipdistutils.build_ext):
 #    sip as a dependency. SIP must have been built with --sip-module=pynetworktables_sip,
 #    otherwise this will fail
 class custom_install(install_lib):
-    if 'PYNET_INCLUDE_SIP' in os.environ:
+    if 'PYNET_INCLUDE_SIP' in os.environ and str(os.environ['PYNET_INCLUDE_SIP']) == "1":
         def install(self):
             # copy the custom sip module to the build directory so it gets
             # picked up by the bdist_wininst :)
@@ -127,15 +128,18 @@ if sys.platform == 'win32':
     libraries = ['ws2_32']
 
     # Generate pdb files for debugging on msvc only
-    if False:
+    if 'PYNET_DEBUG' in os.environ and str(os.environ['PYNET_DEBUG']) == "1":
         # TODO: figure out output directory name
-        pdb_file = os.path.join(os.path.dirname(__file__),"pynetworktables.pdb")
+        
+        major, minor = platform.python_version_tuple()[:2]
+        
+        pdb_file = os.path.join(os.path.dirname(__file__), "pynetworktables-%s%s.pdb" % (major, minor))
         extra_link_args = ['/DEBUG', '/PDB:"%s"' % pdb_file]
         extra_compile_args = ['/Zi', '/Od']
 
 setup(
     name = 'pynetworktables',
-    version = '1.0.1',
+    version = '1.0.2',
     ext_modules=[
         Extension("pynetworktables", source_files,
                   include_dirs=include_dirs,
