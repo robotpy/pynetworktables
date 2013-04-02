@@ -139,7 +139,7 @@ if sys.platform == 'win32':
 
 setup(
     name = 'pynetworktables',
-    version = '1.0.2',
+    version = '2013.4',
     ext_modules=[
         Extension("pynetworktables", source_files,
                   include_dirs=include_dirs,
