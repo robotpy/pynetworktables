@@ -1,3 +1,4 @@
+__version__ = '2013.4'
 
 import os
 import os.path
@@ -121,8 +122,10 @@ class custom_install(install_lib):
 source_files = extra_src_files + cpp_files
 include_dirs = [src_dir, sip_dir, wpilib_base, cpp_base]
 libraries = None
+define_macros = [("PYNETWORKTABLES_VERSION", '"%s"' % __version__)]
 extra_compile_args = None
 extra_link_args = None
+
 
 if sys.platform == 'win32':
     libraries = ['ws2_32']
@@ -139,9 +142,10 @@ if sys.platform == 'win32':
 
 setup(
     name = 'pynetworktables',
-    version = '2013.4',
+    version = __version__,
     ext_modules=[
         Extension("pynetworktables", source_files,
+                  define_macros=define_macros,
                   include_dirs=include_dirs,
                   libraries=libraries,
                   extra_compile_args=extra_compile_args,

@@ -27,6 +27,10 @@ typedef unsigned long long UINT64;
     #include "vxWorks.h"
 %End
 
+%ModuleCode
+    const char * __version__ = PYNETWORKTABLES_VERSION;
+%End
+
 %InitialisationCode
     #if WIN32
         WSADATA data;
@@ -34,6 +38,7 @@ typedef unsigned long long UINT64;
     #endif
 %End
 
+const char * __version__;
 
 %Include tables/TableKeyNotDefinedException.sip
 %Include networktables2/connection/BadMessageException.sip
