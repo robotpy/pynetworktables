@@ -28,7 +28,8 @@ typedef unsigned long long uint64_t;
 %End
 
 %ModuleCode
-    const char * __version__ = PYNETWORKTABLES_VERSION;
+    #define STR(x) #x
+    const char * __version__ = STR(PYNETWORKTABLES_VERSION);
 %End
 
 %InitialisationCode
