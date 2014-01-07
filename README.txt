@@ -27,6 +27,7 @@ You can do this using git:
 
     git clone https://github.com/robotpy/robotpy.git robotpy
     cd robotpy
+    git checkout 2014
     git submodule init
     git submodule update
 
@@ -34,7 +35,10 @@ WARNINGS:
     - RobotPy uses submodules, and if you do not check them out you will
     get build failures when building pynetworktables
     - pynetworktables is generally tested against the very latest build
-    of RobotPy, and may not work correctly against older versions! 
+    of RobotPy, and will not work correctly against older versions!
+    - Note that the version of pynetworktables corresponds to the branch
+    of the RobotPy code. So, 2014.1 works with RobotPy 2014 branch, 2013.4
+    works with RobotPy 2013 branch, etc.  
 
 
 Build Instructions

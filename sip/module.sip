@@ -4,15 +4,15 @@
 %DefaultEncoding "UTF-8"
 
 
-typedef signed char INT8 /PyInt/;
-typedef short INT16;
-typedef int INT32;
-typedef long long INT64;
+typedef signed char int8_t /PyInt/;
+typedef short int16_t;
+typedef long int32_t;
+typedef long long int64_t;
 
-typedef unsigned char UINT8 /PyInt/;
-typedef unsigned short UINT16;
-typedef unsigned int UINT32;
-typedef unsigned long long UINT64;
+typedef unsigned char uint8_t /PyInt/;
+typedef unsigned short uint16_t;
+typedef unsigned long uint32_t;
+typedef unsigned long long uint64_t;
 
 //typedef struct semaphore * SEM_ID;
 

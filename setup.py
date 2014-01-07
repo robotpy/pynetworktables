@@ -1,4 +1,4 @@
-__version__ = '2013.4'
+__version__ = '2014.1'
 
 import os
 import os.path
@@ -42,7 +42,7 @@ cpp_files = []
 extra_src_files = [os.path.join(sip_dir, 'module.sip'),
                    os.path.join(src_dir, 'DefaultThreadManager.cpp'),
                    os.path.join(src_dir, 'System.cpp'),
-                   os.path.join(src_dir, 'Task.cpp')]
+                   os.path.join(src_dir, 'OSAL', 'Task.cpp')]
 
 
 # don't want to bother with these for now.. too many interdependencies

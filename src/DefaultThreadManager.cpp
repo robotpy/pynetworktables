@@ -5,12 +5,12 @@
  *      Author: Mitchell Wills
  */
 
-#include "networktables2/thread/DefaultThreadManager.h"
+#include "DefaultThreadManager.h"
 #include <stdio.h>
 
 
 PeriodicNTThread::PeriodicNTThread(PeriodicRunnable* _r, const char* _name) : 
-			name(_name), thread(new Task(name, (FUNCPTR)PeriodicNTThread::taskMain)), r(_r), run(true){
+			name(_name), thread(new NTTask(name, (FUNCPTR)PeriodicNTThread::taskMain)), r(_r), run(true){
 	fprintf(stdout, "Starting task: %s\n", name);
 	fflush(stdout);
     thread->Start(this);

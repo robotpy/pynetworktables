@@ -15,14 +15,14 @@ typedef void (*FUNCPTR)(void*);
  * WPI task is a wrapper for the native Task object.
  * All WPILib tasks are managed by a static task manager for simplified cleanup.
  **/
-class Task
+class NTTask
 {
 public:
 	static const UINT32 kDefaultPriority = 101;
 	static const INT32 kInvalidTaskID = -1;
 
-	Task(const char* name, FUNCPTR function, INT32 priority = kDefaultPriority, UINT32 stackSize = 20000);
-	virtual ~Task();
+	NTTask(const char* name, FUNCPTR function, INT32 priority = kDefaultPriority, UINT32 stackSize = 20000);
+	virtual ~NTTask();
 
     bool Start(void * arg0);
 	//bool Start(UINT32 arg0 = 0, UINT32 arg1 = 0, UINT32 arg2 = 0, UINT32 arg3 = 0, UINT32 arg4 = 0, 

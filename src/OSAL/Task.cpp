@@ -1,16 +1,16 @@
 
 #include "Task.h"
 
-Task::Task(const char* name, FUNCPTR function, INT32 priority, UINT32 stackSize)
+NTTask::NTTask(const char* name, FUNCPTR function, INT32 priority, UINT32 stackSize)
 {
     m_function = function;
 }
 
-Task::~Task()
+NTTask::~NTTask()
 {
 }
 
-bool Task::IsReady()
+bool NTTask::IsReady()
 {
     return true;
 }
@@ -20,7 +20,7 @@ bool Task::IsReady()
 
     #include <Windows.h>
 
-    bool Task::Start(void * arg0)
+    bool NTTask::Start(void * arg0)
     {
         HANDLE thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)m_function, arg0, 0, NULL);
         if (!thread)
@@ -49,7 +49,7 @@ bool Task::IsReady()
         return NULL;
     }
 
-    bool Task::Start(void * arg0)
+    bool NTTask::Start(void * arg0)
     {
         pthread_t thread;
         tmp_arg_t * tmp = new tmp_arg_t;
