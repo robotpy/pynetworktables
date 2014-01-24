@@ -18,7 +18,7 @@ x64 platforms, in python 2.7 and 3.x.
 
 You must have a compiler installed that is supported by python distutils.
 
-Additionally, SIP must be installed. You can get SIP at:
+Additionally, SIP 4.15.3 or above must be installed. You can get SIP at:
 
     http://www.riverbankcomputing.com/software/sip/
 
