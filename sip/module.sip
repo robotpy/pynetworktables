@@ -52,9 +52,9 @@ const char * __version__;
 %Include networktables2/util/IllegalStateException.sip
 %Include networktables2/TableKeyExistsWithDifferentTypeException.sip
 
-//%Include LiveWindow/LiveWindow.sip
-//%Include LiveWindow/LiveWindowSendable.sip
-//%Include LiveWindow/LiveWindowStatusListener.sip
+%Include LiveWindow/LiveWindow.sip
+%Include LiveWindow/LiveWindowSendable.sip
+%Include LiveWindow/LiveWindowStatusListener.sip
 %Include networktables/NetworkTable.sip
 %Include networktables/NetworkTableConnectionListenerAdapter.sip
 %Include networktables/NetworkTableKeyListenerAdapter.sip

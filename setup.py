@@ -41,12 +41,14 @@ sip_base = os.path.join(wpilib_base, 'sip')
 cpp_files = []
 extra_src_files = [os.path.join(sip_dir, 'module.sip'),
                    os.path.join(src_dir, 'DefaultThreadManager.cpp'),
+                   os.path.join(src_dir, 'ErrorBase.cpp'),
+                   os.path.join(src_dir, 'Scheduler.cpp'),
                    os.path.join(src_dir, 'System.cpp'),
                    os.path.join(src_dir, 'OSAL', 'Task.cpp')]
 
 
 # don't want to bother with these for now.. too many interdependencies
-exclude_dirs = ['Buttons', 'Commands', 'LiveWindow']
+exclude_dirs = ['Buttons', 'Commands']
 exclude_files = [
     'networktables2/thread/DefaultThreadManger.cpp',
     'networktables2/util/System.cpp'
