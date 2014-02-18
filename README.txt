@@ -9,12 +9,35 @@ You can use this library to be either a client or a server.
 
     robot code is a server
     dashboard code is a client
+    
+This is not a reimplementation of NetworkTables, but leverages the exact
+same code (mostly) that your robot code uses to do NetworkTables. These
+are just simple Python bindings on top of those. 
+
+Our team has successfully used this in FRC competitions to communicate
+with our robot from the Driver Station.
+    
+    
+Supported platforms
+===================
+    
+pynetworktables makes WPILib's NetworkTables truly cross-platform, and
+has been used and tested in the following configurations:
+    
+    Windows 7 x64
+        - Python 3.2 x64, MSVC
+        - Python 2.7 x86, MSVC
+    
+    It is not currently recommended to use MinGW to build pynetworktables.
+    
+    Linux x64 (Ubuntu 12.10+, Fedora 20)
+        - Python 3.2
+
+    OSX 10.8.5
+        - Python 2.7 & 3.2
 
 Build Requirements
 ==================
-
-pynetworktables has been found to work on Windows and Linux, on x86 and
-x64 platforms, in python 2.7 and 3.x. 
 
 You must have a compiler installed that is supported by python distutils.
 
@@ -44,45 +67,52 @@ WARNINGS:
 Build Instructions
 ==================
 
-Use the following commands to build pynetworktables. Do the following on 
-Windows:
+Use the following commands to build & install pynetworktables. Do the following
+on Windows:
 
     set ROBOTPY=c:\path\to\robotpy
-    c:\python33\python.exe setup.py build
+    c:\python33\python.exe setup.py build install
     
-Do the following on Linux:
+Do the following on Linux or OSX:
+
+    ROBOTPY="/path/to/robotpy" python setup.py build
+    sudo ROBOTPY="/path/to/robotpy" python setup.py install
 
     ROBOTPY="/path/to/robotpy" python3 setup.py build
-    
-To install to your site-packages, you can just run the following command:
-
-    python3 setup.py install
+    sudo ROBOTPY="/path/to/robotpy" python3 setup.py install
 
 Usage
 =====
 
-See the 'samples' directory for sample programs. 
+See the 'samples' directory for sample programs. The object and method names
+should all match the C++ API.
 
-- Python 2.7 Note
 
-    NOTE: This is no longer true as of RobotPy sip bindings after 4/1/2013
+Differences between pynetworktables and the C++ API
+===================================================
 
-    pynetworktables will compile and run on Python 2.7 and 3.x, but the SIP
-    bindings it uses treats all strings as unicode, so on python 2.7 you 
-    need to pass strings to it in the form of u'String' instead of 'String', 
-    otherwise you will get errors complaining about invalid parameter types. 
-    
-Tested Platforms
-================
-    
-    Windows 7 x64
-        - Python 3.2 x64, MSVC
-        - Python 2.7 x86, MSVC
-    
-    It is not currently recommended to use MinGW to build pynetworktables
-    
-    Linux x64 (Ubuntu 12.10)
-        - Python 3.2
+Something like 99% of the LiveWindow, NetworkTables, networktables2, and 
+SmartDashboard API's are wrapped and implemented. However, unless you really
+like pain you will usually only want to use NetworkTable and the SmartDashboard
+objects.
 
-    
+SmartDashboard does not support the RetrieveValue or GetData functions.
+
+NetworkTable::GetValue does not return an EntryValue object, but instead
+returns a python object of the correct type for float, booleans, and strings.
+
+Anything that uses an EntryValue object is probably not supported, or may
+not actually work the way you might expect.
+
+
+Bugs
+====
+
+If you get an 'unknown' exception, please file a bug report on the github 
+tracker and report what function you called that threw that exception. The
+API does not explicitly call out which functions will throw exceptions, so
+they may pop up in unexpected places. 
+
+If you find additional bugs, please report them on the github tracker. 
+
 
