@@ -38,6 +38,7 @@ private:
 //#endif
 	PeriodicRunnable* r;
 	bool run;
+	bool is_running;
 //#if (defined __vxworks || defined WIN32)
 	int _taskMain();
 	static int taskMain(PeriodicNTThread* o);
