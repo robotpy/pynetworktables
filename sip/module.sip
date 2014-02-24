@@ -29,7 +29,8 @@ typedef unsigned long long uint64_t;
 
 %ModuleCode
     #ifdef _MSC_VER
-        #define STR(x) #x
+        #define _STR(y) #y
+        #define STR(x) _STR(x)
         const char * __version__ = STR(PYNETWORKTABLES_VERSION);
     #else
         const char * __version__ = PYNETWORKTABLES_VERSION;
