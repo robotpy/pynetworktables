@@ -21,5 +21,8 @@
         return send(fd, buf, nbytes, 0);
     }
     
+    #define errno WSAGetLastError()
+    #define EWOULDBLOCK WSAEWOULDBLOCK
+    
 #endif
 
