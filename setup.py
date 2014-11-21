@@ -35,7 +35,7 @@ setup(
     long_description=long_description,
     author='Peter Johnson, Dustin Spicuzza',
     author_email='robotpy@googlegroups.com',
-    url='https://github.com/robotpy',
+    url='https://github.com/robotpy/pynetworktables',
     keywords='frc first robotics wpilib networktables',
     packages=['', base_package],
     )
