@@ -354,15 +354,15 @@ class NetworkTable:
             del self.connectionListenerMap[listener]
 
     def addTableListener(self, listener, immediateNotify=False, key=None):
-            adapters = self.listenerMap.setdefault(listener, [])
-            if key is not None:
-                adapter = NetworkTableKeyListenerAdapter(
-                        key, self.absoluteKeyCache.get(key), self, listener)
-            else:
-                adapter = NetworkTableListenerAdapter(
-                        self.path+self.PATH_SEPARATOR, self, listener)
-            adapters.append(adapter)
-            self.node.addTableListener(adapter, immediateNotify)
+        adapters = self.listenerMap.setdefault(listener, [])
+        if key is not None:
+            adapter = NetworkTableKeyListenerAdapter(
+                    key, self.absoluteKeyCache.get(key), self, listener)
+        else:
+            adapter = NetworkTableListenerAdapter(
+                    self.path+self.PATH_SEPARATOR, self, listener)
+        adapters.append(adapter)
+        self.node.addTableListener(adapter, immediateNotify)
 
     def addSubTableListener(self, listener):
         adapters = self.listenerMap.setdefault(listener, [])

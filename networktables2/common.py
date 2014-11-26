@@ -129,7 +129,7 @@ class AbstractNetworkTableEntryStore:
         :param table:
         """
         with self.mutex:
-            while entry in self.namedEntries.values():
+            for entry in self.namedEntries.values():
                 listener.valueChanged(table, entry.name, entry.getValue(), True)
 
 class WriteManager:
