@@ -65,7 +65,7 @@ RobotPy is an open project that all members of the FIRST community can
 easily and quickly contribute to. If you find a bug, or have an idea that you
 think others can use:
 
-1. [Fork this git repository](https://github.com/robotpy/pynetworktables/fork) to your github account
+1. `Fork this git repository <https://github.com/robotpy/pynetworktables/fork>`_ to your github account
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push -u origin my-new-feature`)
