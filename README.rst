@@ -1,6 +1,9 @@
 RobotPy NetworkTables
 =====================
 
+.. image:: https://travis-ci.org/robotpy/pynetworktables.svg
+    :target: https://travis-ci.org/robotpy/pynetworktables
+
 A pure python implementation of NetworkTables, originally derived from the
 java implementation.  NetworkTables are used to pass non-Driver
 Station data to and from the robot across the network.
