@@ -1,5 +1,8 @@
 from .type import DefaultEntryTypes, ComplexData, ComplexEntryType
 
+import logging
+logger = logging.getLogger('nt')
+
 __all__ = ["NetworkTableNode"]
 
 class NetworkTableNode:

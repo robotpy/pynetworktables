@@ -6,6 +6,9 @@ from .connection import *
 from .networktablenode import NetworkTableNode
 from .type import NetworkTableEntryTypeManager
 
+import logging
+logger = logging.getLogger('nt')
+
 __all__ = ["NetworkTableServer"]
 
 class ServerConnectionState:
@@ -52,7 +55,7 @@ class ServerConnectionAdapter:
 
     def gotoState(self, newState):
         if self.connectionState != newState:
-            print("%s entered connection state: %s" % (self, newState))
+            logger.info("%s entered connection state: %s", self, newState)
             self.connectionState = newState
 
     def __init__(self, stream, entryStore, transactionReceiver,
@@ -75,6 +78,9 @@ class ServerConnectionAdapter:
                 self.connection, name="Server Connection Reader Thread")
         self.readThread.daemon = True
         self.readThread.start()
+        
+    def __str__(self):
+        return 'Server 0x%08x' % id(self)
 
     def badMessage(self, e):
         self.gotoState(ServerError(e))
@@ -215,7 +221,7 @@ class ServerConnectionList:
                 self.connections.remove(connectionAdapter)
             except ValueError:
                 return
-            print("Close: %s" % connectionAdapter)
+            logging.info("Close: %s" % connectionAdapter)
             connectionAdapter.shutdown(closeStream)
 
     def closeAll(self):
@@ -223,7 +229,7 @@ class ServerConnectionList:
         """
         with self.connectionsLock:
             for connection in self.connections:
-                print("Close: %s" % connection)
+                logging.info("Close: %s" % connection)
                 connection.shutdown(True)
             self.connections.clear()
 
@@ -285,7 +291,7 @@ class NetworkTableServer(NetworkTableNode):
             self.streamProvider.close()
             time.sleep(1)
         except IOError as e:
-            print("Error during close: %s" % e)
+            logger.error("Error during close: %s", e)
 
     def isConnected(self):
         return True

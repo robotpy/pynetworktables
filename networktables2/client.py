@@ -6,6 +6,9 @@ from .networktableentry import NetworkTableEntry
 from .networktablenode import NetworkTableNode
 from .type import NetworkTableEntryTypeManager
 
+import logging
+logger = logging.getLogger('nt')
+
 __all__ = ["NetworkTableClient"]
 
 class ClientConnectionState:
@@ -76,7 +79,7 @@ class ClientConnectionAdapter:
     def gotoState(self, newState):
         with self.connectionLock:
             if self.connectionState != newState:
-                print("%s entered connection state: %s" % (self, newState))
+                logger.info("%s entered connection state: %s", self, newState)
                 if newState == IN_SYNC_WITH_SERVER:
                     self.connectionListenerManager.fireConnectedEvent()
                 if self.connectionState == IN_SYNC_WITH_SERVER:
@@ -108,6 +111,9 @@ class ClientConnectionAdapter:
         self.readThread = None
         self.connectionState = DISCONNECTED_FROM_SERVER
         self.connectionLock = threading.RLock()
+        
+    def __str__(self):
+        return 'Client 0x%08x' % id(self)
 
     #
     # Connection management
