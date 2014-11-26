@@ -37,7 +37,7 @@ class ServerError(ServerConnectionState):
         """Create a new error state
         :param e:
         """
-        super().__init__("SERVER_ERROR")
+        ServerConnectionState.__init__(self, "SERVER_ERROR")
         self.e = e
 
     def getException(self):
@@ -168,7 +168,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         :param listenerManager: the listener manager that fires events from
             this entry store
         """
-        super().__init__(listenerManager)
+        AbstractNetworkTableEntryStore.__init__(self, listenerManager)
         self.nextId = 0
 
     def addEntry(self, newEntry):
@@ -231,7 +231,7 @@ class ServerConnectionList:
             for connection in self.connections:
                 logging.info("Close: %s" % connection)
                 connection.shutdown(True)
-            self.connections.clear()
+            del self.connections[:]
 
     def offerOutgoingAssignment(self, entry):
         with self.connectionsLock:
@@ -261,7 +261,7 @@ class NetworkTableServer(NetworkTableNode):
         """Create a NetworkTable Server
         :param streamProvider:
         """
-        super().__init__(ServerNetworkTableEntryStore(self))
+        NetworkTableNode.__init__(self, ServerNetworkTableEntryStore(self))
         self.typeManager = NetworkTableEntryTypeManager()
         self.streamProvider = streamProvider
 

@@ -40,7 +40,7 @@ class NetworkTableEntryType:
 
 class BasicEntryType(NetworkTableEntryType):
     def __init__(self, id, name, STRUCT):
-        super().__init__(id, name)
+        NetworkTableEntryType.__init__(self, id, name)
         self.STRUCT = _struct.Struct(STRUCT)
 
     def sendValue(self, value, wstream):
@@ -55,7 +55,7 @@ class StringEntryType(NetworkTableEntryType):
     LEN = _struct.Struct('>H')
 
     def __init__(self, id, name):
-        super().__init__(id, name)
+        NetworkTableEntryType.__init__(self, id, name)
 
     def sendValue(self, value, wstream):
         s = value.encode('utf-8')
@@ -77,7 +77,7 @@ class DefaultEntryTypes:
 
 class ComplexEntryType(NetworkTableEntryType):
     def __init__(self, id, name):
-        super().__init__(id, name)
+        NetworkTableEntryType.__init__(self, id, name)
 
     def internalizeValue(self, key, externalRepresentation, currentInteralValue):
         raise NotImplementedError
@@ -88,7 +88,7 @@ class ComplexEntryType(NetworkTableEntryType):
 class ArrayEntryType(ComplexEntryType):
     #TODO allow for array of complex type
     def __init__(self, id, elementType, externalArrayType):
-        super().__init__(id, "Array of [%s]" % elementType.name)
+        ComplexEntryType.__init__(self, id, "Array of [%s]" % elementType.name)
         if not issubclass(externalArrayType, ArrayData):
             raise TypeError("External Array Data Type must extend ArrayData")
         self.externalArrayType = externalArrayType
@@ -114,7 +114,7 @@ class ArrayEntryType(ComplexEntryType):
 
         if len(currentInternalValue) == len(externalRepresentation):
             internalArray = currentInternalValue
-            internalArray.clear()
+            del internalArray[:]
         else:
             internalArray = []
         internalArray.extend(externalRepresentation)
@@ -124,32 +124,32 @@ class ArrayEntryType(ComplexEntryType):
         if not isinstance(externalRepresentation, self.externalArrayType):
             raise TypeError("%s is not a %s" % (externalRepresentation, self.externalArrayType))
 
-        externalRepresentation.clear()
+        del externalRepresentation[:]
         externalRepresentation.extend(internalData)
 
 class BooleanArray(ArrayData):
     BOOLEAN_ARRAY_RAW_ID = 0x10
 
     def __init__(self):
-        super().__init__(BooleanArray.TYPE)
+        ArrayData.__init__(self, BooleanArray.TYPE)
 
     def __contains__(self, key):
-        return super().__contains__(bool(key))
+        return ArrayData.__contains__(self, bool(key))
 
     def __setitem__(self, key, value):
-        super().__setitem__(key, bool(value))
+        ArrayData.__setitem__(self, key, bool(value))
 
     def append(self, obj):
-        super().append(bool(obj))
+        ArrayData.append(self, bool(obj))
 
     def extend(self, iterable):
-        super().extend(bool(x) for x in iterable)
+        ArrayData.extend(self, (bool(x) for x in iterable))
 
     def insert(self, index, obj):
-        super().insert(index, bool(obj))
+        ArrayData.insert(self, index, bool(obj))
 
     def remove(self, value):
-        super().remove(bool(value))
+        ArrayData.remove(self, bool(value))
 
 BooleanArray.TYPE = ArrayEntryType(BooleanArray.BOOLEAN_ARRAY_RAW_ID,
                                    DefaultEntryTypes.BOOLEAN,
@@ -159,25 +159,25 @@ class NumberArray(ArrayData):
     NUMBER_ARRAY_RAW_ID = 0x11
 
     def __init__(self):
-        super().__init__(NumberArray.TYPE)
+        ArrayData.__init__(self, NumberArray.TYPE)
 
     def __contains__(self, key):
-        return super().__contains__(float(key))
+        return ArrayData.__contains__(self, float(key))
 
     def __setitem__(self, key, value):
-        super().__setitem__(key, float(value))
+        ArrayData.__setitem__(self, key, float(value))
 
     def append(self, obj):
-        super().append(float(obj))
+        ArrayData.append(self, float(obj))
 
     def extend(self, iterable):
-        super().extend(float(x) for x in iterable)
+        ArrayData.extend(self, (float(x) for x in iterable))
 
     def insert(self, index, obj):
-        super().insert(index, float(obj))
+        ArrayData.insert(self, index, float(obj))
 
     def remove(self, value):
-        super().remove(float(value))
+        ArrayData.remove(self, float(value))
 
 NumberArray.TYPE = ArrayEntryType(NumberArray.NUMBER_ARRAY_RAW_ID,
                                   DefaultEntryTypes.DOUBLE,
@@ -187,25 +187,25 @@ class StringArray(ArrayData):
     STRING_ARRAY_RAW_ID = 0x12
 
     def __init__(self):
-        super().__init__(StringArray.TYPE)
+        ArrayData.__init__(self, StringArray.TYPE)
 
     def __contains__(self, key):
-        return super().__contains__(str(key))
+        return ArrayData.__contains__(self, str(key))
 
     def __setitem__(self, key, value):
-        super().__setitem__(key, str(value))
+        ArrayData.__setitem__(self, key, str(value))
 
     def append(self, obj):
-        super().append(str(obj))
+        ArrayData.append(self, str(obj))
 
     def extend(self, iterable):
-        super().extend(str(x) for x in iterable)
+        ArrayData.extend(self, (str(x) for x in iterable))
 
     def insert(self, index, obj):
-        super().insert(index, str(obj))
+        ArrayData.insert(self, index, str(obj))
 
     def remove(self, value):
-        super().remove(str(value))
+        ArrayData.remove(self, str(value))
 
 StringArray.TYPE = ArrayEntryType(StringArray.STRING_ARRAY_RAW_ID,
                                   DefaultEntryTypes.STRING,

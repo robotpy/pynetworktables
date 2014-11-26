@@ -29,7 +29,9 @@ class SocketServerStreamProvider:
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(('', port))
         self.server.listen(50)
-        self.server.settimeout(0.5)
+        # this fails in 2.7... need a better way of dealing with the timeout problem,
+        # or make the timeout bigger
+        #self.server.settimeout(1.0)
 
     def accept(self):
         return SocketStream(self.server.accept()[0])

@@ -41,7 +41,7 @@ class ProtocolUnsuppotedByServer(ClientConnectionState):
         """Create a new protocol unsupported state
         :param serverVersion:
         """
-        super().__init__("PROTOCOL_UNSUPPORTED_BY_SERVER")
+        ClientConnectionState.__init__(self, "PROTOCOL_UNSUPPORTED_BY_SERVER")
         self.serverVersion = serverVersion
 
     def getServerVersion(self):
@@ -60,7 +60,7 @@ class ClientError(ClientConnectionState):
         """Create a new error state
         :param e:
         """
-        super().__init__("CLIENT_ERROR")
+        ClientConnectionState.__init__(self, "CLIENT_ERROR")
         self.e = e
 
     def getException(self):
@@ -275,7 +275,7 @@ class NetworkTableClient(NetworkTableNode):
         """Create a new NetworkTable Client
         :param streamFactory:
         """
-        super().__init__(ClientNetworkTableEntryStore(self))
+        NetworkTableNode.__init__(self, ClientNetworkTableEntryStore(self))
         typeManager = NetworkTableEntryTypeManager()
         self.adapter = ClientConnectionAdapter(self.entryStore, streamFactory,
                                                self, typeManager)

@@ -227,7 +227,7 @@ class WriteManager:
             wrote = True
             if self.receiver is not None:
                 self.receiver.offerOutgoingAssignment(entry)
-        self.outgoingAssignmentQueue.clear()
+        del self.outgoingAssignmentQueue[:]
 
         for entry in self.outgoingUpdateQueue:
             with self.entryStore.mutex:
@@ -235,7 +235,7 @@ class WriteManager:
             wrote = True
             if self.receiver is not None:
                 self.receiver.offerOutgoingUpdate(entry)
-        self.outgoingUpdateQueue.clear()
+        del self.outgoingUpdateQueue[:]
 
         if wrote:
             if self.receiver is not None:

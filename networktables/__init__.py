@@ -359,7 +359,7 @@ class NetworkTable:
         if adapters is not None:
             for adapter in adapters:
                 self.node.removeTableListener(adapter)
-            adapters.clear()
+            del adapters[:]
 
     def getEntry(self, key):
         with self.mutex:

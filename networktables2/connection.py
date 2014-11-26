@@ -36,7 +36,7 @@ class NamedMessage(Message):
     NAME_LEN_STRUCT = struct.Struct('>H')
 
     def __init__(self, HEADER, STRUCT=None):
-        super().__init__(HEADER, STRUCT)
+        Message.__init__(self, HEADER, STRUCT)
 
     def send(self, wstream, name, *args):
         wstream.write(self.HEADER)
@@ -170,7 +170,7 @@ class ConnectionMonitorThread(threading.Thread):
         :param adapter:
         :param connection:
         """
-        super().__init__(name=name)
+        threading.Thread.__init__(self, name=name)
         self.adapter = adapter
         self.connection = connection
         self.running = True
