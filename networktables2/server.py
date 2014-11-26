@@ -127,20 +127,20 @@ class ServerConnectionAdapter:
             if self.connectionState == CONNECTED_TO_CLIENT:
                 self.connection.sendEntryAssignment(entry)
         except IOError as e:
-            self.ioException(e)
+            self.ioError(e)
 
     def offerOutgoingUpdate(self, entry):
         try:
             if self.connectionState == CONNECTED_TO_CLIENT:
                 self.connection.sendEntryUpdate(entry)
         except IOError as e:
-            self.ioException(e)
+            self.ioError(e)
 
     def flush(self):
         try:
             self.connection.flush()
         except IOError as e:
-            self.ioException(e)
+            self.ioError(e)
 
     def getConnectionState(self):
         """:returns: the state of the connection
@@ -151,7 +151,7 @@ class ServerConnectionAdapter:
         try:
             self.connection.sendKeepAlive()
         except IOError as e:
-            self.ioException(e)
+            self.ioError(e)
 
 class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
     """The entry store for a {@link NetworkTableServer}

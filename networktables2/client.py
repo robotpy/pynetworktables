@@ -175,7 +175,7 @@ class ClientConnectionAdapter:
                 self.gotoState(IN_SYNC_WITH_SERVER)
                 self.entryStore.sendUnknownEntries(self.connection)
             except IOError as e:
-                self.ioException(e)
+                self.ioError(e)
         else:
             raise BadMessageError("A client should only receive a server hello complete once and only after it has connected to the server")
 
@@ -192,7 +192,7 @@ class ClientConnectionAdapter:
                     self.connectionState == IN_SYNC_WITH_SERVER):
                     self.connection.sendEntryAssignment(entry)
         except IOError as e:
-            self.ioException(e)
+            self.ioError(e)
 
     def offerOutgoingUpdate(self, entry):
         try:
@@ -201,7 +201,7 @@ class ClientConnectionAdapter:
                     self.connectionState == IN_SYNC_WITH_SERVER):
                     self.connection.sendEntryUpdate(entry)
         except IOError as e:
-            self.ioException(e)
+            self.ioError(e)
 
     def flush(self):
         with self.connectionLock:
@@ -209,7 +209,7 @@ class ClientConnectionAdapter:
                 try:
                     self.connection.flush()
                 except IOError as e:
-                    self.ioException(e)
+                    self.ioError(e)
 
     def ensureAlive(self):
         with self.connectionLock:
@@ -217,7 +217,7 @@ class ClientConnectionAdapter:
                 try:
                     self.connection.sendKeepAlive()
                 except IOError as e:
-                    self.ioException(e)
+                    self.ioError(e)
             else:
                 self.reconnect() #try to reconnect if not connected
 
