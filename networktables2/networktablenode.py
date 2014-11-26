@@ -153,4 +153,7 @@ class NetworkTableNode:
 
     def fireTableListeners(self, key, value, isNew):
         for listener in self.tableListeners:
-            listener.valueChanged(None, key, value, isNew)
+            try:
+                listener.valueChanged(None, key, value, isNew)
+            except:
+                logger.exception('Exception in valueChanged callback!')
