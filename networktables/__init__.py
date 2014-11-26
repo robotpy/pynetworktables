@@ -180,33 +180,49 @@ class NetworkTableModeClient:
         return client
 
 class NetworkTable:
-    # The path separator for sub-tables and keys
+    """
+    This is the primary object that you will use when interacting with
+    NetworkTables. You should not directly create a NetworkTable object,
+    but instead use the :meth:`getTable` method to create an appropriate
+    object instead.
+
+    For example, to interact with the SmartDashboard::
+
+        from networktables import NetworkTable
+        sd = NetworkTable.getTable('SmartDashboard')
+
+        sd.putNumber('someNumber', 1234)
+        ...
+
+    """
+
+    #: The path separator for sub-tables and keys
     PATH_SEPARATOR = '/'
-    # The default port that network tables operates on
+    #: The default port that network tables operates on
     DEFAULT_PORT = 1735
 
-    staticProvider = None
+    _staticProvider = None
 
     mode = NetworkTableModeServer
     port = DEFAULT_PORT
     ipAddress = None
 
-    staticMutex = threading.RLock()
+    _staticMutex = threading.RLock()
 
     class _defaultValueSentry:
         pass
 
     @staticmethod
     def checkInit():
-        with NetworkTable.staticMutex:
-            if NetworkTable.staticProvider is not None:
+        with NetworkTable._staticMutex:
+            if NetworkTable._staticProvider is not None:
                 raise RuntimeError("Network tables has already been initialized")
 
     @staticmethod
     def initialize():
-        with NetworkTable.staticMutex:
+        with NetworkTable._staticMutex:
             NetworkTable.checkInit()
-            NetworkTable.staticProvider = NetworkTableProvider(
+            NetworkTable._staticProvider = NetworkTableProvider(
                     NetworkTable.mode.createNode(NetworkTable.ipAddress,
                                                  NetworkTable.port))
 
@@ -216,9 +232,9 @@ class NetworkTable:
         
         .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
         """
-        with NetworkTable.staticMutex:
+        with NetworkTable._staticMutex:
             NetworkTable.checkInit()
-            NetworkTable.staticProvider = provider
+            NetworkTable._staticProvider = provider
 
     @staticmethod
     def setServerMode():
@@ -226,7 +242,7 @@ class NetworkTable:
         
         .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
         """
-        with NetworkTable.staticMutex:
+        with NetworkTable._staticMutex:
             NetworkTable.checkInit();
             NetworkTable.mode = NetworkTableModeServer
 
@@ -236,7 +252,7 @@ class NetworkTable:
         
         .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
         """
-        with NetworkTable.staticMutex:
+        with NetworkTable._staticMutex:
             NetworkTable.checkInit()
             NetworkTable.mode = NetworkTableModeClient
 
@@ -258,7 +274,7 @@ class NetworkTable:
         
         .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
         """
-        with NetworkTable.staticMutex:
+        with NetworkTable._staticMutex:
             NetworkTable.checkInit()
             NetworkTable.ipAddress = address
 
@@ -273,10 +289,10 @@ class NetworkTable:
         :param key: the key name
         :returns: the network table requested
         """
-        with NetworkTable.staticMutex:
-            if NetworkTable.staticProvider is None:
+        with NetworkTable._staticMutex:
+            if NetworkTable._staticProvider is None:
                 NetworkTable.initialize()
-            return NetworkTable.staticProvider.getTable(NetworkTable.PATH_SEPARATOR+key)
+            return NetworkTable._staticProvider.getTable(NetworkTable.PATH_SEPARATOR+key)
 
     def __init__(self, path, provider):
         self.path = path

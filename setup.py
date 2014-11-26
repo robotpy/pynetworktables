@@ -32,7 +32,7 @@ with open(join(setup_dir, 'README.rst'), 'r') as readme_file:
 setup(
     name='pynetworktables',
     version=__version__,
-    description='NetworkTables',
+    description='A pure python implementation of NetworkTables, used for Robot communications in the FIRST Robotics Competition.',
     long_description=long_description,
     author='Peter Johnson, Dustin Spicuzza',
     author_email='robotpy@googlegroups.com',

@@ -1,6 +1,8 @@
 build
 dist
 
+docs/_build
+
 networktables/version.py
 
 *.egg-info
