@@ -237,7 +237,7 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
 
             if entry is not None:
                 if entry.getId() != newEntry.getId():
-                    del self.idEntries[entry.getId()]
+                    self.idEntries.pop(entry.getId(), None)
                     if newEntry.getId() != NetworkTableEntry.UNKNOWN_ID:
                         entry.setId(newEntry.getId())
                         self.idEntries[newEntry.getId()] = entry
