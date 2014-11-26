@@ -1,14 +1,15 @@
-#!/usr/bin/env python3
+
+from __future__ import print_function
 
 from os.path import dirname, exists, join
 import sys, subprocess
 from setuptools import setup
 
 setup_dir = dirname(__file__)
-base_package = 'networktables2'
+base_package = 'networktables'
 
 # Automatically generate a version.py based on the git version
-if exists(join(setup_dir, '..', '.git')):
+if exists(join(setup_dir, '.git')):
     p = subprocess.Popen(["git", "describe", "--tags", "--dirty=-dirty"],
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
@@ -29,7 +30,7 @@ with open(join(setup_dir, 'README.rst'), 'r') as readme_file:
     long_description = readme_file.read()
 
 setup(
-    name='networktables',
+    name='pynetworktables',
     version=__version__,
     description='NetworkTables',
     long_description=long_description,
@@ -37,5 +38,5 @@ setup(
     author_email='robotpy@googlegroups.com',
     url='https://github.com/robotpy/pynetworktables',
     keywords='frc first robotics wpilib networktables',
-    packages=['', base_package],
+    packages=[base_package, 'networktables2'],
     )

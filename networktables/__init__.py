@@ -5,7 +5,7 @@ from networktables2 import *
 __all__ = ["NetworkTable", "BooleanArray", "NumberArray", "StringArray"]
 
 try:
-    from networktables2.version import __version__
+    from .version import __version__
 except ImportError:
     __version__ = 'master'
 

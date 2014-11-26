@@ -1,7 +1,7 @@
 build
 dist
 
-networktables2/version.py
+networktables/version.py
 
 *.egg-info
 *.py[cod]
