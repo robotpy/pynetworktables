@@ -55,7 +55,7 @@ def test_key_listener_immediate_notify(table1):
     table1.putBoolean("MyKey2", True)
     table1.putBoolean("MyKey4", False)
     
-    table1.addTableListener(listener1, True)
+    table1.addTableListener(listener1.valueChanged, True)
     
     listener1.valueChanged.assert_has_calls([
         call(table1, "MyKey1", False, True),
@@ -94,7 +94,7 @@ def test_key_listener_not_immediate_notify(table1):
     table1.putBoolean("MyKey2", True)
     table1.putBoolean("MyKey4", False)
     
-    table1.addTableListener(listener1, False)
+    table1.addTableListener(listener1.valueChanged, False)
     assert len(listener1.mock_calls) == 0
     listener1.reset_mock()
     
@@ -122,7 +122,7 @@ def test_specific_key_listener(table1):
     
     listener1 = Mock()
     
-    table1.addTableListener(listener1, False, key='MyKey1')
+    table1.addTableListener(listener1.valueChanged, False, key='MyKey1')
     
     table1.putBoolean('MyKey1', True)
     listener1.valueChanged.assert_called_once_with(table1, "MyKey1", True, True)
@@ -140,7 +140,7 @@ def test_subtable_listener(table2, subtable1, subtable2):
     
     table2.putBoolean("MyKey1", True)
     table2.putBoolean("MyKey1", False)
-    table2.addSubTableListener(listener1)
+    table2.addSubTableListener(listener1.valueChanged)
     table2.putBoolean("MyKey2", True)
     table2.putBoolean("MyKey4", False)
 
@@ -161,9 +161,9 @@ def test_subtable_listener(table2, subtable1, subtable2):
 def test_subsubtable_listener(table3, subtable3, subtable4):
     listener1 = Mock()
     
-    table3.addSubTableListener(listener1)
-    subtable3.addSubTableListener(listener1)
-    subtable4.addTableListener(listener1, True)
+    table3.addSubTableListener(listener1.valueChanged)
+    subtable3.addSubTableListener(listener1.valueChanged)
+    subtable4.addTableListener(listener1.valueChanged, True)
     
     subtable4.putBoolean('MyKey1', False)
     listener1.valueChanged.assert_has_calls([
@@ -181,9 +181,9 @@ def test_subsubtable_listener(table3, subtable3, subtable4):
     
     listener2 = Mock()
     
-    table3.addSubTableListener(listener2)
-    subtable3.addSubTableListener(listener2)
-    subtable4.addTableListener(listener2, True)
+    table3.addSubTableListener(listener2.valueChanged)
+    subtable3.addSubTableListener(listener2.valueChanged)
+    subtable4.addTableListener(listener2.valueChanged, True)
     
     listener2.valueChanged.assert_has_calls([
         call(table3, 'suba', subtable3, True),

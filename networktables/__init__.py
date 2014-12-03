@@ -21,7 +21,10 @@ class NetworkTableConnectionListenerAdapter:
         """
         self.targetSource = targetSource
         self.targetListener = targetListener
-
+        
+        assert callable(self.targetListener.connected)
+        assert callable(self.targetListener.disconnected)
+    
     def connected(self, remote):
         self.targetListener.connected(self.targetSource)
 
@@ -41,8 +44,9 @@ class NetworkTableKeyListenerAdapter:
         :param fullKey: the full name of the key in the NetworkTableNode
         :param targetSource: the source that events passed to the target
                              listener will appear to come from
-        :param targetListener: the listener where events are forwarded to
+        :param targetListener: the callable where events are forwarded to
         """
+        assert callable(targetListener)
         self.relativeKey = relativeKey
         self.fullKey = fullKey
         self.targetSource = targetSource
@@ -50,8 +54,8 @@ class NetworkTableKeyListenerAdapter:
 
     def valueChanged(self, source, key, value, isNew):
         if key == self.fullKey:
-            self.targetListener.valueChanged(self.targetSource,
-                                             self.relativeKey, value, isNew)
+            self.targetListener(self.targetSource,
+                                self.relativeKey, value, isNew)
 
 class NetworkTableListenerAdapter:
     """An adapter that is used to filter value change notifications and make
@@ -65,8 +69,9 @@ class NetworkTableListenerAdapter:
                        beginning of the key
         :param targetSource: the source that events passed to the target
                              listener will appear to come from
-        :param targetListener: the listener where events are forwarded to
+        :param targetListener: the callable where events are forwarded to
         """
+        assert callable(targetListener)
         self.prefix = prefix
         self.targetSource = targetSource
         self.targetListener = targetListener
@@ -77,8 +82,8 @@ class NetworkTableListenerAdapter:
             relativeKey = key[len(self.prefix):]
             if NetworkTable.PATH_SEPARATOR in relativeKey:
                 return
-            self.targetListener.valueChanged(self.targetSource, relativeKey,
-                                             value, isNew)
+            self.targetListener(self.targetSource, relativeKey,
+                                value, isNew)
 
 class NetworkTableSubListenerAdapter:
     """An adapter that is used to filter sub table change notifications and
@@ -91,8 +96,9 @@ class NetworkTableSubListenerAdapter:
         :param prefix: the prefix of the current table
         :param targetSource: the source that events passed to the target
                              listener will appear to come from
-        :param targetListener: the listener where events are forwarded to
+        :param targetListener: the callable where events are forwarded to
         """
+        assert callable(targetListener)
         self.prefix = prefix
         self.targetSource = targetSource
         self.targetListener = targetListener
@@ -114,7 +120,7 @@ class NetworkTableSubListenerAdapter:
             return
 
         self.notifiedTables.add(subTableKey)
-        self.targetListener.valueChanged(self.targetSource, subTableKey,
+        self.targetListener(self.targetSource, subTableKey,
                 self.targetSource.getSubTable(subTableKey), True)
 
 class NetworkTableProvider:
@@ -340,6 +346,18 @@ class NetworkTable:
             return cachedValue
 
     def addConnectionListener(self, listener, immediateNotify):
+        '''Adds a listener that will be notified when a new connection to a 
+        NetworkTables client/server is established.
+        
+        The listener is called from the NetworkTables I/O thread, and should
+        return as quickly as possible.
+        
+        :param listener: An object that has a 'connect' function and a
+                         'disconnect' function. Each function will be called
+                         with this NetworkTable object as the first parameter
+        :param immediateNotify: If True, the listener will be called immediately
+                                with the current values of the table
+        '''
         adapter = self.connectionListenerMap.get(listener)
         if adapter is not None:
             raise ValueError("Cannot add the same listener twice")
@@ -348,12 +366,26 @@ class NetworkTable:
         self.node.addConnectionListener(adapter, immediateNotify)
 
     def removeConnectionListener(self, listener):
+        '''Removes a connection listener
+        
+        :param listener: The callable registered for connection notifications
+        '''
         adapter = self.connectionListenerMap.get(listener)
         if adapter is not None:
             self.node.removeConnectionListener(adapter)
             del self.connectionListenerMap[listener]
 
     def addTableListener(self, listener, immediateNotify=False, key=None):
+        '''Adds a listener that will be notified when any key in this
+        NetworkTable is changed, or when a specified key changes.
+        
+        The listener is called from the NetworkTables I/O thread, and should
+        return as quickly as possible.
+        
+        :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
+        :param immediateNotify: If True, the listener will be called immediately with the current values of the table
+        :param key: If specified, the listener will only be called when this key is changed
+        '''
         adapters = self.listenerMap.setdefault(listener, [])
         if key is not None:
             adapter = NetworkTableKeyListenerAdapter(
@@ -365,12 +397,25 @@ class NetworkTable:
         self.node.addTableListener(adapter, immediateNotify)
 
     def addSubTableListener(self, listener):
+        '''Adds a listener that will be notified when any key in a subtable of
+        this NetworkTable is changed.
+        
+        The listener is called from the NetworkTables I/O thread, and should
+        return as quickly as possible.
+        
+        :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
+        '''
         adapters = self.listenerMap.setdefault(listener, [])
         adapter = NetworkTableSubListenerAdapter(self.path, self, listener)
         adapters.append(adapter)
         self.node.addTableListener(adapter, True)
 
     def removeTableListener(self, listener):
+        '''Removes a table listener
+        
+        :param listener: callable that was passed to :meth:`addTableListener`
+                         or :meth:`addSubTableListener`
+        '''
         adapters = self.listenerMap.get(listener)
         if adapters is not None:
             for adapter in adapters:

@@ -27,14 +27,11 @@ NetworkTable.setIPAddress(ip)
 NetworkTable.setClientMode()
 NetworkTable.initialize()
 
-class Listener:
-    def valueChanged(self, table, key, value, isNew):
-        print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
-
-listener = Listener()
+def valueChanged(table, key, value, isNew):
+    print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
         
 sd = NetworkTable.getTable("SmartDashboard")
-sd.addTableListener(listener)
+sd.addTableListener(valueChanged)
 
 while True:
     time.sleep(1)
