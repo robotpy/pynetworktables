@@ -112,7 +112,8 @@ class ArrayEntryType(ComplexEntryType):
         if not isinstance(externalRepresentation, self.externalArrayType):
             raise TypeError("%s is not a %s" % (externalRepresentation, self.externalArrayType))
 
-        if len(currentInternalValue) == len(externalRepresentation):
+        if currentInternalValue is not None and \
+           len(currentInternalValue) == len(externalRepresentation):
             internalArray = currentInternalValue
             del internalArray[:]
         else:
