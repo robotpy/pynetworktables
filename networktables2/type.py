@@ -86,6 +86,9 @@ class ComplexEntryType(NetworkTableEntryType):
         raise NotImplementedError
 
 class ArrayEntryType(ComplexEntryType):
+    
+    LEN = _struct.Struct('>B')
+    
     #TODO allow for array of complex type
     def __init__(self, id, elementType, externalArrayType):
         ComplexEntryType.__init__(self, id, "Array of [%s]" % elementType.name)
@@ -97,14 +100,14 @@ class ArrayEntryType(ComplexEntryType):
     def sendValue(self, value, wstream):
         if len(value) > 255:
             raise IOError("Cannot write %s as %s. Arrays have a max length of 255 values" % (value, self.name))
-        wstream.writeByte(len(value))
+        wstream.write(self.LEN.pack(len(value)))
         for v in value:
             self.elementType.sendValue(v, wstream)
 
     def readValue(self, rstream):
-        length = rstream.readUnsignedByte()
+        sLen = rstream.readStruct(self.LEN)[0]
         dataArray = [] #TODO cache object arrays
-        for i in range(length):
+        for _ in range(sLen):
             dataArray.append(self.elementType.readValue(rstream))
         return dataArray
 
