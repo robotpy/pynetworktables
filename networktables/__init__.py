@@ -156,35 +156,37 @@ class NetworkTableProvider:
         """
         self.node.close()
 
-class NetworkTableModeServer:
-    """A mode where Network tables will be a server on the specified port
+def _create_server_node(ipAddress, port):
+    """Creates a network tables server node
+    
+    :param ipAddress: the IP address configured by the user
+    :param port: the port configured by the user
+    :returns: a new node that can back a network table
     """
-    @staticmethod
-    def createNode(ipAddress, port):
-        """
-        :param ipAddress: the IP address configured by the user
-        :param port: the port configured by the user
-        :returns: a new node that can back a network table
-        """
-        return NetworkTableServer(SocketServerStreamProvider(port))
+    return NetworkTableServer(SocketServerStreamProvider(port))
 
-class NetworkTableModeClient:
-    """A mode where network tables will be a client which connects to the
-    specified host and port
+def _create_client_node(ipAddress, port):
+    """Creates a network tables client node
+    
+    :param ipAddress: the IP address configured by the user
+    :param port: the port configured by the user
+    :returns: a new node that can back a network table
     """
-    @staticmethod
-    def createNode(ipAddress, port):
-        """
-        :param ipAddress: the IP address configured by the user
-        :param port: the port configured by the user
-        :returns: a new node that can back a network table
-        """
-        if ipAddress is None:
-            raise ValueError("IP address cannot be None when in client mode")
-        client = NetworkTableClient(SocketStreamFactory(ipAddress, port))
-        client.reconnect()
-        return client
-
+    if ipAddress is None:
+        raise ValueError("IP address cannot be None when in client mode")
+    client = NetworkTableClient(SocketStreamFactory(ipAddress, port))
+    client.reconnect()
+    return client
+    
+def _create_test_node(ipAddress, port):
+    
+    class NullStreamFactory:
+        def createStream(self):
+            return None
+        
+    return NetworkTableClient(NullStreamFactory)
+    
+    
 class NetworkTable:
     """
     This is the primary object that you will use when interacting with
@@ -208,8 +210,8 @@ class NetworkTable:
     DEFAULT_PORT = 1735
 
     _staticProvider = None
-
-    mode = NetworkTableModeServer
+    _mode_fn = _create_server_node
+    
     port = DEFAULT_PORT
     ipAddress = None
 
@@ -229,8 +231,8 @@ class NetworkTable:
         with NetworkTable._staticMutex:
             NetworkTable.checkInit()
             NetworkTable._staticProvider = NetworkTableProvider(
-                    NetworkTable.mode.createNode(NetworkTable.ipAddress,
-                                                 NetworkTable.port))
+                    NetworkTable._mode_fn(NetworkTable.ipAddress,
+                                          NetworkTable.port))
 
     @staticmethod
     def setTableProvider(provider):
@@ -244,13 +246,13 @@ class NetworkTable:
 
     @staticmethod
     def setServerMode():
-        """set that network tables should be a server
+        """set that network tables should be a server (this is the default)
         
         .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
         """
         with NetworkTable._staticMutex:
             NetworkTable.checkInit();
-            NetworkTable.mode = NetworkTableModeServer
+            NetworkTable._mode_fn = _create_server_node
 
     @staticmethod
     def setClientMode():
@@ -260,7 +262,17 @@ class NetworkTable:
         """
         with NetworkTable._staticMutex:
             NetworkTable.checkInit()
-            NetworkTable.mode = NetworkTableModeClient
+            NetworkTable._mode_fn = _create_client_node
+            
+    @staticmethod
+    def setTestMode():
+        """Setup network tables to run in unit test mode
+        
+        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
+        """
+        with NetworkTable._staticMutex:
+            NetworkTable.checkInit()
+            NetworkTable._mode_fn = _create_test_node
 
     @staticmethod
     def setTeam(team):
