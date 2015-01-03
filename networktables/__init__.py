@@ -184,7 +184,7 @@ def _create_test_node(ipAddress, port):
         def createStream(self):
             return None
         
-    return NetworkTableClient(NullStreamFactory)
+    return NetworkTableClient(NullStreamFactory())
     
     
 class NetworkTable:
