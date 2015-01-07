@@ -210,7 +210,7 @@ class NetworkTable:
     DEFAULT_PORT = 1735
 
     _staticProvider = None
-    _mode_fn = _create_server_node
+    _mode_fn = staticmethod(_create_server_node)
     
     port = DEFAULT_PORT
     ipAddress = None
@@ -252,7 +252,7 @@ class NetworkTable:
         """
         with NetworkTable._staticMutex:
             NetworkTable.checkInit();
-            NetworkTable._mode_fn = _create_server_node
+            NetworkTable._mode_fn = staticmethod(_create_server_node)
 
     @staticmethod
     def setClientMode():
@@ -262,7 +262,7 @@ class NetworkTable:
         """
         with NetworkTable._staticMutex:
             NetworkTable.checkInit()
-            NetworkTable._mode_fn = _create_client_node
+            NetworkTable._mode_fn = staticmethod(_create_client_node)
             
     @staticmethod
     def setTestMode():
@@ -272,7 +272,7 @@ class NetworkTable:
         """
         with NetworkTable._staticMutex:
             NetworkTable.checkInit()
-            NetworkTable._mode_fn = _create_test_node
+            NetworkTable._mode_fn = staticmethod(_create_test_node)
 
     @staticmethod
     def setTeam(team):
