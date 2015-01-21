@@ -1,5 +1,7 @@
 import struct as _struct
 
+from .connection import BadMessageError
+
 class ComplexData:
     def __init__(self, type):
         self.type = type
@@ -64,7 +66,10 @@ class StringEntryType(NetworkTableEntryType):
 
     def readValue(self, rstream):
         sLen = rstream.readStruct(self.LEN)[0]
-        return rstream.read(sLen).decode('utf-8')
+        try:
+            return rstream.read(sLen).decode('utf-8')
+        except UnicodeDecodeError as e:
+            raise BadMessageError(e)
 
 class DefaultEntryTypes:
     BOOLEAN_RAW_ID = 0x00

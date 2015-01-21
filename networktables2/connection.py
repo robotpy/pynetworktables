@@ -48,7 +48,10 @@ class NamedMessage(Message):
 
     def read(self, rstream):
         nameLen = rstream.readStruct(self.NAME_LEN_STRUCT)[0]
-        name = rstream.read(nameLen).decode('utf-8')
+        try:
+            name = rstream.read(nameLen).decode('utf-8')
+        except UnicodeDecodeError as e:
+            raise BadMessageError(e)
         return name, rstream.readStruct(self.STRUCT)
 
 # A keep alive message that the client sends
