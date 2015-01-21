@@ -101,7 +101,6 @@ class NetworkTableNode:
                 self.entryStore.putOutgoingEntry(entry, entryType.internalizeValue(entry.name, value, entry.getValue()))
         else:
             self.entryStore.putOutgoingEntry(entry, value)
-        return
 
     def getValue(self, name):
         #TODO don't allow get of complex types
@@ -124,6 +123,9 @@ class NetworkTableNode:
         """close all networking activity related to this node
         """
         pass
+    
+    def isConnected(self):
+        raise NotImplementedError()
 
     def addConnectionListener(self, listener, immediateNotify):
         self.remoteListeners.append(listener)

@@ -32,7 +32,7 @@ SENT_HELLO_TO_SERVER = ClientConnectionState("SENT_HELLO_TO_SERVER")
 # represents that the client is now in sync with the server
 IN_SYNC_WITH_SERVER = ClientConnectionState("IN_SYNC_WITH_SERVER")
 
-class ProtocolUnsuppotedByServer(ClientConnectionState):
+class ProtocolUnsupportedByServer(ClientConnectionState):
     """Represents that a client received a message from the server indicating
     that the client's protocol revision is not supported by the server
     """
@@ -149,7 +149,7 @@ class ClientConnectionAdapter:
                 self.readThread.stop()
                 self.readThread = None
             if self.connection is not None:
-                self.connection.close();
+                self.connection.close()
                 self.connection = None
             self.entryStore.clearIds()
 
@@ -173,7 +173,7 @@ class ClientConnectionAdapter:
 
     def protocolVersionUnsupported(self, protocolRevision):
         self.close()
-        self.gotoState(ProtocolUnsuppotedByServer(protocolRevision))
+        self.gotoState(ProtocolUnsupportedByServer(protocolRevision))
 
     def serverHelloComplete(self):
         if self.connectionState == CONNECTED_TO_SERVER:

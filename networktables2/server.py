@@ -88,7 +88,7 @@ class ServerConnectionAdapter:
 
     def ioError(self, e):
         if isinstance(e, StreamEOF):
-            self.gotoState(CLIENT_DISCONNECTED);
+            self.gotoState(CLIENT_DISCONNECTED)
         else:
             self.gotoState(ServerError(e))
         self.adapterListener.close(self, False)
@@ -221,7 +221,7 @@ class ServerConnectionList:
                 self.connections.remove(connectionAdapter)
             except ValueError:
                 return
-            logger.info("Close: %s" % connectionAdapter)
+            logger.info("Close: %s", connectionAdapter)
             connectionAdapter.shutdown(closeStream)
 
     def closeAll(self):
@@ -229,7 +229,7 @@ class ServerConnectionList:
         """
         with self.connectionsLock:
             for connection in self.connections:
-                logger.info("Close: %s" % connection)
+                logger.info("Close: %s", connection)
                 connection.shutdown(True)
             del self.connections[:]
 
@@ -306,6 +306,6 @@ class NetworkTableServer(NetworkTableNode):
                 if newStream is not None:
                     connectionAdapter = ServerConnectionAdapter(newStream, self.entryStore, self.entryStore, self.connectionList, self.typeManager)
                     self.connectionList.add(connectionAdapter)
-            except IOError as e:
+            except IOError:
                 pass #could not get a new stream for some reason. ignore and continue
 

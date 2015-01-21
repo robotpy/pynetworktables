@@ -251,7 +251,7 @@ class NetworkTable:
         .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
         """
         with NetworkTable._staticMutex:
-            NetworkTable.checkInit();
+            NetworkTable.checkInit()
             NetworkTable._mode_fn = staticmethod(_create_server_node)
 
     @staticmethod
@@ -357,15 +357,15 @@ class NetworkTable:
                     self.cache[key] = cachedValue
             return cachedValue
 
-    def addConnectionListener(self, listener, immediateNotify):
+    def addConnectionListener(self, listener, immediateNotify=False):
         '''Adds a listener that will be notified when a new connection to a 
         NetworkTables client/server is established.
         
         The listener is called from the NetworkTables I/O thread, and should
         return as quickly as possible.
         
-        :param listener: An object that has a 'connect' function and a
-                         'disconnect' function. Each function will be called
+        :param listener: An object that has a 'connected' function and a
+                         'disconnected' function. Each function will be called
                          with this NetworkTable object as the first parameter
         :param immediateNotify: If True, the listener will be called immediately
                                 with the current values of the table
@@ -380,7 +380,7 @@ class NetworkTable:
     def removeConnectionListener(self, listener):
         '''Removes a connection listener
         
-        :param listener: The callable registered for connection notifications
+        :param listener: The object registered for connection notifications
         '''
         adapter = self.connectionListenerMap.get(listener)
         if adapter is not None:
