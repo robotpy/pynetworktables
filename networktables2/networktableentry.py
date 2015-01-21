@@ -12,11 +12,11 @@ class NetworkTableEntry:
         :param type: the type of the entry
         :param value:
         :param id:
-        :param sequenceNumber:
+        :param sequenceNumber: A value that is truncated to 16 bits
         """
         self.id = id
         self.name = name
-        self.sequenceNumber = sequenceNumber
+        self.sequenceNumber = sequenceNumber & 0xFFFF
         self.type = type
         self.value = value
         self.isNew = True
@@ -44,6 +44,7 @@ class NetworkTableEntry:
         :param newValue: the new value
         :returns: True if the value was set
         """
+        newSequenceNumber &= 0xFFFF
         if ((self.sequenceNumber < newSequenceNumber and
              (newSequenceNumber - self.sequenceNumber) < self.HALF_OF_CHAR) or
             (self.sequenceNumber > newSequenceNumber and
@@ -63,7 +64,7 @@ class NetworkTableEntry:
         if type is not None:
             self.type = type
         self.value = newValue
-        self.sequenceNumber = newSequenceNumber
+        self.sequenceNumber = newSequenceNumber & 0xFFFF
 
     def makeDirty(self):
         self.isDirty = True
