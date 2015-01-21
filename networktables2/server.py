@@ -221,7 +221,7 @@ class ServerConnectionList:
                 self.connections.remove(connectionAdapter)
             except ValueError:
                 return
-            logging.info("Close: %s" % connectionAdapter)
+            logger.info("Close: %s" % connectionAdapter)
             connectionAdapter.shutdown(closeStream)
 
     def closeAll(self):
@@ -229,7 +229,7 @@ class ServerConnectionList:
         """
         with self.connectionsLock:
             for connection in self.connections:
-                logging.info("Close: %s" % connection)
+                logger.info("Close: %s" % connection)
                 connection.shutdown(True)
             del self.connections[:]
 
