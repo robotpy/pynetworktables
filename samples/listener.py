@@ -29,9 +29,20 @@ NetworkTable.initialize()
 
 def valueChanged(table, key, value, isNew):
     print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
-        
+
+class ConnectionListener:
+
+    def connected(self, table):
+        print("Connected", table)
+
+    def disconnected(self, table):
+        print("Disconnected", table)
+
+c_listener = ConnectionListener()
+
 sd = NetworkTable.getTable("SmartDashboard")
 sd.addTableListener(valueChanged)
+sd.addConnectionListener(c_listener)
 
 while True:
     time.sleep(1)
