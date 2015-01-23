@@ -1,16 +1,19 @@
 import socket
 
+from . import _impl
+
 __all__ = ["SocketStreamFactory", "SocketServerStreamProvider"]
+
 
 class SocketStream:
     def __init__(self, conn):
         self.conn = conn
 
     def getInputStream(self):
-        return self.conn.makefile('rb')
+        return _impl.sock_makefile(self.conn, 'rb')
 
     def getOutputStream(self):
-        return self.conn.makefile('wb')
+        return _impl.sock_makefile(self.conn, 'wb')
 
     def close(self):
         self.conn.close()

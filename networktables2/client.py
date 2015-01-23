@@ -1,10 +1,11 @@
-import threading
 
+from . import _impl
 from .common import *
 from .connection import *
 from .networktableentry import NetworkTableEntry
 from .networktablenode import NetworkTableNode
 from .type import NetworkTableEntryTypeManager
+
 
 import logging
 logger = logging.getLogger('nt')
@@ -110,7 +111,7 @@ class ClientConnectionAdapter:
         self.connection = None
         self.readThread = None
         self.connectionState = DISCONNECTED_FROM_SERVER
-        self.connectionLock = threading.RLock()
+        self.connectionLock = _impl.create_rlock()
         
     def __str__(self):
         return 'Client 0x%08x' % id(self)

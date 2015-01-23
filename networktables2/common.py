@@ -4,6 +4,7 @@ import threading
 import time
 import warnings
 
+from . import _impl
 from .networktableentry import NetworkTableEntry
 
 __all__ = ["AbstractNetworkTableEntryStore", "WriteManager"]
@@ -18,7 +19,7 @@ class AbstractNetworkTableEntryStore:
         self.listenerManager = listenerManager
         self.outgoingReceiver = None
         self.incomingReceiver = None
-        self.mutex = threading.RLock()
+        self.mutex = _impl.create_rlock()
 
     def getEntry(self, name_id):
         """Get an entry based on its name or id
@@ -151,7 +152,7 @@ class WriteManager:
         self.keepAliveDelay = keepAliveDelay
         self.lastWrite = 0
 
-        self.transactionsLock = threading.RLock()
+        self.transactionsLock = _impl.create_rlock()
 
         self.incomingAssignmentQueue = []
         self.incomingUpdateQueue = []

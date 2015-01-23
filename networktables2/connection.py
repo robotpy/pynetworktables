@@ -1,6 +1,7 @@
 import struct
 import threading
 
+from . import _impl
 from .networktableentry import NetworkTableEntry
 
 __all__ = ["BadMessageError", "StreamEOF", "NetworkTableConnection",
@@ -91,7 +92,7 @@ class NetworkTableConnection:
         self.rstream = ReadStream(stream.getInputStream())
         self.wstream = stream.getOutputStream()
         self.typeManager = typeManager
-        self.write_lock = threading.RLock()
+        self.write_lock = _impl.create_rlock()
         self.isValid = True
 
     def close(self):

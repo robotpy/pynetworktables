@@ -1,6 +1,7 @@
 import threading
 import time
 
+from . import _impl
 from .common import *
 from .connection import *
 from .networktablenode import NetworkTableNode
@@ -206,7 +207,7 @@ class ServerConnectionList:
 
     def __init__(self):
         self.connections = []
-        self.connectionsLock = threading.RLock()
+        self.connectionsLock = _impl.create_rlock()
 
     def add(self, connection):
         """Add a connection to the list
