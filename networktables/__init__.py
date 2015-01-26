@@ -109,13 +109,18 @@ class NetworkTableSubListenerAdapter:
         if not key.startswith(self.prefix):
             return
 
+        key = key[len(self.prefix):]
+
+        if key.startswith(NetworkTable.PATH_SEPARATOR):
+            key = key[len(NetworkTable.PATH_SEPARATOR):]
+
         #TODO implement sub table listening better
-        endSubTable = key.find(NetworkTable.PATH_SEPARATOR,
-                               len(self.prefix)+1)
-        if endSubTable == -1:
+        keysplit = key.split(NetworkTable.PATH_SEPARATOR)
+        if len(keysplit) < 2:
             return
 
-        subTableKey = key[len(self.prefix)+1:endSubTable]
+        subTableKey = keysplit[0]
+
         if subTableKey in self.notifiedTables:
             return
 
@@ -310,7 +315,9 @@ class NetworkTable:
         with NetworkTable._staticMutex:
             if NetworkTable._staticProvider is None:
                 NetworkTable.initialize()
-            return NetworkTable._staticProvider.getTable(NetworkTable.PATH_SEPARATOR+key)
+            if not key.startswith(NetworkTable.PATH_SEPARATOR):
+                key = NetworkTable.PATH_SEPARATOR + key
+            return NetworkTable._staticProvider.getTable(key)
 
     def __init__(self, path, provider):
         self.path = path
@@ -333,6 +340,8 @@ class NetworkTable:
 
     class _KeyCache:
         def __init__(self, path):
+            if path[-len(NetworkTable.PATH_SEPARATOR):] == NetworkTable.PATH_SEPARATOR:
+                path = path[:-len(NetworkTable.PATH_SEPARATOR)]
             self.path = path
             self.cache = {}
 

@@ -36,7 +36,7 @@ class AbstractNetworkTableEntryStore:
         :returns: the list of keys
         """
         with self.mutex:
-            return self.namedEntries.keys().copy()
+            return [k for k in self.namedEntries.keys()]
 
     def clearEntries(self):
         """Remove all entries.
