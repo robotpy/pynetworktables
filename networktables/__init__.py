@@ -306,6 +306,7 @@ class NetworkTable:
 
         :param key: the key name
         :returns: the network table requested
+        :rtype: :class:`NetworkTable`
         """
         with NetworkTable._staticMutex:
             if NetworkTable._staticProvider is None:
@@ -444,6 +445,7 @@ class NetworkTable:
 
         :param key: the key name
         :returns: the networktable to be returned
+        :rtype: :class:`NetworkTable`
         """
         with self.mutex:
             return self.provider.getTable(self.absoluteKeyCache.get(key))
