@@ -111,7 +111,7 @@ class ClientConnectionAdapter:
         self.connection = None
         self.readThread = None
         self.connectionState = DISCONNECTED_FROM_SERVER
-        self.connectionLock = _impl.create_rlock()
+        self.connectionLock = _impl.create_rlock('client_conn_lock')
         
     def __str__(self):
         return 'Client 0x%08x' % id(self)

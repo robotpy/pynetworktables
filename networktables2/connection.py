@@ -92,7 +92,7 @@ class NetworkTableConnection:
         self.rstream = ReadStream(stream.getInputStream())
         self.wstream = stream.getOutputStream()
         self.typeManager = typeManager
-        self.write_lock = _impl.create_rlock()
+        self.write_lock = _impl.create_rlock('write_lock')
         self.isValid = True
 
     def close(self):

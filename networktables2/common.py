@@ -19,7 +19,7 @@ class AbstractNetworkTableEntryStore:
         self.listenerManager = listenerManager
         self.outgoingReceiver = None
         self.incomingReceiver = None
-        self.mutex = _impl.create_rlock()
+        self.mutex = _impl.create_rlock('entry_lock')
 
     def getEntry(self, name_id):
         """Get an entry based on its name or id
@@ -143,8 +143,7 @@ class WriteManager:
 
     def __init__(self, receiver, entryStore, keepAliveDelay):
         """Create a new Write manager
-        :param receiver:
-        :param transactionPool:
+        :param receiver: Either a ServerConnectionList, or a ClientConnectionAdapter
         :param entryStore:
         """
         self.receiver = receiver
@@ -152,7 +151,7 @@ class WriteManager:
         self.keepAliveDelay = keepAliveDelay
         self.lastWrite = 0
 
-        self.transactionsLock = _impl.create_rlock()
+        self.transactionsLock = _impl.create_rlock('trans_lock')
 
         self.incomingAssignmentQueue = []
         self.incomingUpdateQueue = []

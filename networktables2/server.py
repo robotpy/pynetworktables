@@ -207,7 +207,7 @@ class ServerConnectionList:
 
     def __init__(self):
         self.connections = []
-        self.connectionsLock = _impl.create_rlock()
+        self.connectionsLock = _impl.create_rlock('server_conn_lock')
 
     def add(self, connection):
         """Add a connection to the list
