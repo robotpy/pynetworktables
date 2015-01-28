@@ -180,7 +180,6 @@ def _create_client_node(ipAddress, port):
     if ipAddress is None:
         raise ValueError("IP address cannot be None when in client mode")
     client = NetworkTableClient(SocketStreamFactory(ipAddress, port))
-    client.reconnect()
     return client
     
 def _create_test_node(ipAddress, port):
