@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import inspect
+import socket
 import threading
 import time
 
@@ -141,6 +142,12 @@ class WrappedFile:
 
 def blocking_sock_makefile(s, mode):
     return WrappedFile(s.makefile(mode))
+
+def blocking_sock_create_connection(address):
+    print("C-HAAH", address)
+    assert_not_locked('connect')
+    time.sleep(1)
+    return socket.create_connection(address)
 
 def _get_caller():
     curframe = inspect.currentframe()
