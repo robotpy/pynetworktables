@@ -143,7 +143,8 @@ class WriteManager:
 
     def __init__(self, receiver, entryStore, keepAliveDelay):
         """Create a new Write manager
-        :param receiver: Either a ServerConnectionList, or a ClientConnectionAdapter
+        :param receiver:
+        :type receiver: :class:`.ServerConnectionList`, :class:`.ClientConnectionAdapter`
         :param entryStore:
         """
         self.receiver = receiver
@@ -152,6 +153,7 @@ class WriteManager:
         self.lastWrite = 0
 
         self.transactionsLock = _impl.create_rlock('trans_lock')
+        self.transactionsCondition = threading.Condition(self.transactionsLock)
 
         self.incomingAssignmentQueue = []
         self.incomingUpdateQueue = []
@@ -168,7 +170,7 @@ class WriteManager:
             self.stop()
         self.lastWrite = time.time()
         self.running = True
-        self.thread = threading.Thread(target=self._runPeriodic,
+        self.thread = threading.Thread(target=self.run,
                                        name="Write Manager Thread")
         self.thread.daemon = True
         self.thread.start()
@@ -178,9 +180,13 @@ class WriteManager:
         """
         if self.thread is not None:
             self.running = False
+            with self.transactionsCondition:
+                self.transactionsCondition.notify()
             self.thread.join()
 
     def offerOutgoingAssignment(self, entry):
+        # This is always called with the entry lock held
+        
         # Mark entry as dirty to avoid duplicate updates
         if entry.isDirty:
             return
@@ -189,10 +195,12 @@ class WriteManager:
         with self.transactionsLock:
             self.incomingAssignmentQueue.append(entry)
             if len(self.incomingAssignmentQueue) >= self.queueSize:
-                self.run()
                 warnings.warn("assignment queue overflowed. decrease the rate at which you create new entries or increase the write buffer size", ResourceWarning)
+                self.transactionsCondition.notify()
 
     def offerOutgoingUpdate(self, entry):
+        # This is always called with the entry lock held
+        
         # Mark entry as dirty to avoid duplicate updates
         if entry.isDirty:
             return
@@ -201,47 +209,53 @@ class WriteManager:
         with self.transactionsLock:
             self.incomingUpdateQueue.append(entry)
             if len(self.incomingUpdateQueue) >= self.queueSize:
-                self.run()
                 warnings.warn("update queue overflowed. decrease the rate at which you update entries or increase the write buffer size", ResourceWarning)
-
-    def _runPeriodic(self):
-        while self.running:
-            self.run()
-            time.sleep(self.SLEEP_TIME)
+                self.transactionsCondition.notify()
 
     def run(self):
         """the periodic method that sends all buffered transactions
         """
-        with self.transactionsLock:
-            #swap the assignment and update queue
-            self.incomingAssignmentQueue, self.outgoingAssignmentQueue = \
-                self.outgoingAssignmentQueue, self.incomingAssignmentQueue
-
-            self.incomingUpdateQueue, self.outgoingUpdateQueue = \
-                self.outgoingUpdateQueue, self.incomingUpdateQueue
-
-        wrote = False
-        for entry in self.outgoingAssignmentQueue:
-            with self.entryStore.mutex:
-                entry.makeClean()
-            wrote = True
-            if self.receiver is not None:
-                self.receiver.offerOutgoingAssignment(entry)
-        del self.outgoingAssignmentQueue[:]
-
-        for entry in self.outgoingUpdateQueue:
-            with self.entryStore.mutex:
-                entry.makeClean()
-            wrote = True
-            if self.receiver is not None:
-                self.receiver.offerOutgoingUpdate(entry)
-        del self.outgoingUpdateQueue[:]
-
-        if wrote:
-            if self.receiver is not None:
+        while self.running:
+            
+            with self.transactionsLock:
+                
+                self.transactionsCondition.wait(self.SLEEP_TIME)
+                
+                if not self.running:
+                    break
+                
+                #swap the assignment and update queue
+                self.incomingAssignmentQueue, self.outgoingAssignmentQueue = \
+                    self.outgoingAssignmentQueue, self.incomingAssignmentQueue
+    
+                self.incomingUpdateQueue, self.outgoingUpdateQueue = \
+                    self.outgoingUpdateQueue, self.incomingUpdateQueue
+            
+            # Decision: Choose to lock/unlock the entry lock quickly, instead
+            #           of one big lock. This allows the main thread to not
+            #           be interrupted for an extended period of time
+            
+            transactions = []
+    
+            for entry in self.outgoingAssignmentQueue:
+                with self.entryStore.entry_lock:
+                    entry.makeClean()
+                    transactions.append(entry.getAssignmentBytes())
+                    
+            for entry in self.outgoingUpdateQueue:
+                with self.entryStore.entry_lock:
+                    entry.makeClean()
+                    transactions.append(entry.getUpdateBytes())
+                
+            del self.outgoingAssignmentQueue[:]
+            del self.outgoingUpdateQueue[:]
+    
+            for entry in transactions:
+                self.receiver.sendEntry(entry)
+    
+            if len(transactions) > 0:
                 self.receiver.flush()
-            self.lastWrite = time.time()
-        elif (self.keepAliveDelay is not None and
-              (time.time()-self.lastWrite) > self.keepAliveDelay):
-            if self.receiver is not None:
+                self.lastWrite = time.time()
+            elif (self.keepAliveDelay is not None and
+                  (time.time()-self.lastWrite) > self.keepAliveDelay):
                 self.receiver.ensureAlive()

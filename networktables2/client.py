@@ -198,22 +198,14 @@ class ClientConnectionAdapter:
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
         self.entryStore.offerIncomingUpdate(entry, sequenceNumber, value)
 
-    def offerOutgoingAssignment(self, entry):
+    def sendEntry(self, entryBytes):
         try:
             with self.connectionLock:
                 if self.connectionState == IN_SYNC_WITH_SERVER:
-                    self.connection.sendEntry(entry.getAssignmentBytes())
+                    self.connection.sendEntry(entryBytes)
         except IOError as e:
             self.ioError(e)
-
-    def offerOutgoingUpdate(self, entry):
-        try:
-            with self.connectionLock:
-                if self.connectionState == IN_SYNC_WITH_SERVER:
-                    self.connection.sendEntry(entry.getUpdateBytes())
-        except IOError as e:
-            self.ioError(e)
-
+    
     def flush(self):
         with self.connectionLock:
             if self.connection is not None:

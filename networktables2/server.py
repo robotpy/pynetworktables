@@ -125,20 +125,13 @@ class ServerConnectionAdapter:
     def getEntry(self, id):
         return self.entryStore.getEntry(id)
 
-    def offerOutgoingAssignment(self, entry):
+    def sendEntry(self, entryBytes):
         try:
             if self.connectionState == CONNECTED_TO_CLIENT:
-                self.connection.sendEntry(entry.getAssignmentBytes())
+                self.connection.sendEntry(entryBytes)
         except IOError as e:
             self.ioError(e)
-
-    def offerOutgoingUpdate(self, entry):
-        try:
-            if self.connectionState == CONNECTED_TO_CLIENT:
-                self.connection.sendEntry(entry.getUpdateBytes())
-        except IOError as e:
-            self.ioError(e)
-
+    
     def flush(self):
         try:
             self.connection.flush()
@@ -235,15 +228,10 @@ class ServerConnectionList:
                 connection.shutdown(True)
             del self.connections[:]
 
-    def offerOutgoingAssignment(self, entry):
+    def sendEntry(self, entryBytes):
         with self.connectionsLock:
             for connection in self.connections:
-                connection.offerOutgoingAssignment(entry)
-
-    def offerOutgoingUpdate(self, entry):
-        with self.connectionsLock:
-            for connection in self.connections:
-                connection.offerOutgoingUpdate(entry)
+                connection.sendEntry(entryBytes)
 
     def flush(self):
         with self.connectionsLock:
