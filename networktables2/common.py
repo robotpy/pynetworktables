@@ -5,7 +5,7 @@ import time
 import warnings
 
 from . import _impl
-from .networktableentry import NetworkTableEntry
+from .entry import NetworkTableEntry
 
 __all__ = ["AbstractNetworkTableEntryStore", "WriteManager"]
 
@@ -135,8 +135,8 @@ class AbstractNetworkTableEntryStore:
 
 class WriteManager:
     """A write manager is a IncomingEntryReceiver that buffers transactions
-    and then and then dispatches them to a flushable transaction receiver
-    that is periodically offered all queued transaction and then flushed
+    and then dispatches them to a flushable transaction receiver that is
+    periodically offered all queued transaction and then flushed
     """
     SLEEP_TIME = 0.1
     queueSize = 500

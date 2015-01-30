@@ -59,26 +59,22 @@ class ServerConnectionAdapter:
             logger.info("%s entered connection state: %s", self, newState)
             self.connectionState = newState
 
-    def __init__(self, stream, entryStore, transactionReceiver,
-                 adapterListener, typeManager):
+    def __init__(self, stream, entryStore, adapterListener, typeManager):
         """Create a server connection adapter for a given stream
 
         :param stream:
         :param entryStore:
-        :param transactionReceiver:
         :param adapterListener:
         """
         self.connection = NetworkTableConnection(stream, typeManager)
         self.entryStore = entryStore
-        self.transactionReceiver = transactionReceiver
         self.adapterListener = adapterListener
 
         self.connectionState = None
         self.gotoState(GOT_CONNECTION_FROM_CLIENT)
-        self.readThread = ConnectionMonitorThread(self,
+        self.readManager = ReadManager(self,
                 self.connection, name="Server Connection Reader Thread")
-        self.readThread.daemon = True
-        self.readThread.start()
+        self.readManager.start()
         
     def __str__(self):
         return 'Server 0x%08x' % id(self)
@@ -97,7 +93,7 @@ class ServerConnectionAdapter:
     def shutdown(self, closeStream):
         """stop the read thread and close the stream
         """
-        self.readThread.stop()
+        self.readManager.stop()
         if closeStream:
             self.connection.close()
 
@@ -121,10 +117,10 @@ class ServerConnectionAdapter:
         raise BadMessageError("A server should not receive a server hello complete message")
 
     def offerIncomingAssignment(self, entry):
-        self.transactionReceiver.offerIncomingAssignment(entry)
+        self.entryStore.offerIncomingAssignment(entry)
 
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
-        self.transactionReceiver.offerIncomingUpdate(entry, sequenceNumber, value)
+        self.entryStore.offerIncomingUpdate(entry, sequenceNumber, value)
 
     def getEntry(self, id):
         return self.entryStore.getEntry(id)
@@ -305,7 +301,7 @@ class NetworkTableServer(NetworkTableNode):
             try:
                 newStream = self.streamProvider.accept()
                 if newStream is not None:
-                    connectionAdapter = ServerConnectionAdapter(newStream, self.entryStore, self.entryStore, self.connectionList, self.typeManager)
+                    connectionAdapter = ServerConnectionAdapter(newStream, self.entryStore, self.connectionList, self.typeManager)
                     self.connectionList.add(connectionAdapter)
             except IOError:
                 pass #could not get a new stream for some reason. ignore and continue

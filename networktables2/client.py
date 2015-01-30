@@ -2,7 +2,7 @@
 from . import _impl
 from .common import *
 from .connection import *
-from .networktableentry import NetworkTableEntry
+from .entry import NetworkTableEntry
 from .networktablenode import NetworkTableNode
 from .type import NetworkTableEntryTypeManager
 
@@ -24,12 +24,15 @@ class ClientConnectionState:
 
 # indicates that the client is disconnected from the server
 DISCONNECTED_FROM_SERVER = ClientConnectionState("DISCONNECTED_FROM_SERVER")
+
 # indicates that the client is connected to the server but has not yet begun
 # communication
 CONNECTED_TO_SERVER = ClientConnectionState("CONNECTED_TO_SERVER")
+
 # represents that the client has sent the hello to the server and is waiting
 # for a response
 SENT_HELLO_TO_SERVER = ClientConnectionState("SENT_HELLO_TO_SERVER")
+
 # represents that the client is now in sync with the server
 IN_SYNC_WITH_SERVER = ClientConnectionState("IN_SYNC_WITH_SERVER")
 
@@ -75,6 +78,8 @@ class ClientError(ClientConnectionState):
 
 class ClientConnectionAdapter:
     """Object that adapts messages from a server
+    
+    There should only be one instance of this object
     """
 
     def gotoState(self, newState):
@@ -109,7 +114,7 @@ class ClientConnectionAdapter:
         self.connectionListenerManager = connectionListenerManager
         self.typeManager = typeManager
         self.connection = None
-        self.readThread = None
+        self.readManager = None
         self.connectionState = DISCONNECTED_FROM_SERVER
         self.connectionLock = _impl.create_rlock('client_conn_lock')
         
@@ -131,10 +136,9 @@ class ClientConnectionAdapter:
                 if stream is None:
                     return
                 self.connection = NetworkTableConnection(stream, self.typeManager)
-                self.readThread = ConnectionMonitorThread(self,
+                self.readManager = ReadManager(self,
                         self.connection, name="Client Connection Reader Thread")
-                self.readThread.daemon = True
-                self.readThread.start()
+                self.readManager.start()
                 self.connection.sendClientHello()
                 self.gotoState(CONNECTED_TO_SERVER)
             except IOError:
@@ -146,9 +150,9 @@ class ClientConnectionAdapter:
         """
         with self.connectionLock:
             self.gotoState(newState)
-            if self.readThread is not None:
-                self.readThread.stop()
-                self.readThread = None
+            if self.readManager is not None:
+                self.readManager.stop()
+                self.readManager = None
             if self.connection is not None:
                 self.connection.close()
                 self.connection = None
@@ -184,7 +188,9 @@ class ClientConnectionAdapter:
             except IOError as e:
                 self.ioError(e)
         else:
-            raise BadMessageError("A client should only receive a server hello complete once and only after it has connected to the server")
+            raise BadMessageError("A client should only receive a server hello " +
+                                  "complete once and only after it has connected " +
+                                  "to the server (state is %s)" % self.connectionState)
 
     def offerIncomingAssignment(self, entry):
         self.entryStore.offerIncomingAssignment(entry)
@@ -195,8 +201,7 @@ class ClientConnectionAdapter:
     def offerOutgoingAssignment(self, entry):
         try:
             with self.connectionLock:
-                if (self.connection is not None and
-                    self.connectionState == IN_SYNC_WITH_SERVER):
+                if self.connectionState == IN_SYNC_WITH_SERVER:
                     self.connection.sendEntryAssignment(entry)
         except IOError as e:
             self.ioError(e)
@@ -204,8 +209,7 @@ class ClientConnectionAdapter:
     def offerOutgoingUpdate(self, entry):
         try:
             with self.connectionLock:
-                if (self.connection is not None and
-                    self.connectionState == IN_SYNC_WITH_SERVER):
+                if self.connectionState == IN_SYNC_WITH_SERVER:
                     self.connection.sendEntryUpdate(entry)
         except IOError as e:
             self.ioError(e)
@@ -270,6 +274,8 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
 
 class NetworkTableClient(NetworkTableNode):
     """A client node in NetworkTables 2.0
+    
+    There should only be one instance of this object
     """
 
     def __init__(self, streamFactory):
