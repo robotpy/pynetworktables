@@ -128,14 +128,14 @@ class ServerConnectionAdapter:
     def offerOutgoingAssignment(self, entry):
         try:
             if self.connectionState == CONNECTED_TO_CLIENT:
-                self.connection.sendEntryAssignment(entry)
+                self.connection.sendEntry(entry.getAssignmentBytes())
         except IOError as e:
             self.ioError(e)
 
     def offerOutgoingUpdate(self, entry):
         try:
             if self.connectionState == CONNECTED_TO_CLIENT:
-                self.connection.sendEntryUpdate(entry)
+                self.connection.sendEntry(entry.getUpdateBytes())
         except IOError as e:
             self.ioError(e)
 
@@ -193,7 +193,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         """
         with self.mutex:
             for entry in self.namedEntries.values():
-                connection.sendEntryAssignment(entry)
+                connection.sendEntry(entry.getAssignmentBytes())
             connection.sendServerHelloComplete()
             connection.flush()
 

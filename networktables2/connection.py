@@ -1,72 +1,15 @@
-import struct
+
 import threading
 
 from . import _impl
 from .entry import NetworkTableEntry
+from .messages import *
 
 __all__ = ["BadMessageError", "StreamEOF", "NetworkTableConnection",
            "ReadManager", "PROTOCOL_REVISION"]
 
-class BadMessageError(IOError):
-    pass
-
 class StreamEOF(IOError):
     pass
-
-PROTOCOL_REVISION = 0x0200
-
-# The definitions of all of the protocol message types
-
-class Message:
-    def __init__(self, HEADER, STRUCT=None):
-        self.HEADER = HEADER
-        if STRUCT is None:
-            self.STRUCT = None
-        else:
-            self.STRUCT = struct.Struct(STRUCT)
-
-    def send(self, wstream, *args):
-        wstream.write(self.HEADER)
-        if self.STRUCT is not None:
-            wstream.write(self.STRUCT.pack(*args))
-
-    def read(self, rstream):
-        return rstream.readStruct(self.STRUCT)
-
-class NamedMessage(Message):
-    NAME_LEN_STRUCT = struct.Struct('>H')
-
-    def __init__(self, HEADER, STRUCT=None):
-        Message.__init__(self, HEADER, STRUCT)
-
-    def send(self, wstream, name, *args):
-        wstream.write(self.HEADER)
-        name = name.encode('utf-8')
-        wstream.write(self.NAME_LEN_STRUCT.pack(len(name)))
-        wstream.write(name)
-        if self.STRUCT is not None:
-            wstream.write(self.STRUCT.pack(*args))
-
-    def read(self, rstream):
-        nameLen = rstream.readStruct(self.NAME_LEN_STRUCT)[0]
-        try:
-            name = rstream.read(nameLen).decode('utf-8')
-        except UnicodeDecodeError as e:
-            raise BadMessageError(e)
-        return name, rstream.readStruct(self.STRUCT)
-
-# A keep alive message that the client sends
-KEEP_ALIVE = Message(b'\x00')
-# A client hello message that a client sends
-CLIENT_HELLO = Message(b'\x01', '>H')
-# A protocol version unsupported message that the server sends to a client
-PROTOCOL_UNSUPPORTED = Message(b'\x02', '>H')
-# A server hello complete message that a server sends
-SERVER_HELLO_COMPLETE = Message(b'\x03')
-# An entry assignment message
-ENTRY_ASSIGNMENT = NamedMessage(b'\x10', '>bHH')
-# A field update message
-FIELD_UPDATE = Message(b'\x11', '>HH')
 
 class ReadStream:
     def __init__(self, f):
@@ -106,36 +49,29 @@ class NetworkTableConnection:
 
     def sendKeepAlive(self):
         with self.write_lock:
-            KEEP_ALIVE.send(self.wstream)
+            self.wstream.write(KEEP_ALIVE.getBytes())
             self.flush()
 
     def sendClientHello(self):
         with self.write_lock:
-            CLIENT_HELLO.send(self.wstream, PROTOCOL_REVISION)
+            self.wstream.write(CLIENT_HELLO.getBytes(PROTOCOL_REVISION))
             self.flush()
 
     def sendServerHelloComplete(self):
         with self.write_lock:
-            SERVER_HELLO_COMPLETE.send(self.wstream)
+            self.wstream.write(SERVER_HELLO_COMPLETE.getBytes())
             self.flush()
 
     def sendProtocolVersionUnsupported(self):
         with self.write_lock:
-            PROTOCOL_UNSUPPORTED.send(self.wstream, PROTOCOL_REVISION)
+            self.wstream.write(PROTOCOL_UNSUPPORTED.getBytes(PROTOCOL_REVISION))
             self.flush()
 
-    def sendEntryAssignment(self, entry):
+    def sendEntry(self, entryBytes):
+        # use entry.getAssignBytes or entry.getUpdateBytes
         with self.write_lock:
-            ENTRY_ASSIGNMENT.send(self.wstream, entry.name, entry.getType().id,
-                                  entry.getId(), entry.getSequenceNumber())
-            entry.sendValue(self.wstream)
-
-    def sendEntryUpdate(self, entry):
-        with self.write_lock:
-            FIELD_UPDATE.send(self.wstream, entry.getId(),
-                              entry.getSequenceNumber())
-            entry.sendValue(self.wstream)
-
+            self.wstream.write(entryBytes)
+    
     def read(self, adapter):
         messageType = self.rstream.read(1)
         if messageType == KEEP_ALIVE.HEADER:

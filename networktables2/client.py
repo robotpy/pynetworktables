@@ -202,7 +202,7 @@ class ClientConnectionAdapter:
         try:
             with self.connectionLock:
                 if self.connectionState == IN_SYNC_WITH_SERVER:
-                    self.connection.sendEntryAssignment(entry)
+                    self.connection.sendEntry(entry.getAssignmentBytes())
         except IOError as e:
             self.ioError(e)
 
@@ -210,7 +210,7 @@ class ClientConnectionAdapter:
         try:
             with self.connectionLock:
                 if self.connectionState == IN_SYNC_WITH_SERVER:
-                    self.connection.sendEntryUpdate(entry)
+                    self.connection.sendEntry(entry.getUpdateBytes())
         except IOError as e:
             self.ioError(e)
 
@@ -269,7 +269,7 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         with self.mutex:
             for entry in self.namedEntries.values():
                 if entry.getId() == NetworkTableEntry.UNKNOWN_ID:
-                    connection.sendEntryAssignment(entry)
+                    connection.sendEntry(entry.getAssignmentBytes())
             connection.flush()
 
 class NetworkTableClient(NetworkTableNode):
