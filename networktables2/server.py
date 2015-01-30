@@ -169,7 +169,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         self.nextId = 0
 
     def addEntry(self, newEntry):
-        with self.mutex:
+        with self.entry_lock:
             entry = self.namedEntries.get(newEntry.name)
 
             if entry is None:
@@ -181,7 +181,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
             return False
 
     def updateEntry(self, entry, sequenceNumber, value):
-        with self.mutex:
+        with self.entry_lock:
             if entry.putValue(sequenceNumber, value):
                 return True
             return False
@@ -191,11 +191,16 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         single transaction
         :param connection:
         """
-        with self.mutex:
+        transaction = []
+        with self.entry_lock:
+            # Cannot use sendEntry while holding entry lock!
             for entry in self.namedEntries.values():
-                connection.sendEntry(entry.getAssignmentBytes())
-            connection.sendServerHelloComplete()
-            connection.flush()
+                transaction.append(entry.getAssignmentBytes())
+                
+        for entry in transaction:
+            connection.sendEntry(entry)
+        connection.sendServerHelloComplete()
+        connection.flush()
 
 class ServerConnectionList:
     """A list of connections that the server currently has

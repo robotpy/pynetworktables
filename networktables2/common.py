@@ -19,14 +19,14 @@ class AbstractNetworkTableEntryStore:
         self.listenerManager = listenerManager
         self.outgoingReceiver = None
         self.incomingReceiver = None
-        self.mutex = _impl.create_rlock('entry_lock')
+        self.entry_lock = _impl.create_rlock('entry_lock')
 
     def getEntry(self, name_id):
         """Get an entry based on its name or id
         :param name_id: the name or id of the entry to look for
         :returns: the entry or None if the entry does not exist
         """
-        with self.mutex:
+        with self.entry_lock:
             if isinstance(name_id, str):
                 return self.namedEntries.get(name_id)
             else:
@@ -36,7 +36,7 @@ class AbstractNetworkTableEntryStore:
         """Get the list of keys.
         :returns: the list of keys
         """
-        with self.mutex:
+        with self.entry_lock:
             return [k for k in self.namedEntries.keys()]
 
     def clearEntries(self):
@@ -45,14 +45,14 @@ class AbstractNetworkTableEntryStore:
         entries which would lead to unknown results.
         This method is for use in testing only.
         """
-        with self.mutex:
+        with self.entry_lock:
             self.idEntries.clear()
             self.namedEntries.clear()
 
     def clearIds(self):
         """clear the id's of all entries
         """
-        with self.mutex:
+        with self.entry_lock:
             self.idEntries.clear()
             for entry in self.namedEntries.values():
                 entry.clearId()
@@ -79,7 +79,7 @@ class AbstractNetworkTableEntryStore:
         Raises TypeError if entry already exists with the given name and is of
         a different type.
         """
-        with self.mutex:
+        with self.entry_lock:
             tableEntry = self.namedEntries.get(name)
             if tableEntry is None:
                 #TODO validate type
@@ -98,7 +98,7 @@ class AbstractNetworkTableEntryStore:
                     tableEntry.fireListener(self.listenerManager)
 
     def putOutgoingEntry(self, tableEntry, value):
-        with self.mutex:
+        with self.entry_lock:
             #TODO Validate type
             if value != tableEntry.getValue():
                 if self.updateEntry(tableEntry, tableEntry.getSequenceNumber()+1, value):
@@ -107,7 +107,7 @@ class AbstractNetworkTableEntryStore:
                 tableEntry.fireListener(self.listenerManager)
 
     def offerIncomingAssignment(self, entry):
-        with self.mutex:
+        with self.entry_lock:
             tableEntry = self.namedEntries.get(entry.name)
             if self.addEntry(entry):
                 if tableEntry is None:
@@ -117,7 +117,7 @@ class AbstractNetworkTableEntryStore:
                     self.incomingReceiver.offerOutgoingAssignment(tableEntry)
 
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
-        with self.mutex:
+        with self.entry_lock:
             if self.updateEntry(entry, sequenceNumber, value):
                 entry.fireListener(self.listenerManager)
                 if self.incomingReceiver is not None:
@@ -129,7 +129,7 @@ class AbstractNetworkTableEntryStore:
         :param listener:
         :param table:
         """
-        with self.mutex:
+        with self.entry_lock:
             for entry in self.namedEntries.values():
                 listener.valueChanged(table, entry.name, entry.getValue(), True)
 

@@ -237,7 +237,7 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
     """
 
     def addEntry(self, newEntry):
-        with self.mutex:
+        with self.entry_lock:
             entry = self.namedEntries.get(newEntry.name)
 
             if entry is not None:
@@ -256,7 +256,7 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         return True
 
     def updateEntry(self, entry, sequenceNumber, value):
-        with self.mutex:
+        with self.entry_lock:
             entry.forcePut(sequenceNumber, value)
             if entry.getId() == NetworkTableEntry.UNKNOWN_ID:
                 return False
@@ -266,11 +266,16 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         """Send all unknown entries in the entry store to the given connection
         :param connection:
         """
-        with self.mutex:
+        transaction = []
+        with self.entry_lock:
+            # Cannot hold the entry lock when calling sendEntry
             for entry in self.namedEntries.values():
                 if entry.getId() == NetworkTableEntry.UNKNOWN_ID:
-                    connection.sendEntry(entry.getAssignmentBytes())
-            connection.flush()
+                    transaction.append(entry.getAssignmentBytes())
+                    
+        for entry in transaction:
+            connection.sendEntry(entry)
+        connection.flush()
 
 class NetworkTableClient(NetworkTableNode):
     """A client node in NetworkTables 2.0
