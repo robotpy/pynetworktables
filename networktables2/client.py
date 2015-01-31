@@ -83,14 +83,14 @@ class ClientConnectionAdapter:
     """
 
     def gotoState(self, newState):
-        with self.connectionLock:
-            if self.connectionState != newState:
-                logger.info("%s entered connection state: %s", self, newState)
-                if newState == IN_SYNC_WITH_SERVER:
-                    self.connectionListenerManager.fireConnectedEvent()
-                if self.connectionState == IN_SYNC_WITH_SERVER:
-                    self.connectionListenerManager.fireDisconnectedEvent()
-                self.connectionState = newState
+        # Always must hold the lock when calling this
+        if self.connectionState != newState:
+            logger.info("%s entered connection state: %s", self, newState)
+            if newState == IN_SYNC_WITH_SERVER:
+                self.connectionListenerManager.fireConnectedEvent()
+            if self.connectionState == IN_SYNC_WITH_SERVER:
+                self.connectionListenerManager.fireDisconnectedEvent()
+            self.connectionState = newState
 
     def getConnectionState(self):
         """:returns: the state of the connection
@@ -120,6 +120,20 @@ class ClientConnectionAdapter:
         
     def __str__(self):
         return 'Client 0x%08x' % id(self)
+    
+    #
+    # Errors
+    #
+    
+    def badMessage(self, e):
+        self.close(ClientError(e))
+
+    def ioError(self, e):
+        if self.connectionState != DISCONNECTED_FROM_SERVER:
+            # will get io exception when on read thread connection is closed
+            self.reconnect()
+        #self.gotoState(ClientError(e))
+    
 
     #
     # Connection management
@@ -129,6 +143,7 @@ class ClientConnectionAdapter:
         """Reconnect the client to the server (even if the client is not
         currently connected)
         """
+        
         with self.connectionLock:
             self.close() #close the existing stream and monitor thread if needed
             try:
@@ -148,6 +163,7 @@ class ClientConnectionAdapter:
         """Close the connection to the server and enter the given state
         :param newState: new state; defaults to DISCONNECTED_FROM_SERVER.
         """
+        
         with self.connectionLock:
             self.gotoState(newState)
             if self.readManager is not None:
@@ -157,15 +173,6 @@ class ClientConnectionAdapter:
                 self.connection.close()
                 self.connection = None
             self.entryStore.clearIds()
-
-    def badMessage(self, e):
-        self.close(ClientError(e))
-
-    def ioError(self, e):
-        if self.connectionState != DISCONNECTED_FROM_SERVER:
-            # will get io exception when on read thread connection is closed
-            self.reconnect()
-        #self.gotoState(ClientError(e))
 
     def getEntry(self, id):
         return self.entryStore.getEntry(id)
@@ -177,20 +184,22 @@ class ClientConnectionAdapter:
         raise BadMessageError("A client should not receive a client hello message")
 
     def protocolVersionUnsupported(self, protocolRevision):
-        self.close()
-        self.gotoState(ProtocolUnsupportedByServer(protocolRevision))
+        with self.connectionLock:
+            self.close()
+            self.gotoState(ProtocolUnsupportedByServer(protocolRevision))
 
     def serverHelloComplete(self):
-        if self.connectionState == CONNECTED_TO_SERVER:
-            try:
-                self.gotoState(IN_SYNC_WITH_SERVER)
-                self.entryStore.sendUnknownEntries(self.connection)
-            except IOError as e:
-                self.ioError(e)
-        else:
-            raise BadMessageError("A client should only receive a server hello " +
-                                  "complete once and only after it has connected " +
-                                  "to the server (state is %s)" % self.connectionState)
+        with self.connectionLock:
+            if self.connectionState == CONNECTED_TO_SERVER:
+                try:
+                    self.gotoState(IN_SYNC_WITH_SERVER)
+                    self.entryStore.sendUnknownEntries(self.connection)
+                except IOError as e:
+                    self.ioError(e)
+            else:
+                raise BadMessageError("A client should only receive a server hello " +
+                                      "complete once and only after it has connected " +
+                                      "to the server (state is %s)" % self.connectionState)
 
     def offerIncomingAssignment(self, entry):
         self.entryStore.offerIncomingAssignment(entry)
