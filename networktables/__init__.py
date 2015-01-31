@@ -180,7 +180,6 @@ def _create_client_node(ipAddress, port):
     if ipAddress is None:
         raise ValueError("IP address cannot be None when in client mode")
     client = NetworkTableClient(SocketStreamFactory(ipAddress, port))
-    client.reconnect()
     return client
     
 def _create_test_node(ipAddress, port):
@@ -302,6 +301,24 @@ class NetworkTable:
             NetworkTable.ipAddress = address
 
     @staticmethod
+    def setWriteFlushPeriod(flushPeriod):
+        """Sets the period of time between writes to the network. 
+        
+        WPILib's networktables and SmartDashboard default to 100ms, we have
+        set it to 50ms instead for quicker response time. You should not set
+        this value too low, as it could potentially increase the volume of
+        data sent over the network.
+        
+        .. warning:: If you don't know what this setting affects, don't mess
+                     with it!
+        
+        :param latency: Write flush period in seconds (default is 0.050,
+                        or 50ms)
+        """
+        from networktables2.client import WriteManager
+        WriteManager.SLEEP_TIME = flushPeriod
+
+    @staticmethod
     def getTable(key):
         """Gets the table with the specified key. If the table does not exist,
         a new table will be created.
@@ -379,6 +396,10 @@ class NetworkTable:
                          with this NetworkTable object as the first parameter
         :param immediateNotify: If True, the listener will be called immediately
                                 with the current values of the table
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
         '''
         adapter = self.connectionListenerMap.get(listener)
         if adapter is not None:
@@ -407,6 +428,11 @@ class NetworkTable:
         :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
         :param immediateNotify: If True, the listener will be called immediately with the current values of the table
         :param key: If specified, the listener will only be called when this key is changed
+        
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
         '''
         adapters = self.listenerMap.setdefault(listener, [])
         if key is not None:
@@ -426,6 +452,10 @@ class NetworkTable:
         return as quickly as possible.
         
         :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
         '''
         adapters = self.listenerMap.setdefault(listener, [])
         adapter = NetworkTableSubListenerAdapter(self.path, self, listener)

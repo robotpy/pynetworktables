@@ -26,10 +26,10 @@ class NetworkTableEntryType:
     def __str__(self):
         return "NetworkTable type: %s" % self.name
 
-    def sendValue(self, value, wstream):
-        """send a value over a data output stream
+    def writeBytes(self, b, value):
+        """Append a sequence of bytes to the array suitable for writing to a stream
+        :param b: bytearray to append bytes to
         :param value: the value to send
-        :param wstream: the stream to send the value over
         """
         raise NotImplementedError
 
@@ -45,8 +45,8 @@ class BasicEntryType(NetworkTableEntryType):
         NetworkTableEntryType.__init__(self, id, name)
         self.STRUCT = _struct.Struct(STRUCT)
 
-    def sendValue(self, value, wstream):
-        wstream.write(self.STRUCT.pack(value))
+    def writeBytes(self, b, value):
+        b.extend(self.STRUCT.pack(value))
 
     def readValue(self, rstream):
         return rstream.readStruct(self.STRUCT)[0]
@@ -59,10 +59,10 @@ class StringEntryType(NetworkTableEntryType):
     def __init__(self, id, name):
         NetworkTableEntryType.__init__(self, id, name)
 
-    def sendValue(self, value, wstream):
+    def writeBytes(self, b, value):
         s = value.encode('utf-8')
-        wstream.write(self.LEN.pack(len(s)))
-        wstream.write(s)
+        b.extend(self.LEN.pack(len(s)))
+        b.extend(s)
 
     def readValue(self, rstream):
         sLen = rstream.readStruct(self.LEN)[0]
@@ -102,12 +102,12 @@ class ArrayEntryType(ComplexEntryType):
         self.externalArrayType = externalArrayType
         self.elementType = elementType
 
-    def sendValue(self, value, wstream):
+    def writeBytes(self, b, value):
         if len(value) > 255:
             raise IOError("Cannot write %s as %s. Arrays have a max length of 255 values" % (value, self.name))
-        wstream.write(self.LEN.pack(len(value)))
+        b.extend(self.LEN.pack(len(value)))
         for v in value:
-            self.elementType.sendValue(v, wstream)
+            self.elementType.writeBytes(b, v)
 
     def readValue(self, rstream):
         sLen = rstream.readStruct(self.LEN)[0]

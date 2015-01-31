@@ -1,3 +1,6 @@
+
+from .messages import ENTRY_ASSIGNMENT, FIELD_UPDATE
+
 class NetworkTableEntry:
     """An entry in a network table
     """
@@ -72,11 +75,18 @@ class NetworkTableEntry:
     def makeClean(self):
         self.isDirty = False
 
-    def sendValue(self, wstream):
-        """Send the value of the entry over the output stream
-        :param wstream: output stream
-        """
-        self.type.sendValue(self.value, wstream)
+    def getAssignmentBytes(self):
+        """Get bytes for an assignment message"""
+        b = ENTRY_ASSIGNMENT.getBytes(self.name, self.type.id, self.id,
+                                      self.sequenceNumber)
+        self.type.writeBytes(b, self.value)
+        return b
+        
+    def getUpdateBytes(self):
+        """Get bytes for an update message"""
+        b = FIELD_UPDATE.getBytes(self.id, self.sequenceNumber)
+        self.type.writeBytes(b, self.value)
+        return b
 
     def getSequenceNumber(self):
         """:returns: the current sequence number of the entry
@@ -96,9 +106,6 @@ class NetworkTableEntry:
         """clear the id of the entry to unknown
         """
         self.id = self.UNKNOWN_ID
-
-    def send(self, connection):
-        connection.sendEntryAssignment(self)
 
     def fireListener(self, listenerManager):
         #TODO determine best way to handle complex data

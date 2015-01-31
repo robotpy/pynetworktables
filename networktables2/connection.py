@@ -1,71 +1,15 @@
-import struct
+
 import threading
 
-from .networktableentry import NetworkTableEntry
+from . import _impl
+from .entry import NetworkTableEntry
+from .messages import *
 
 __all__ = ["BadMessageError", "StreamEOF", "NetworkTableConnection",
-           "ConnectionMonitorThread", "PROTOCOL_REVISION"]
-
-class BadMessageError(IOError):
-    pass
+           "ReadManager", "PROTOCOL_REVISION"]
 
 class StreamEOF(IOError):
     pass
-
-PROTOCOL_REVISION = 0x0200
-
-# The definitions of all of the protocol message types
-
-class Message:
-    def __init__(self, HEADER, STRUCT=None):
-        self.HEADER = HEADER
-        if STRUCT is None:
-            self.STRUCT = None
-        else:
-            self.STRUCT = struct.Struct(STRUCT)
-
-    def send(self, wstream, *args):
-        wstream.write(self.HEADER)
-        if self.STRUCT is not None:
-            wstream.write(self.STRUCT.pack(*args))
-
-    def read(self, rstream):
-        return rstream.readStruct(self.STRUCT)
-
-class NamedMessage(Message):
-    NAME_LEN_STRUCT = struct.Struct('>H')
-
-    def __init__(self, HEADER, STRUCT=None):
-        Message.__init__(self, HEADER, STRUCT)
-
-    def send(self, wstream, name, *args):
-        wstream.write(self.HEADER)
-        name = name.encode('utf-8')
-        wstream.write(self.NAME_LEN_STRUCT.pack(len(name)))
-        wstream.write(name)
-        if self.STRUCT is not None:
-            wstream.write(self.STRUCT.pack(*args))
-
-    def read(self, rstream):
-        nameLen = rstream.readStruct(self.NAME_LEN_STRUCT)[0]
-        try:
-            name = rstream.read(nameLen).decode('utf-8')
-        except UnicodeDecodeError as e:
-            raise BadMessageError(e)
-        return name, rstream.readStruct(self.STRUCT)
-
-# A keep alive message that the client sends
-KEEP_ALIVE = Message(b'\x00')
-# A client hello message that a client sends
-CLIENT_HELLO = Message(b'\x01', '>H')
-# A protocol version unsupported message that the server sends to a client
-PROTOCOL_UNSUPPORTED = Message(b'\x02', '>H')
-# A server hello complete message that a server sends
-SERVER_HELLO_COMPLETE = Message(b'\x03')
-# An entry assignment message
-ENTRY_ASSIGNMENT = NamedMessage(b'\x10', '>bHH')
-# A field update message
-FIELD_UPDATE = Message(b'\x11', '>HH')
 
 class ReadStream:
     def __init__(self, f):
@@ -91,7 +35,7 @@ class NetworkTableConnection:
         self.rstream = ReadStream(stream.getInputStream())
         self.wstream = stream.getOutputStream()
         self.typeManager = typeManager
-        self.write_lock = threading.RLock()
+        self.write_lock = _impl.create_rlock('write_lock')
         self.isValid = True
 
     def close(self):
@@ -105,48 +49,45 @@ class NetworkTableConnection:
 
     def sendKeepAlive(self):
         with self.write_lock:
-            KEEP_ALIVE.send(self.wstream)
-            self.flush()
+            self.wstream.write(KEEP_ALIVE.getBytes())
+            self.wstream.flush()
 
     def sendClientHello(self):
         with self.write_lock:
-            CLIENT_HELLO.send(self.wstream, PROTOCOL_REVISION)
-            self.flush()
+            self.wstream.write(CLIENT_HELLO.getBytes(PROTOCOL_REVISION))
+            self.wstream.flush()
 
     def sendServerHelloComplete(self):
         with self.write_lock:
-            SERVER_HELLO_COMPLETE.send(self.wstream)
-            self.flush()
+            self.wstream.write(SERVER_HELLO_COMPLETE.getBytes())
+            self.wstream.flush()
 
     def sendProtocolVersionUnsupported(self):
         with self.write_lock:
-            PROTOCOL_UNSUPPORTED.send(self.wstream, PROTOCOL_REVISION)
-            self.flush()
+            self.wstream.write(PROTOCOL_UNSUPPORTED.getBytes(PROTOCOL_REVISION))
+            self.wstream.flush()
 
-    def sendEntryAssignment(self, entry):
+    def sendEntry(self, entryBytes):
+        # use entry.getAssignBytes or entry.getUpdateBytes
         with self.write_lock:
-            ENTRY_ASSIGNMENT.send(self.wstream, entry.name, entry.getType().id,
-                                  entry.getId(), entry.getSequenceNumber())
-            entry.sendValue(self.wstream)
-
-    def sendEntryUpdate(self, entry):
-        with self.write_lock:
-            FIELD_UPDATE.send(self.wstream, entry.getId(),
-                              entry.getSequenceNumber())
-            entry.sendValue(self.wstream)
-
+            self.wstream.write(entryBytes)
+    
     def read(self, adapter):
         messageType = self.rstream.read(1)
         if messageType == KEEP_ALIVE.HEADER:
             adapter.keepAlive()
+            
         elif messageType == CLIENT_HELLO.HEADER:
             protocolRevision = CLIENT_HELLO.read(self.rstream)[0]
             adapter.clientHello(protocolRevision)
+            
         elif messageType == SERVER_HELLO_COMPLETE.HEADER:
             adapter.serverHelloComplete()
+            
         elif messageType == PROTOCOL_UNSUPPORTED.HEADER:
             protocolRevision = PROTOCOL_UNSUPPORTED.read(self.rstream)[0]
             adapter.protocolVersionUnsupported(protocolRevision)
+            
         elif messageType == ENTRY_ASSIGNMENT.HEADER:
             entryName, (typeId, entryId, entrySequenceNumber) = \
                     ENTRY_ASSIGNMENT.read(self.rstream)
@@ -155,6 +96,7 @@ class NetworkTableConnection:
                 raise BadMessageError("Unknown data type: 0x%x" % typeId)
             value = entryType.readValue(self.rstream)
             adapter.offerIncomingAssignment(NetworkTableEntry(entryName, entryType, value, id=entryId, sequenceNumber=entrySequenceNumber))
+            
         elif messageType == FIELD_UPDATE.HEADER:
             entryId, entrySequenceNumber = FIELD_UPDATE.read(self.rstream)
             entry = adapter.getEntry(entryId)
@@ -162,26 +104,35 @@ class NetworkTableConnection:
                 raise BadMessageError("Received update for unknown entry id: %d " % entryId)
             value = entry.getType().readValue(self.rstream)
             adapter.offerIncomingUpdate(entry, entrySequenceNumber, value)
+            
         else:
             raise BadMessageError("Unknown Network Table Message Type: %s" % (messageType))
 
-class ConnectionMonitorThread(threading.Thread):
+class ReadManager:
     """A periodic thread that repeatedly reads from a connection
     """
     def __init__(self, adapter, connection, name=None):
         """create a new monitor thread
+        
         :param adapter:
+        :type  adapter: :class:`.ServerConncetionAdapter` or :class:`.ClientConnectionAdapter`
         :param connection:
+        :type  connection: :class:`NetworkTableConnection`
         """
-        threading.Thread.__init__(self, name=name)
         self.adapter = adapter
         self.connection = connection
         self.running = True
+        
+        self.thread = threading.Thread(target=self.run, name=name)
+        self.thread.daemon = True
+
+    def start(self):
+        self.thread.start()
 
     def stop(self):
         self.running = False
         try:
-            self.join()
+            self.thread.join()
         except RuntimeError:
             pass
 

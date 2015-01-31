@@ -1,6 +1,7 @@
 import threading
 import time
 
+from . import _impl
 from .common import *
 from .connection import *
 from .networktablenode import NetworkTableNode
@@ -58,26 +59,22 @@ class ServerConnectionAdapter:
             logger.info("%s entered connection state: %s", self, newState)
             self.connectionState = newState
 
-    def __init__(self, stream, entryStore, transactionReceiver,
-                 adapterListener, typeManager):
+    def __init__(self, stream, entryStore, adapterListener, typeManager):
         """Create a server connection adapter for a given stream
 
         :param stream:
         :param entryStore:
-        :param transactionReceiver:
         :param adapterListener:
         """
         self.connection = NetworkTableConnection(stream, typeManager)
         self.entryStore = entryStore
-        self.transactionReceiver = transactionReceiver
         self.adapterListener = adapterListener
 
         self.connectionState = None
         self.gotoState(GOT_CONNECTION_FROM_CLIENT)
-        self.readThread = ConnectionMonitorThread(self,
+        self.readManager = ReadManager(self,
                 self.connection, name="Server Connection Reader Thread")
-        self.readThread.daemon = True
-        self.readThread.start()
+        self.readManager.start()
         
     def __str__(self):
         return 'Server 0x%08x' % id(self)
@@ -96,7 +93,7 @@ class ServerConnectionAdapter:
     def shutdown(self, closeStream):
         """stop the read thread and close the stream
         """
-        self.readThread.stop()
+        self.readManager.stop()
         if closeStream:
             self.connection.close()
 
@@ -120,28 +117,21 @@ class ServerConnectionAdapter:
         raise BadMessageError("A server should not receive a server hello complete message")
 
     def offerIncomingAssignment(self, entry):
-        self.transactionReceiver.offerIncomingAssignment(entry)
+        self.entryStore.offerIncomingAssignment(entry)
 
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
-        self.transactionReceiver.offerIncomingUpdate(entry, sequenceNumber, value)
+        self.entryStore.offerIncomingUpdate(entry, sequenceNumber, value)
 
     def getEntry(self, id):
         return self.entryStore.getEntry(id)
 
-    def offerOutgoingAssignment(self, entry):
+    def sendEntry(self, entryBytes):
         try:
             if self.connectionState == CONNECTED_TO_CLIENT:
-                self.connection.sendEntryAssignment(entry)
+                self.connection.sendEntry(entryBytes)
         except IOError as e:
             self.ioError(e)
-
-    def offerOutgoingUpdate(self, entry):
-        try:
-            if self.connectionState == CONNECTED_TO_CLIENT:
-                self.connection.sendEntryUpdate(entry)
-        except IOError as e:
-            self.ioError(e)
-
+    
     def flush(self):
         try:
             self.connection.flush()
@@ -172,7 +162,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         self.nextId = 0
 
     def addEntry(self, newEntry):
-        with self.mutex:
+        with self.entry_lock:
             entry = self.namedEntries.get(newEntry.name)
 
             if entry is None:
@@ -184,7 +174,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
             return False
 
     def updateEntry(self, entry, sequenceNumber, value):
-        with self.mutex:
+        with self.entry_lock:
             if entry.putValue(sequenceNumber, value):
                 return True
             return False
@@ -194,11 +184,16 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
         single transaction
         :param connection:
         """
-        with self.mutex:
+        transaction = []
+        with self.entry_lock:
+            # Cannot use sendEntry while holding entry lock!
             for entry in self.namedEntries.values():
-                connection.sendEntryAssignment(entry)
-            connection.sendServerHelloComplete()
-            connection.flush()
+                transaction.append(entry.getAssignmentBytes())
+                
+        for entry in transaction:
+            connection.sendEntry(entry)
+        connection.sendServerHelloComplete()
+        connection.flush()
 
 class ServerConnectionList:
     """A list of connections that the server currently has
@@ -206,7 +201,7 @@ class ServerConnectionList:
 
     def __init__(self):
         self.connections = []
-        self.connectionsLock = threading.RLock()
+        self.connectionsLock = _impl.create_rlock('server_conn_lock')
 
     def add(self, connection):
         """Add a connection to the list
@@ -233,15 +228,10 @@ class ServerConnectionList:
                 connection.shutdown(True)
             del self.connections[:]
 
-    def offerOutgoingAssignment(self, entry):
+    def sendEntry(self, entryBytes):
         with self.connectionsLock:
             for connection in self.connections:
-                connection.offerOutgoingAssignment(entry)
-
-    def offerOutgoingUpdate(self, entry):
-        with self.connectionsLock:
-            for connection in self.connections:
-                connection.offerOutgoingUpdate(entry)
+                connection.sendEntry(entryBytes)
 
     def flush(self):
         with self.connectionsLock:
@@ -304,7 +294,7 @@ class NetworkTableServer(NetworkTableNode):
             try:
                 newStream = self.streamProvider.accept()
                 if newStream is not None:
-                    connectionAdapter = ServerConnectionAdapter(newStream, self.entryStore, self.entryStore, self.connectionList, self.typeManager)
+                    connectionAdapter = ServerConnectionAdapter(newStream, self.entryStore, self.connectionList, self.typeManager)
                     self.connectionList.add(connectionAdapter)
             except IOError:
                 pass #could not get a new stream for some reason. ignore and continue
