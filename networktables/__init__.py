@@ -378,6 +378,10 @@ class NetworkTable:
                          with this NetworkTable object as the first parameter
         :param immediateNotify: If True, the listener will be called immediately
                                 with the current values of the table
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
         '''
         adapter = self.connectionListenerMap.get(listener)
         if adapter is not None:
@@ -406,6 +410,11 @@ class NetworkTable:
         :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
         :param immediateNotify: If True, the listener will be called immediately with the current values of the table
         :param key: If specified, the listener will only be called when this key is changed
+        
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
         '''
         adapters = self.listenerMap.setdefault(listener, [])
         if key is not None:
@@ -425,6 +434,10 @@ class NetworkTable:
         return as quickly as possible.
         
         :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
         '''
         adapters = self.listenerMap.setdefault(listener, [])
         adapter = NetworkTableSubListenerAdapter(self.path, self, listener)
