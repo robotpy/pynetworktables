@@ -1,5 +1,5 @@
 '''
-    Tools for finding deadlocks in networktables    
+    Instrumentation for finding deadlocks in networktables    
 '''
 
 from __future__ import print_function
@@ -9,19 +9,17 @@ import socket
 import threading
 import time
 
+
 # List of locks that can be acquired from the main thread
 main_locks = [
-    'client_conn_lock',
     'entry_lock',
     'trans_lock',
-    'write_lock'
 ]
 
 # List of locks that are allowed to be held when accessing a socket
 # -> must never be locks that can be acquired by the main thread
 sock_locks = [
     'client_conn_lock',
-    'entry_lock',
     'server_conn_lock',
     'write_lock',
 ]
@@ -29,20 +27,29 @@ sock_locks = [
 # Dictionary of locks
 # key: name, value: locks that can be held when acquiring the lock
 locks = {
+    # Never held by robot thread
     'client_conn_lock': [
         'client_conn_lock'
     ],
+    
     'entry_lock': [
-        'client_conn_lock',
-        'entry_lock'
+        'entry_lock',
+        'client_conn_lock'
     ],
     
+    # Never held by robot thread
     'server_conn_lock': [
         'server_conn_lock',       
     ],
     
     'trans_lock': [
         'entry_lock',
+        
+        # Not 100% sure if this should be allowed
+        # -> this only happens when NetworkTable API calls are made from
+        #    a fired listener
+        'server_conn_lock',
+        'client_conn_lock'
     ],
     
     # Never held by robot thread
@@ -50,7 +57,6 @@ locks = {
         'client_conn_lock',
         'server_conn_lock',
         'write_lock',
-        'entry_lock',
     ],
 }
 
@@ -124,13 +130,11 @@ class WrappedFile:
         self._file = file
         
     def write(self, data):
-        print("W-HAHA")
         assert_not_locked('write')
         time.sleep(1)
         return self._file.write(data)
         
     def read(self, *args, **kwargs):
-        print("R-HAHA")
         assert_not_locked('read')
         time.sleep(1)
         return self._file.read(*args, **kwargs)
@@ -144,7 +148,6 @@ def blocking_sock_makefile(s, mode):
     return WrappedFile(s.makefile(mode))
 
 def blocking_sock_create_connection(address):
-    print("C-HAAH", address)
     assert_not_locked('connect')
     time.sleep(1)
     return socket.create_connection(address)
