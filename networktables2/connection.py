@@ -50,22 +50,22 @@ class NetworkTableConnection:
     def sendKeepAlive(self):
         with self.write_lock:
             self.wstream.write(KEEP_ALIVE.getBytes())
-            self.flush()
+            self.wstream.flush()
 
     def sendClientHello(self):
         with self.write_lock:
             self.wstream.write(CLIENT_HELLO.getBytes(PROTOCOL_REVISION))
-            self.flush()
+            self.wstream.flush()
 
     def sendServerHelloComplete(self):
         with self.write_lock:
             self.wstream.write(SERVER_HELLO_COMPLETE.getBytes())
-            self.flush()
+            self.wstream.flush()
 
     def sendProtocolVersionUnsupported(self):
         with self.write_lock:
             self.wstream.write(PROTOCOL_UNSUPPORTED.getBytes(PROTOCOL_REVISION))
-            self.flush()
+            self.wstream.flush()
 
     def sendEntry(self, entryBytes):
         # use entry.getAssignBytes or entry.getUpdateBytes

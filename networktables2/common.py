@@ -138,7 +138,8 @@ class WriteManager:
     and then dispatches them to a flushable transaction receiver that is
     periodically offered all queued transaction and then flushed
     """
-    SLEEP_TIME = 0.1
+    SLEEP_TIME = 0.050
+    
     queueSize = 500
 
     def __init__(self, receiver, entryStore, keepAliveDelay):
