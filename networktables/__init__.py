@@ -301,6 +301,24 @@ class NetworkTable:
             NetworkTable.ipAddress = address
 
     @staticmethod
+    def setWriteFlushPeriod(flushPeriod):
+        """Sets the period of time between writes to the network. 
+        
+        WPILib's networktables and SmartDashboard default to 100ms, we have
+        set it to 50ms instead for quicker response time. You should not set
+        this value too low, as it could potentially increase the volume of
+        data sent over the network.
+        
+        .. warning:: If you don't know what this setting affects, don't mess
+                     with it!
+        
+        :param latency: Write flush period in seconds (default is 0.050,
+                        or 50ms)
+        """
+        from networktables2.client import WriteManager
+        WriteManager.SLEEP_TIME = flushPeriod
+
+    @staticmethod
     def getTable(key):
         """Gets the table with the specified key. If the table does not exist,
         a new table will be created.
