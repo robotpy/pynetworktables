@@ -50,7 +50,7 @@ class NetworkTableNode:
         self.putValue(name, value, type=value.getType())
 
     def retrieveValue(self, name, externalData):
-        with self.entryStore.mutex:
+        with self.entryStore.entry_lock:
             entry = self.entryStore.getEntry(name)
             if entry is None:
                 raise KeyError(name)
@@ -81,7 +81,7 @@ class NetworkTableNode:
                 raise ValueError("Invalid Type")
 
         if isinstance(type, ComplexEntryType):
-            with self.entryStore.mutex: #must sync because use get
+            with self.entryStore.entry_lock: #must sync because use get
                 entry = self.entryStore.getEntry(name)
                 if entry is not None:
                     self.entryStore.putOutgoingEntry(entry, type.internalizeValue(entry.name, value, entry.getValue()))
@@ -97,14 +97,14 @@ class NetworkTableNode:
         """
         entryType = entry.getType()
         if isinstance(entryType, ComplexEntryType):
-            with self.entryStore.mutex: #must sync because use get
+            with self.entryStore.entry_lock: #must sync because use get
                 self.entryStore.putOutgoingEntry(entry, entryType.internalizeValue(entry.name, value, entry.getValue()))
         else:
             self.entryStore.putOutgoingEntry(entry, value)
 
     def getValue(self, name):
         #TODO don't allow get of complex types
-        with self.entryStore.mutex:
+        with self.entryStore.entry_lock:
             entry = self.entryStore.getEntry(name)
             if entry is None:
                 raise KeyError(name)
