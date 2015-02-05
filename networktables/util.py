@@ -1,7 +1,3 @@
-'''
-    Utilities
-    ---------
-'''
 
 from networktables2 import StringArray
 from .networktable import NetworkTable
@@ -15,6 +11,7 @@ class ChooserControl(object):
     def __init__(self, key, on_choices=None, on_selected=None):
         '''
             :param key: NetworkTables key
+            :type  key: str
             :param on_choices: A function that will be called when the
                                choices change. Signature: fn(value)
             :param on_selection: A function that will be called when the
@@ -35,20 +32,32 @@ class ChooserControl(object):
             self.subtable.removeTableListener(self._on_change)
     
     def getChoices(self):
-        '''Returns the current choices as a list'''
+        '''
+            Returns the current choices
+        
+            :rtype: :class:`.StringArray`
+        '''
         choices = StringArray()
         self.subtable.retrieveValue('options', choices)
         return choices
     
     def getSelected(self):
-        '''Returns the current selection or None'''
+        '''
+            Returns the current selection or None
+        
+            :rtype: str
+        '''
         selected = self.subtable.getString('selected', None)
         if selected is None:
             selected = self.subtable.getString('default', None)
         return selected
     
     def setSelected(self, selection):
-        '''Sets the active selection on the chooser'''
+        '''
+            Sets the active selection on the chooser
+            
+            :param selection: Active selection name
+        '''
         self.subtable.putString('selected', selection)
     
     def _on_change(self, table, key, value, isNew):

@@ -590,6 +590,17 @@ class NetworkTable:
             return defaultValue
 
     def retrieveValue(self, key, externalValue):
+        """Retrieves the data associated with a complex data type (such as
+        arrays) and stores it.
+        
+        For example, to retrieve a type which is an array of strings::
+        
+            val = networktables.StringArray()
+            nt.retrieveValue('some key', val)
+            
+        :param key: the key name
+        :param externalValue: The complex data member
+        """
         self.node.retrieveValue(self.absoluteKeyCache.get(key), externalValue)
 
     def putValue(self, key, value):

@@ -137,6 +137,12 @@ class ArrayEntryType(ComplexEntryType):
         externalRepresentation.extend(internalData)
 
 class BooleanArray(ArrayData):
+    '''
+        A list of boolean values, can be used like a python list. Use
+        ``putValue`` and ``retrieveValue`` to get/store this on a particular
+        key in a :class:`.NetworkTable`.
+    '''
+    
     BOOLEAN_ARRAY_RAW_ID = 0x10
 
     def __init__(self):
@@ -165,6 +171,12 @@ BooleanArray.TYPE = ArrayEntryType(BooleanArray.BOOLEAN_ARRAY_RAW_ID,
                                    BooleanArray)
 
 class NumberArray(ArrayData):
+    '''
+        A list of number values, can be used like a python list. Use
+        ``putValue`` and ``retrieveValue`` to get/store this on a particular
+        key in a :class:`.NetworkTable`.
+    '''
+    
     NUMBER_ARRAY_RAW_ID = 0x11
 
     def __init__(self):
@@ -193,6 +205,12 @@ NumberArray.TYPE = ArrayEntryType(NumberArray.NUMBER_ARRAY_RAW_ID,
                                   NumberArray)
 
 class StringArray(ArrayData):
+    '''
+        A list of string values, can be used like a python list. Use
+        ``putValue`` and ``retrieveValue`` to get/store this on a particular
+        key in a :class:`.NetworkTable`.
+    '''
+    
     STRING_ARRAY_RAW_ID = 0x12
 
     def __init__(self):
