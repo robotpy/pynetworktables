@@ -160,7 +160,7 @@ class NetworkTableProvider:
     def close(self):
         """close the backing network table node
         """
-        self.node.close()
+        self.node.stop()
 
 def _create_server_node(ipAddress, port):
     """Creates a network tables server node
