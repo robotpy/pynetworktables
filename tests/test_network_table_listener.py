@@ -1,5 +1,7 @@
 import pytest
-import networktables
+
+from networktables.networktable import NetworkTableProvider
+from networktables2 import NetworkTableClient
 
 try:
     from unittest.mock import call, Mock
@@ -12,11 +14,11 @@ class NullStreamFactory:
 
 @pytest.fixture(scope='function')
 def client():
-    return networktables.NetworkTableClient(NullStreamFactory())
+    return NetworkTableClient(NullStreamFactory())
 
 @pytest.fixture(scope='function')
 def provider(client):
-    return networktables.NetworkTableProvider(client)
+    return NetworkTableProvider(client)
 
 @pytest.fixture(scope='function')
 def table1(provider):
