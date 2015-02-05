@@ -17,3 +17,8 @@ Listener Example
 ----------------
 
 .. literalinclude:: ../samples/listener.py
+
+Listen Chooser Example
+----------------------
+
+.. literalinclude:: ../samples/listen_chooser.py
