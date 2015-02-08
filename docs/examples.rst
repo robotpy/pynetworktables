@@ -22,3 +22,8 @@ Listen Chooser Example
 ----------------------
 
 .. literalinclude:: ../samples/listen_chooser.py
+
+Auto Listener Example
+---------------------
+
+.. literalinclude:: ../samples/auto_listener.py

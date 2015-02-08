@@ -5,6 +5,10 @@ API Reference
     :members:
     :undoc-members:
 
+.. autoclass:: networktables.networktable.AutoUpdateValue
+    :members:
+    :undoc-members:
+
 Types
 -----
 

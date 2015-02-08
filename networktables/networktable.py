@@ -129,6 +129,39 @@ class NetworkTableSubListenerAdapter:
         self.targetListener(self.targetSource, subTableKey,
                 self.targetSource.getSubTable(subTableKey), True)
 
+class AutoUpdateValue:
+    """Holds a value from NetworkTables, and changes it as new entries
+    come in. Updates to this value are NOT passed on to NetworkTables.
+    
+    Do not create this object directly, as it only holds the value. 
+    Use :meth:`.NetworkTable.getAutoUpdateValue` to obtain an instance
+    of this.
+    """
+    
+    def __init__(self, default):
+        self.value = default
+        
+    def get(self):
+        '''Returns the value held by this object'''
+        return self.value
+
+class AutoUpdateListener:
+    
+    def __init__(self, table):
+        # no lock required if we use atomic operations (setdefault, get) on it
+        self.keys = {}
+        table.addTableListener(self._valueChanged)
+        
+    def createAutoValue(self, key, default):
+        new_value = AutoUpdateValue(default)
+        return self.keys.setdefault(key, new_value)
+    
+    def _valueChanged(self, table, key, value, isNew):
+        auto_value = self.keys.get(key)
+        if auto_value is not None:
+            auto_value.value = value
+
+
 class NetworkTableProvider:
     """Provides a NetworkTable for a given NetworkTableNode
     """
@@ -347,6 +380,8 @@ class NetworkTable:
         self.connectionListenerMap = {}
         self.listenerMap = {}
         self.mutex = threading.RLock()
+        
+        self.autoListener = None
 
     def __str__(self):
         return "NetworkTable: "+self.path
@@ -633,9 +668,39 @@ class NetworkTable:
             if defaultValue is NetworkTable._defaultValueSentry:
                 raise
             return defaultValue
+    
+    def getAutoUpdateValue(self, key, defaultValue):
+        '''Returns an object that will be automatically updated when the
+        value is updated by networktables. 
+        
+        Does not work with complex types. If you modify the returned type,
+        the value will NOT be written back to NetworkTables.
+        
+        :param key: the key name
+        :type  key: str
+        :param defaultValue: Default value to use if not in the table
+        :type  defaultValue: any
+        
+        :rtype: :class:`.AutoUpdateValue`
+        
+        .. versionadded:: 2015.1.3
+        '''
+        
+        try:
+            value = self.getValue(key)
+        except KeyError:
+            value = defaultValue
+            self.putValue(key, value)
+        
+        with self.mutex:
+            if self.autoListener is None:
+                self.autoListener = AutoUpdateListener(self)
+        
+        return self.autoListener.createAutoValue(key, value)
 
     # Deprecated Methods
     putInt = putNumber
     getInt = getNumber
     putDouble = putNumber
     getDouble = getNumber
+    
