@@ -67,7 +67,7 @@ class NetworkTableNode:
         """
         if type is None:
             # Guess type based on value
-            if isinstance(value, float):
+            if isinstance(value, (float, int)):
                 type = DefaultEntryTypes.DOUBLE
             elif isinstance(value, str):
                 type = DefaultEntryTypes.STRING
