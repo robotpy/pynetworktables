@@ -33,12 +33,16 @@ class ChooserControl(object):
     
     def getChoices(self):
         '''
-            Returns the current choices
+            Returns the current choices. If the chooser doesn't exist, this
+            will return an empty array.
         
             :rtype: :class:`.StringArray`
         '''
         choices = StringArray()
-        self.subtable.retrieveValue('options', choices)
+        try:
+            self.subtable.retrieveValue('options', choices)
+        except KeyError:
+            pass
         return choices
     
     def getSelected(self):
