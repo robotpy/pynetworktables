@@ -67,12 +67,12 @@ class NetworkTableNode:
         """
         if type is None:
             # Guess type based on value
-            if isinstance(value, (float, int)):
+            if isinstance(value, bool):
+                type = DefaultEntryTypes.BOOLEAN
+            elif isinstance(value, (float, int)):
                 type = DefaultEntryTypes.DOUBLE
             elif isinstance(value, str):
                 type = DefaultEntryTypes.STRING
-            elif isinstance(value, bool):
-                type = DefaultEntryTypes.BOOLEAN
             elif isinstance(value, ComplexData):
                 type = value.getType()
             elif value is None:
