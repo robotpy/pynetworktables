@@ -71,13 +71,14 @@ class AbstractNetworkTableEntryStore:
 
     def putOutgoing(self, name, type, value):
         """Stores the given value under the given name and queues it for
-        transmission to the server.
+        transmission to the remote end.
 
         :param name: The name under which to store the given value.
         :param type: The type of the given value.
         :param value: The value to store.
-        Raises TypeError if entry already exists with the given name and is of
-        a different type.
+        
+        If the type is different than that which is stored, it will be
+        changed.
         """
         with self.entry_lock:
             tableEntry = self.namedEntries.get(name)
@@ -89,24 +90,22 @@ class AbstractNetworkTableEntryStore:
                     if self.outgoingReceiver is not None:
                         self.outgoingReceiver.offerOutgoingAssignment(tableEntry)
             else:
+                # Note: NetworkTables only allows the type to change on a new
+                #       assignment, and existing server implementations ignore
+                #       assignment if the entry already exists. This means we 
+                #       have to raise an error here, instead of changing the type
                 if tableEntry.getType().id != type.id:
-                    raise TypeError(name)
+                    raise TypeError("Cannot put %s '%s', existing value in table is a %s" % (
+                                     tableEntry.getType().name, tableEntry.name,
+                                     type.name))
                 if value != tableEntry.getValue():
                     if self.updateEntry(tableEntry, tableEntry.getSequenceNumber()+1, value):
                         if self.outgoingReceiver is not None:
                             self.outgoingReceiver.offerOutgoingUpdate(tableEntry)
                     tableEntry.fireListener(self.listenerManager)
 
-    def putOutgoingEntry(self, tableEntry, value):
-        with self.entry_lock:
-            #TODO Validate type
-            if value != tableEntry.getValue():
-                if self.updateEntry(tableEntry, tableEntry.getSequenceNumber()+1, value):
-                    if self.outgoingReceiver is not None:
-                        self.outgoingReceiver.offerOutgoingUpdate(tableEntry)
-                tableEntry.fireListener(self.listenerManager)
-
     def offerIncomingAssignment(self, entry):
+        '''Called when a remote NT wants to assign a value to our table'''
         with self.entry_lock:
             tableEntry = self.namedEntries.get(entry.name)
             if self.addEntry(entry):
@@ -117,6 +116,7 @@ class AbstractNetworkTableEntryStore:
                     self.incomingReceiver.offerOutgoingAssignment(tableEntry)
 
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
+        '''Called when a remote NT wants to update a value in our table'''
         with self.entry_lock:
             if self.updateEntry(entry, sequenceNumber, value):
                 entry.fireListener(self.listenerManager)

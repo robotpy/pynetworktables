@@ -90,23 +90,11 @@ class NetworkTableNode:
             with self.entryStore.entry_lock: #must sync because use get
                 entry = self.entryStore.getEntry(name)
                 if entry is not None:
-                    self.entryStore.putOutgoingEntry(entry, type.internalizeValue(entry.name, value, entry.getValue()))
+                    self.entryStore.putOutgoing(name, type, type.internalizeValue(name, value, entry.getValue()))
                 else:
                     self.entryStore.putOutgoing(name, type, type.internalizeValue(name, value, None))
         else:
             self.entryStore.putOutgoing(name, type, value)
-
-    def putValueEntry(self, entry, value):
-        """Put a value into a specific entry
-        :param entry: the entry to associate with the given value
-        :param value: the actual value of the entry
-        """
-        entryType = entry.getType()
-        if isinstance(entryType, ComplexEntryType):
-            with self.entryStore.entry_lock: #must sync because use get
-                self.entryStore.putOutgoingEntry(entry, entryType.internalizeValue(entry.name, value, entry.getValue()))
-        else:
-            self.entryStore.putOutgoingEntry(entry, value)
 
     def getValue(self, name):
         #TODO don't allow get of complex types

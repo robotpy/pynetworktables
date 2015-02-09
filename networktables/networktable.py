@@ -2,6 +2,7 @@
 import threading
 
 from networktables2 import (
+    DefaultEntryTypes,
     NetworkTableClient,
     NetworkTableServer,
     SocketStreamFactory,
@@ -373,7 +374,6 @@ class NetworkTable:
 
     def __init__(self, path, provider):
         self.path = path
-        self.entryCache = NetworkTable._EntryCache(path, self)
         self.absoluteKeyCache = NetworkTable._KeyCache(path)
         self.provider = provider
         self.node = provider.getNode()
@@ -404,20 +404,6 @@ class NetworkTable:
             if cachedValue is None:
                 cachedValue = self.path + NetworkTable.PATH_SEPARATOR + key
                 self.cache[key] = cachedValue
-            return cachedValue
-
-    class _EntryCache:
-        def __init__(self, path, table):
-            self.path = path
-            self.table = table
-            self.cache = {}
-
-        def get(self, key):
-            cachedValue = self.cache.get(key)
-            if cachedValue is None:
-                cachedValue = self.table.node.getEntryStore().getEntry(self.table.absoluteKeyCache.get(key))
-                if cachedValue is not None:
-                    self.cache[key] = cachedValue
             return cachedValue
 
     def addConnectionListener(self, listener, immediateNotify=False):
@@ -510,10 +496,6 @@ class NetworkTable:
                 self.node.removeTableListener(adapter)
             del adapters[:]
 
-    def getEntry(self, key):
-        with self.mutex:
-            return self.entryCache.get(key)
-
     def getSubTable(self, key):
         """Returns the table at the specified key. If there is no table at the
         specified key, it will create a new table
@@ -551,7 +533,7 @@ class NetworkTable:
         :param key: the key
         :param value: the value
         """
-        self.putValue(key, float(value)) #TODO cache
+        self.node.putValue(self.absoluteKeyCache.get(key), float(value), DefaultEntryTypes.DOUBLE)
 
     def getNumber(self, key, defaultValue=_defaultValueSentry):
         """Returns the key that the name maps to. If the key is None, it will
@@ -578,7 +560,7 @@ class NetworkTable:
         :param key: the key
         :param value: the value
         """
-        self.putValue(key, str(value))
+        self.node.putValue(self.absoluteKeyCache.get(key), str(value), DefaultEntryTypes.STRING)
 
     def getString(self, key, defaultValue=_defaultValueSentry):
         """Returns the key that the name maps to. If the key is None, it will
@@ -605,7 +587,7 @@ class NetworkTable:
         :param key: the key
         :param value: the value
         """
-        self.putValue(key, bool(value))
+        self.node.putValue(self.absoluteKeyCache.get(key), bool(value), DefaultEntryTypes.BOOLEAN)
 
     def getBoolean(self, key, defaultValue=_defaultValueSentry):
         """Returns the key that the name maps to. If the key is None, it will
@@ -646,11 +628,7 @@ class NetworkTable:
         :param key: the key name
         :param value: the value to be put
         """
-        entry = self.entryCache.get(key)
-        if entry is not None:
-            self.node.putValueEntry(entry, value)
-        else:
-            self.node.putValue(self.absoluteKeyCache.get(key), value)
+        self.node.putValue(self.absoluteKeyCache.get(key), value)
 
     def getValue(self, key, defaultValue=_defaultValueSentry):
         """Returns the key that the name maps to. If the key is None, it will
