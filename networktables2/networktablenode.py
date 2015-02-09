@@ -26,7 +26,9 @@ class NetworkTableNode:
         entry = self.entryStore.getEntry(name)
         if entry is None:
             raise KeyError(name)
-        return bool(entry.getValue())
+        if entry.getType() != DefaultEntryTypes.BOOLEAN:
+            raise TypeError("Cannot get boolean for '%s', is a %s" % (name, entry.getType().name))
+        return entry.getValue()
 
     def putDouble(self, name, value):
         self.putValue(name, value, type=DefaultEntryTypes.DOUBLE)
@@ -35,7 +37,9 @@ class NetworkTableNode:
         entry = self.entryStore.getEntry(name)
         if entry is None:
             raise KeyError(name)
-        return float(entry.getValue())
+        if entry.getType() != DefaultEntryTypes.DOUBLE:
+            raise TypeError("Cannot get number for '%s', is a %s" % (name, entry.getType().name))
+        return entry.getValue()
 
     def putString(self, name, value):
         self.putValue(name, value, type=DefaultEntryTypes.STRING)
@@ -44,7 +48,9 @@ class NetworkTableNode:
         entry = self.entryStore.getEntry(name)
         if entry is None:
             raise KeyError(name)
-        return str(entry.getValue())
+        if entry.getType() != DefaultEntryTypes.STRING:
+            raise TypeError("Cannot get string for '%s', is a %s" % (name, entry.getType().name))
+        return entry.getValue()
 
     def putComplex(self, name, value):
         self.putValue(name, value, type=value.getType())
@@ -56,7 +62,7 @@ class NetworkTableNode:
                 raise KeyError(name)
             entryType = entry.getType()
             if not isinstance(entryType, ComplexEntryType):
-                raise TypeError("'%s' is not a complex data type" % name)
+                raise TypeError("Cannot get complex data for '%s', is a %s" % (name, entryType.name))
             entryType.exportValue(name, entry.getValue(), externalData)
 
     def putValue(self, name, value, type=None):
