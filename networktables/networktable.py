@@ -647,9 +647,9 @@ class NetworkTable:
                 raise
             return defaultValue
     
-    def getAutoUpdateValue(self, key, defaultValue):
+    def getAutoUpdateValue(self, key, defaultValue, writeDefault=True):
         '''Returns an object that will be automatically updated when the
-        value is updated by networktables. 
+        value is updated by networktables.
         
         Does not work with complex types. If you modify the returned type,
         the value will NOT be written back to NetworkTables.
@@ -658,17 +658,24 @@ class NetworkTable:
         :type  key: str
         :param defaultValue: Default value to use if not in the table
         :type  defaultValue: any
+        :param writeDefault: If True, put the default value to the table,
+                             overwriting existing values
+        :type  writeDefault: bool
         
         :rtype: :class:`.AutoUpdateValue`
         
         .. versionadded:: 2015.1.3
         '''
         
-        try:
-            value = self.getValue(key)
-        except KeyError:
-            value = defaultValue
+        value = defaultValue
+        
+        if writeDefault:
             self.putValue(key, value)
+        else:
+            try:
+                value = self.getValue(key)
+            except KeyError:
+                self.putValue(key, value)
         
         with self.mutex:
             if self.autoListener is None:
