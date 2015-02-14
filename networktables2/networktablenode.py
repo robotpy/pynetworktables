@@ -30,16 +30,20 @@ class NetworkTableNode:
             raise TypeError("Cannot get boolean for '%s', is a %s" % (name, entry.getType().name))
         return entry.getValue()
 
-    def putDouble(self, name, value):
+    def putNumber(self, name, value):
         self.putValue(name, value, type=DefaultEntryTypes.DOUBLE)
 
-    def getDouble(self, name):
+    def getNumber(self, name):
         entry = self.entryStore.getEntry(name)
         if entry is None:
             raise KeyError(name)
         if entry.getType() != DefaultEntryTypes.DOUBLE:
             raise TypeError("Cannot get number for '%s', is a %s" % (name, entry.getType().name))
         return entry.getValue()
+
+    putDouble = putNumber
+    getDouble = getNumber
+
 
     def putString(self, name, value):
         self.putValue(name, value, type=DefaultEntryTypes.STRING)

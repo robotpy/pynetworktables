@@ -33,6 +33,15 @@ class NetworkTableConnectionListenerAdapter:
     def disconnected(self, remote):
         self.targetListener.disconnected(self.targetSource)
 
+class NetworkTableGlobalListenerAdapter:
+
+    def __init__(self, listener):
+        self.listener = listener
+        assert callable(self.listener)
+
+    def valueChanged(self, source, key, value, isNew):
+        self.listener(key, value, isNew)
+
 class NetworkTableKeyListenerAdapter:
     """An adapter that is used to filter value change notifications for a
     specific key
@@ -174,6 +183,7 @@ class NetworkTableProvider:
         """
         self.node = node
         self.tables = {}
+        self.global_listeners = {}
 
     def getRootTable(self):
         return self.getTable("")
@@ -195,6 +205,20 @@ class NetworkTableProvider:
         """close the backing network table node
         """
         self.node.stop()
+
+    def addGlobalListener(self, listener, immediateNotify):
+        adapter = self.global_listeners.get(listener)
+        if adapter is None:
+            adapter = NetworkTableGlobalListenerAdapter(listener)
+            self.global_listeners[listener] = adapter
+            self.node.addTableListener(adapter, immediateNotify)
+
+    def removeGlobalListener(self, listener):
+        adapter = self.global_listeners.get(listener)
+        if adapter is not None:
+            self.node.removeTableListener(adapter)
+            del self.global_listeners[listener]
+
 
 def _create_server_node(ipAddress, port):
     """Creates a network tables server node
@@ -371,6 +395,63 @@ class NetworkTable:
             if not key.startswith(NetworkTable.PATH_SEPARATOR):
                 key = NetworkTable.PATH_SEPARATOR + key
             return NetworkTable._staticProvider.getTable(key)
+
+    @staticmethod
+    def getGlobalTable():
+        """Returns an object that allows you to write values to raw network table
+        keys (which are paths with / separators).
+
+        This will automatically initialize network tables if it has not been
+        already.
+
+        .. warning:: Generally, you should not use this object. Prefer to use
+                     :meth:`getTable` instead and do operations on individual
+                     NetworkTables.
+
+        .. versionadded:: 2015.2.0
+
+        :rtype: :class:`.NetworkTableNode`
+        """
+        with NetworkTable._staticMutex:
+            if NetworkTable._staticProvider is None:
+                NetworkTable.initialize()
+            return NetworkTable._staticProvider.getNode()
+
+    @staticmethod
+    def addGlobalListener(listener, immediateNotify=True):
+        '''Adds a listener that will be notified when any key in any
+        NetworkTable is changed. The keys that are received using this
+        listener will be full NetworkTable keys. Most users will not
+        want to use this listener type.
+
+        The listener is called from the NetworkTables I/O thread, and should
+        return as quickly as possible.
+
+        This will automatically initialize network tables if it has not been
+        already.
+
+        :param listener: A callable that has this signature: `callable(key, value, isNew)`
+        :param immediateNotify: If True, the listener will be called immediately with the current values of the table
+
+        .. versionadded:: 2015.2.0
+
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended as we are not
+                     currently sure if deadlocks will occur
+        '''
+        with NetworkTable._staticMutex:
+            if NetworkTable._staticProvider is None:
+                NetworkTable.initialize()
+            NetworkTable._staticProvider.addGlobalListener(listener, immediateNotify)
+
+    @staticmethod
+    def removeGlobalListener(listener):
+        '''Removes a global listener
+
+        .. versionadded:: 2015.2.0
+        '''
+        with NetworkTable._staticMutex:
+            NetworkTable._staticProvider.removeGlobalListener(listener)
 
     def __init__(self, path, provider):
         self.path = path
