@@ -260,3 +260,4 @@ class WriteManager:
             elif (self.keepAliveDelay is not None and
                   (time.time()-self.lastWrite) > self.keepAliveDelay):
                 self.receiver.ensureAlive()
+                self.lastWrite = time.time()
