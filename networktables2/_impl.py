@@ -15,9 +15,11 @@ def sock_create_connection(address):
 
 
 # Call this before creating any NetworkTable objects
-def enable_lock_debugging():
+def enable_lock_debugging(sock_block_period=None):
     
     from . import _impl_debug
+    
+    _impl_debug.sock_block_period = sock_block_period
     
     g = globals()
     g['create_rlock'] = _impl_debug.create_tracked_rlock

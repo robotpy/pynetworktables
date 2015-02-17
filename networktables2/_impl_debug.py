@@ -9,6 +9,8 @@ import socket
 import threading
 import time
 
+# Number of seconds to block
+sock_block_period = None
 
 # List of locks that can be acquired from the main thread
 main_locks = [
@@ -131,12 +133,14 @@ class WrappedFile:
         
     def write(self, data):
         assert_not_locked('write')
-        time.sleep(1)
+        if sock_block_period:
+            time.sleep(sock_block_period)
         return self._file.write(data)
         
     def read(self, *args, **kwargs):
         assert_not_locked('read')
-        time.sleep(1)
+        if sock_block_period:
+            time.sleep(sock_block_period)
         return self._file.read(*args, **kwargs)
         
         
@@ -149,7 +153,8 @@ def blocking_sock_makefile(s, mode):
 
 def blocking_sock_create_connection(address):
     assert_not_locked('connect')
-    time.sleep(1)
+    if sock_block_period:
+        time.sleep(sock_block_period)
     return socket.create_connection(address)
 
 def _get_caller():
