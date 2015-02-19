@@ -6,6 +6,7 @@
 
    examples
    networktables
+   troubleshooting
 
 Indices and tables
 ==================
