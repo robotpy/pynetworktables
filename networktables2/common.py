@@ -83,6 +83,9 @@ class AbstractNetworkTableEntryStore:
         with self.entry_lock:
             tableEntry = self.namedEntries.get(name)
             if tableEntry is None:
+                if hasattr(type, 'internalizeValue'):
+                    value = type.internalizeValue(name, value, None)
+                
                 #TODO validate type
                 tableEntry = NetworkTableEntry(name, type, value)
                 if self.addEntry(tableEntry):
@@ -98,7 +101,12 @@ class AbstractNetworkTableEntryStore:
                     raise TypeError("Cannot put %s '%s', existing value in table is a %s" % (
                                      tableEntry.getType().name, tableEntry.name,
                                      type.name))
-                if value != tableEntry.getValue():
+                currentValue = tableEntry.getValue() 
+                if value != currentValue:
+                    
+                    if hasattr(type, 'internalizeValue'):
+                        value = type.internalizeValue(name, value, currentValue)
+                    
                     if self.updateEntry(tableEntry, tableEntry.getSequenceNumber()+1, value):
                         if self.outgoingReceiver is not None:
                             self.outgoingReceiver.offerOutgoingUpdate(tableEntry)

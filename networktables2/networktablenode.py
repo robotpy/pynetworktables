@@ -89,16 +89,8 @@ class NetworkTableNode:
                 raise ValueError("Cannot put a null value into networktables")
             else:
                 raise ValueError("Invalid Type")
-
-        if isinstance(type, ComplexEntryType):
-            with self.entryStore.entry_lock: #must sync because use get
-                entry = self.entryStore.getEntry(name)
-                if entry is not None:
-                    self.entryStore.putOutgoing(name, type, type.internalizeValue(name, value, entry.getValue()))
-                else:
-                    self.entryStore.putOutgoing(name, type, type.internalizeValue(name, value, None))
-        else:
-            self.entryStore.putOutgoing(name, type, value)
+        
+        self.entryStore.putOutgoing(name, type, value)
 
     def getValue(self, name):
         #TODO don't allow get of complex types
