@@ -144,6 +144,13 @@ class BooleanArray(ArrayData):
     '''
     
     BOOLEAN_ARRAY_RAW_ID = 0x10
+    
+    @staticmethod
+    def from_list(iterable):
+        '''Convenience method to construct a BooleanArray from a list'''
+        a = BooleanArray()
+        a.extend(iterable)
+        return a
 
     def __init__(self):
         ArrayData.__init__(self, BooleanArray.TYPE)
@@ -178,6 +185,13 @@ class NumberArray(ArrayData):
     '''
     
     NUMBER_ARRAY_RAW_ID = 0x11
+    
+    @staticmethod
+    def from_list(iterable):
+        '''Convenience method to construct a NumberArray from a list'''
+        a = NumberArray()
+        a.extend(iterable)
+        return a
 
     def __init__(self):
         ArrayData.__init__(self, NumberArray.TYPE)
@@ -212,6 +226,13 @@ class StringArray(ArrayData):
     '''
     
     STRING_ARRAY_RAW_ID = 0x12
+    
+    @staticmethod
+    def from_list(iterable):
+        '''Convenience method to construct a StringArray from a list'''
+        a = StringArray()
+        a.extend(iterable)
+        return a
 
     def __init__(self):
         ArrayData.__init__(self, StringArray.TYPE)
