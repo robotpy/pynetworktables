@@ -199,7 +199,7 @@ class AutoUpdateListener:
     def _valueChanged(self, table, key, value, isNew):
         auto_value = self.keys.get(key)
         if auto_value is not None:
-            auto_value.value = value
+            auto_value._AutoUpdateValue__value = value
 
 
 class NetworkTableProvider:
