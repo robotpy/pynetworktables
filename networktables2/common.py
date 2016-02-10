@@ -69,6 +69,22 @@ class AbstractNetworkTableEntryStore:
     def updateEntry(self, entry, sequenceNumber, value):
         raise NotImplementedError
 
+    def updateEntryFlags(self, entry, flags):
+        with self.entry_lock:
+            if entry.getId() in self.idEntries:
+                self.idEntries[entry.getId()].flags = flags
+
+    def deleteEntry(self, entry):
+        with self.entry_lock:
+            if entry.getId() in self.idEntries:
+                del self.namedEntries[self.idEntries[entry.getId()].name]
+                del self.idEntries[entry.getId()]
+
+    def deleteAll(self):
+        with self.entry_lock:
+            self.idEntries.clear()
+            self.namedEntries.clear()
+
     def putOutgoing(self, name, type, value):
         """Stores the given value under the given name and queues it for
         transmission to the remote end.
@@ -131,6 +147,30 @@ class AbstractNetworkTableEntryStore:
                 if self.incomingReceiver is not None:
                     self.incomingReceiver.offerOutgoingUpdate(entry)
 
+    def offerIncomingFlagsUpdate(self, entry, flags):
+        '''Called when a remote NT wants to update value flags in our table'''
+        with self.entry_lock:
+            if self.updateEntryFlags(entry, flags):
+                #entry.fireListener(self.listenerManager)
+                if self.incomingReceiver is not None:
+                    self.incomingReceiver.offerOutgoingFlagsUpdate(entry)
+
+    def offerIncomingDelete(self, entry):
+        '''Called when a remote NT wants to delete value in our table'''
+        with self.entry_lock:
+            if self.deleteEntry(entry):
+                #entry.fireListener(self.listenerManager)
+                if self.incomingReceiver is not None:
+                    self.incomingReceiver.offerOutgoingDelete(entry)
+
+    def offerIncomingDeleteAll(self):
+        '''Called when a remote NT wants to delete all values in our table'''
+        with self.entry_lock:
+            if self.deleteAll():
+                #entry.fireListener(self.listenerManager)
+                if self.incomingReceiver is not None:
+                    self.incomingReceiver.offerOutgoingDeleteAll()
+
     def notifyEntries(self, table, listener):
         """Called to say that a listener should notify the listener manager
         of all of the entries
@@ -166,8 +206,12 @@ class WriteManager:
 
         self.incomingAssignmentQueue = []
         self.incomingUpdateQueue = []
+        self.incomingFlagsUpdateQueue = []
+        self.incomingDeleteQueue = []
         self.outgoingAssignmentQueue = []
         self.outgoingUpdateQueue = []
+        self.outgoingFlagsUpdateQueue = []
+        self.outgoingDeleteQueue = []
 
         self.thread = None
         self.running = False
@@ -221,6 +265,36 @@ class WriteManager:
                 warnings.warn("update queue overflowed. decrease the rate at which you update entries or increase the write buffer size", ResourceWarning)
                 self.transactionsCondition.notify()
 
+    def offerOutgoingFlagsUpdate(self, entry):
+        # This is always called with the entry lock held
+        with self.transactionsLock:
+            self.incomingFlagsUpdateQueue.append(entry)
+            if len(self.incomingFlagsUpdateQueue) >= self.queueSize:
+                warnings.warn("flags update queue overflowed. decrease the rate at which you update entries or increase the write buffer size", ResourceWarning)
+                self.transactionsCondition.notify()
+
+    def offerOutgoingDelete(self, entry):
+        # This is always called with the entry lock held
+
+        # Mark entry as dirty to avoid duplicate updates
+        if entry.isDirty:
+            return
+        entry.makeDirty()
+
+        with self.transactionsLock:
+            self.incomingDeleteQueue.append(entry)
+            if len(self.incomingDeleteQueue) >= self.queueSize:
+                warnings.warn("delete queue overflowed. decrease the rate at which you update entries or increase the write buffer size", ResourceWarning)
+                self.transactionsCondition.notify()
+
+    def offerOutgoingDeleteAll(self):
+        # This is always called with the entry lock held
+        with self.transactionsLock:
+            self.incomingDeleteQueue.append(None)
+            if len(self.incomingDeleteQueue) >= self.queueSize:
+                warnings.warn("delete queue overflowed. decrease the rate at which you update entries or increase the write buffer size", ResourceWarning)
+                self.transactionsCondition.notify()
+
     def run(self):
         """the periodic method that sends all buffered transactions
         """
@@ -239,6 +313,11 @@ class WriteManager:
     
                 self.incomingUpdateQueue, self.outgoingUpdateQueue = \
                     self.outgoingUpdateQueue, self.incomingUpdateQueue
+
+                self.incomingFlagsUpdateQueue, self.outgoingFlagsUpdateQueue = \
+                    self.outgoingFlagsUpdateQueue, self.incomingFlagsUpdateQueue
+                self.incomingDeleteQueue, self.outgoingDeleteQueue = \
+                    self.outgoingDeleteQueue, self.incomingDeleteQueue
             
             # Decision: Choose to lock/unlock the entry lock quickly, instead
             #           of one big lock. This allows the main thread to not
@@ -256,8 +335,22 @@ class WriteManager:
                     entry.makeClean()
                     transactions.append(entry.getUpdateBytes())
                 
+            for entry in self.outgoingFlagsUpdateQueue:
+                with self.entryStore.entry_lock:
+                    transactions.append(entry.getFlagsUpdateBytes())
+
+            for entry in self.outgoingDeleteQueue:
+                if entry is None:
+                    transactions.append(CLEAR_ENTRIES.getBytes(0xD06CB27A))
+                    continue
+                with self.entryStore.entry_lock:
+                    entry.makeClean()
+                    transactions.append(entry.getDeleteBytes())
+
             del self.outgoingAssignmentQueue[:]
             del self.outgoingUpdateQueue[:]
+            del self.outgoingFlagsUpdateQueue[:]
+            del self.outgoingDeleteQueue[:]
     
             for entry in transactions:
                 self.receiver.sendEntry(entry)

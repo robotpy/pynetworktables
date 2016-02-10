@@ -1,4 +1,5 @@
 import struct as _struct
+from . import leb128 as _leb128
 
 from .connection import BadMessageError
 
@@ -54,20 +55,35 @@ class BasicEntryType(NetworkTableEntryType):
 class StringEntryType(NetworkTableEntryType):
     """a string type
     """
-    LEN = _struct.Struct('>H')
-
     def __init__(self, id, name):
         NetworkTableEntryType.__init__(self, id, name)
 
     def writeBytes(self, b, value):
         s = value.encode('utf-8')
-        b.extend(self.LEN.pack(len(s)))
+        b.extend(_leb128.encode_uleb128(len(s)))
         b.extend(s)
 
     def readValue(self, rstream):
-        sLen = rstream.readStruct(self.LEN)[0]
+        sLen = _leb128.read_uleb128(rstream)
         try:
             return rstream.read(sLen).decode('utf-8')
+        except UnicodeDecodeError as e:
+            raise BadMessageError(e)
+
+class BytesEntryType(NetworkTableEntryType):
+    """a bytes type
+    """
+    def __init__(self, id, name):
+        NetworkTableEntryType.__init__(self, id, name)
+
+    def writeBytes(self, b, value):
+        b.extend(_leb128.encode_uleb128(len(value)))
+        b.extend(value)
+
+    def readValue(self, rstream):
+        sLen = _leb128.read_uleb128(rstream)
+        try:
+            return rstream.read(sLen)
         except UnicodeDecodeError as e:
             raise BadMessageError(e)
 
@@ -75,10 +91,12 @@ class DefaultEntryTypes:
     BOOLEAN_RAW_ID = 0x00
     DOUBLE_RAW_ID = 0x01
     STRING_RAW_ID = 0x02
+    BYTES_RAW_ID = 0x03
 
     BOOLEAN = BasicEntryType(BOOLEAN_RAW_ID, "Boolean", '?')
     DOUBLE = BasicEntryType(DOUBLE_RAW_ID, "Double", '>d')
     STRING = StringEntryType(STRING_RAW_ID, "String")
+    BYTES = BytesEntryType(BYTES_RAW_ID, "Bytes")
 
 class ComplexEntryType(NetworkTableEntryType):
     def __init__(self, id, name):
@@ -265,6 +283,7 @@ class NetworkTableEntryTypeManager:
         self.registerType(DefaultEntryTypes.BOOLEAN)
         self.registerType(DefaultEntryTypes.DOUBLE)
         self.registerType(DefaultEntryTypes.STRING)
+        self.registerType(DefaultEntryTypes.BYTES)
         self.registerType(BooleanArray.TYPE)
         self.registerType(NumberArray.TYPE)
         self.registerType(StringArray.TYPE)

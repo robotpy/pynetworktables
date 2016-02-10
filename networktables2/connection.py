@@ -52,9 +52,9 @@ class NetworkTableConnection:
             self.wstream.write(KEEP_ALIVE.getBytes())
             self.wstream.flush()
 
-    def sendClientHello(self):
+    def sendClientHello(self, clientName):
         with self.write_lock:
-            self.wstream.write(CLIENT_HELLO.getBytes(PROTOCOL_REVISION))
+            self.wstream.write(CLIENT_HELLO.getBytes(clientName, PROTOCOL_REVISION))
             self.wstream.flush()
 
     def sendServerHelloComplete(self):
@@ -65,6 +65,16 @@ class NetworkTableConnection:
     def sendProtocolVersionUnsupported(self):
         with self.write_lock:
             self.wstream.write(PROTOCOL_UNSUPPORTED.getBytes(PROTOCOL_REVISION))
+            self.wstream.flush()
+
+    def sendServerHello(self, serverName, flags):
+        with self.write_lock:
+            self.wstream.write(SERVER_HELLO.getBytes(serverName, flags))
+            self.wstream.flush()
+
+    def sendClientHelloComplete(self):
+        with self.write_lock:
+            self.wstream.write(CLIENT_HELLO_COMPLETE.getBytes())
             self.wstream.flush()
 
     def sendEntry(self, entryBytes):
@@ -78,32 +88,74 @@ class NetworkTableConnection:
             adapter.keepAlive()
             
         elif messageType == CLIENT_HELLO.HEADER:
-            protocolRevision = CLIENT_HELLO.read(self.rstream)[0]
-            adapter.clientHello(protocolRevision)
-            
-        elif messageType == SERVER_HELLO_COMPLETE.HEADER:
-            adapter.serverHelloComplete()
+            clientName, (protocolRevision,) = CLIENT_HELLO.read(self.rstream)
+            adapter.clientHello(clientName, protocolRevision)
             
         elif messageType == PROTOCOL_UNSUPPORTED.HEADER:
             protocolRevision = PROTOCOL_UNSUPPORTED.read(self.rstream)[0]
             adapter.protocolVersionUnsupported(protocolRevision)
             
+        elif messageType == SERVER_HELLO_COMPLETE.HEADER:
+            adapter.serverHelloComplete()
+            
+        elif messageType == SERVER_HELLO.HEADER:
+            serverName, (flags,) = SERVER_HELLO.read(self.rstream)
+            adapter.serverHello(serverName, flags)
+            
+        elif messageType == CLIENT_HELLO_COMPLETE.HEADER:
+            adapter.clientHelloComplete()
+            
         elif messageType == ENTRY_ASSIGNMENT.HEADER:
-            entryName, (typeId, entryId, entrySequenceNumber) = \
+            entryName, (typeId, entryId, entrySequenceNumber, entryFlags) = \
                     ENTRY_ASSIGNMENT.read(self.rstream)
             entryType = self.typeManager.getType(typeId)
             if entryType is None:
                 raise BadMessageError("Unknown data type: 0x%x" % typeId)
             value = entryType.readValue(self.rstream)
-            adapter.offerIncomingAssignment(NetworkTableEntry(entryName, entryType, value, id=entryId, sequenceNumber=entrySequenceNumber))
+            adapter.offerIncomingAssignment(NetworkTableEntry(entryName, entryType, value, entryFlags, id=entryId, sequenceNumber=entrySequenceNumber))
             
         elif messageType == FIELD_UPDATE.HEADER:
-            entryId, entrySequenceNumber = FIELD_UPDATE.read(self.rstream)
+            entryId, entrySequenceNumber, typeId = FIELD_UPDATE.read(self.rstream)
+            entryType = self.typeManager.getType(typeId)
+            if entryType is None:
+                raise BadMessageError("Unknown data type: 0x%x" % typeId)
+            value = entryType.readValue(self.rstream)
             entry = adapter.getEntry(entryId)
             if entry is None:
-                raise BadMessageError("Received update for unknown entry id: %d " % entryId)
-            value = entry.getType().readValue(self.rstream)
+                #raise BadMessageError("Received update for unknown entry id: %d " % entryId)
+                return
             adapter.offerIncomingUpdate(entry, entrySequenceNumber, value)
+            
+        elif messageType == FLAGS_UPDATE.HEADER:
+            entryId, entryFlags = FLAGS_UPDATE.read(self.rstream)
+            entry = adapter.getEntry(entryId)
+            if entry is None:
+                #raise BadMessageError("Received update for unknown entry id: %d " % entryId)
+                return
+            adapter.offerIncomingFlagsUpdate(entry, entryFlags)
+            
+        elif messageType == ENTRY_DELETE.HEADER:
+            entryId = FLAGS_UPDATE.read(self.rstream)[0]
+            entry = adapter.getEntry(entryId)
+            if entry is None:
+                return
+            adapter.offerIncomingDelete(entry)
+            
+        elif messageType == CLEAR_ENTRIES.HEADER:
+            magic = CLEAR_ENTRIES.read(self.rstream)[0]
+            if magic != 0xD06CB27A:
+                return
+            adapter.offerIncomingDeleteAll()
+            
+        elif messageType == EXECUTE_RPC.HEADER:
+            params, (entryId, rpcSequenceNumber) = \
+                    EXECUTE_RPC.read(self.rstream)
+            adapter.offerIncomingExecuteRpc(entryId, rpcSequenceNumber, params)
+            
+        elif messageType == RPC_RESPONSE.HEADER:
+            results, (entryId, rpcSequenceNumber) = \
+                    EXECUTE_RPC.read(self.rstream)
+            adapter.offerIncomingRpcResponse(entryId, rpcSequenceNumber, results)
             
         else:
             raise BadMessageError("Unknown Network Table Message Type: %s" % (messageType))

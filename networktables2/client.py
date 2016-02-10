@@ -154,7 +154,7 @@ class ClientConnectionAdapter:
                 self.readManager = ReadManager(self,
                         self.connection, name="Client Connection Reader Thread")
                 self.readManager.start()
-                self.connection.sendClientHello()
+                self.connection.sendClientHello("client")
                 self.gotoState(CONNECTED_TO_SERVER)
             except IOError:
                 self.close() #make sure to clean everything up if we fail to connect
@@ -180,7 +180,7 @@ class ClientConnectionAdapter:
     def keepAlive(self):
         pass
 
-    def clientHello(self, protocolRevision):
+    def clientHello(self, clientName, protocolRevision):
         raise BadMessageError("A client should not receive a client hello message")
 
     def protocolVersionUnsupported(self, protocolRevision):
@@ -201,11 +201,32 @@ class ClientConnectionAdapter:
                                       "complete once and only after it has connected " +
                                       "to the server (state is %s)" % self.connectionState)
 
+    def serverHello(self, serverName, flags):
+        pass
+
+    def clientHelloComplete(self):
+        raise BadMessageError("A client should not receive a client hello complete message")
+
     def offerIncomingAssignment(self, entry):
         self.entryStore.offerIncomingAssignment(entry)
 
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
         self.entryStore.offerIncomingUpdate(entry, sequenceNumber, value)
+
+    def offerIncomingFlagsUpdate(self, entry, flags):
+        self.entryStore.offerIncomingFlagsUpdate(entry, flags)
+
+    def offerIncomingDelete(self, entry):
+        self.entryStore.offerIncomingDelete(entry)
+
+    def offerIncomingDeleteAll(self):
+        self.entryStore.offerIncomingDeleteAll()
+
+    def offerIncomingExecuteRpc(self, entryId, rpcSequenceNumber, params):
+        pass
+
+    def offerIncomingRpcResponse(self, entryId, rpcSequenceNumber, results):
+        pass
 
     def sendEntry(self, entryBytes):
         try:
@@ -276,6 +297,7 @@ class ClientNetworkTableEntryStore(AbstractNetworkTableEntryStore):
                     
         for entry in transaction:
             connection.sendEntry(entry)
+        connection.sendClientHelloComplete()
         connection.flush()
 
 class NetworkTableClient(NetworkTableNode):

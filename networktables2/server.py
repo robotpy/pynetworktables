@@ -100,7 +100,7 @@ class ServerConnectionAdapter:
     def keepAlive(self):
         pass # just let it happen
 
-    def clientHello(self, protocolRevision):
+    def clientHello(self, clientName, protocolRevision):
         if self.connectionState != GOT_CONNECTION_FROM_CLIENT:
             raise BadMessageError("A server should not receive a client hello after it has already connected/entered an error state")
         if protocolRevision != PROTOCOL_REVISION:
@@ -116,11 +116,32 @@ class ServerConnectionAdapter:
     def serverHelloComplete(self):
         raise BadMessageError("A server should not receive a server hello complete message")
 
+    def serverHello(self, serverName, flags):
+        raise BadMessageError("A client should not receive a client hello complete message")
+
+    def clientHelloComplete(self):
+        pass
+
     def offerIncomingAssignment(self, entry):
         self.entryStore.offerIncomingAssignment(entry)
 
     def offerIncomingUpdate(self, entry, sequenceNumber, value):
         self.entryStore.offerIncomingUpdate(entry, sequenceNumber, value)
+
+    def offerIncomingFlagsUpdate(self, entry, flags):
+        self.entryStore.offerIncomingFlagsUpdate(entry, flags)
+
+    def offerIncomingDelete(self, entry):
+        self.entryStore.offerIncomingDelete(entry)
+
+    def offerIncomingDeleteAll(self):
+        self.entryStore.offerIncomingDeleteAll()
+
+    def offerIncomingExecuteRpc(self, entryId, rpcSequenceNumber, params):
+        pass
+
+    def offerIncomingRpcResponse(self, entryId, rpcSequenceNumber, results):
+        pass
 
     def getEntry(self, id):
         return self.entryStore.getEntry(id)
@@ -190,6 +211,7 @@ class ServerNetworkTableEntryStore(AbstractNetworkTableEntryStore):
             for entry in self.namedEntries.values():
                 transaction.append(entry.getAssignmentBytes())
                 
+        connection.sendServerHello("server", 0)
         for entry in transaction:
             connection.sendEntry(entry)
         connection.sendServerHelloComplete()

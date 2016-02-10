@@ -8,7 +8,7 @@ class NetworkTableEntry:
     UNKNOWN_ID = 0xFFFF
     HALF_OF_CHAR = 32768
 
-    def __init__(self, name, type, value, id=UNKNOWN_ID, sequenceNumber=0):
+    def __init__(self, name, type, value, flags=0, id=UNKNOWN_ID, sequenceNumber=0):
         """Create a new entry with the given id, name, sequence number, type
         and value
         :param name: the name of the entry
@@ -24,6 +24,7 @@ class NetworkTableEntry:
         self.value = value
         self.isNew = True
         self.isDirty = False
+        self.flags = flags
 
     def getId(self):
         """:returns: the id of the entry
@@ -78,15 +79,23 @@ class NetworkTableEntry:
     def getAssignmentBytes(self):
         """Get bytes for an assignment message"""
         b = ENTRY_ASSIGNMENT.getBytes(self.name, self.type.id, self.id,
-                                      self.sequenceNumber)
+                                      self.sequenceNumber, self.flags)
         self.type.writeBytes(b, self.value)
         return b
         
     def getUpdateBytes(self):
         """Get bytes for an update message"""
-        b = FIELD_UPDATE.getBytes(self.id, self.sequenceNumber)
+        b = FIELD_UPDATE.getBytes(self.id, self.sequenceNumber, self.type.id)
         self.type.writeBytes(b, self.value)
         return b
+
+    def getFlagsUpdateBytes(self):
+        """Get bytes for a flags update message"""
+        return FLAGS_UPDATE.getBytes(self.id, self.flags)
+
+    def getDeleteBytes(self):
+        """Get bytes for a delete message"""
+        return ENTRY_DELETE.getBytes(self.id)
 
     def getSequenceNumber(self):
         """:returns: the current sequence number of the entry
@@ -113,6 +122,6 @@ class NetworkTableEntry:
         self.isNew = False
 
     def __str__(self):
-        return "Network Table %s entry: %s: %d - %d - %s" % \
+        return "Network Table %s entry: %s: %d - %d - %s - %d" % \
                 (self.type.name, self.name, self.id, self.sequenceNumber,
-                 self.value)
+                 self.value, self.flags)
