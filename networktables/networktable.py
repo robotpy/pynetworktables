@@ -187,16 +187,21 @@ class AutoUpdateValue:
 
 class AutoUpdateListener:
     
-    def __init__(self, table):
+    def __init__(self):
         # no lock required if we use atomic operations (setdefault, get) on it
         self.keys = {}
-        table.addTableListener(self._valueChanged)
+        self.hasListener = False
+        
+    def init(self):
+        if not self.hasListener:
+            NetworkTable.addGlobalListener(self._valueChanged, False)
+            self.hasListener = True
         
     def createAutoValue(self, key, default):
         new_value = AutoUpdateValue(default)
         return self.keys.setdefault(key, new_value)
     
-    def _valueChanged(self, table, key, value, isNew):
+    def _valueChanged(self, key, value, isNew):
         auto_value = self.keys.get(key)
         if auto_value is not None:
             auto_value._AutoUpdateValue__value = value
@@ -248,7 +253,6 @@ class NetworkTableProvider:
         if adapter is not None:
             self.node.removeTableListener(adapter)
             del self.global_listeners[listener]
-
 
 def _create_server_node(ipAddress, port):
     """Creates a network tables server node
@@ -305,6 +309,9 @@ class NetworkTable:
     _staticProvider = None
     _mode_fn = staticmethod(_create_server_node)
     
+    _queuedAutoUpdateValues = []
+    _autoListener = AutoUpdateListener()
+    
     port = DEFAULT_PORT
     ipAddress = None
 
@@ -326,6 +333,12 @@ class NetworkTable:
             NetworkTable._staticProvider = NetworkTableProvider(
                     NetworkTable._mode_fn(NetworkTable.ipAddress,
                                           NetworkTable.port))
+            
+            if NetworkTable._queuedAutoUpdateValues:
+                q = NetworkTable._queuedAutoUpdateValues
+                NetworkTable._queuedAutoUpdateValues = None
+                for args in q:
+                    NetworkTable.getGlobalAutoUpdateValue(*args)
 
     @staticmethod
     def setTableProvider(provider):
@@ -482,6 +495,38 @@ class NetworkTable:
         '''
         with NetworkTable._staticMutex:
             NetworkTable._staticProvider.removeGlobalListener(listener)
+            
+    @staticmethod
+    def getGlobalAutoUpdateValue(key, defaultValue, writeDefault):
+        '''Global version of getAutoUpdateValue. This function will not initialize
+        NetworkTables.
+        
+        .. versionadded:: 2015.3.0
+        '''
+        with NetworkTable._staticMutex:
+            
+            autoListener = NetworkTable._autoListener
+            
+            if NetworkTable._staticProvider is None:
+                NetworkTable._queuedAutoUpdateValues.append((key, defaultValue, writeDefault))
+                gtable = None
+            else:
+                # initialize auto listener if not already done
+                autoListener.init()
+                gtable = NetworkTable._staticProvider.getNode()
+        
+        value = defaultValue
+        
+        if gtable:
+            if writeDefault:
+                gtable.putValue(key, value)
+            else:
+                try:
+                    value = gtable.getValue(key)
+                except KeyError:
+                    gtable.putValue(key, value)
+        
+        return autoListener.createAutoValue(key, value)
 
     def __init__(self, path, provider):
         self.path = path
@@ -491,8 +536,6 @@ class NetworkTable:
         self.connectionListenerMap = {}
         self.listenerMap = {}
         self.mutex = threading.RLock()
-        
-        self.autoListener = None
 
     def __str__(self):
         return "NetworkTable: "+self.path
@@ -777,22 +820,7 @@ class NetworkTable:
         
         .. versionadded:: 2015.1.3
         '''
-        
-        value = defaultValue
-        
-        if writeDefault:
-            self.putValue(key, value)
-        else:
-            try:
-                value = self.getValue(key)
-            except KeyError:
-                self.putValue(key, value)
-        
-        with self.mutex:
-            if self.autoListener is None:
-                self.autoListener = AutoUpdateListener(self)
-        
-        return self.autoListener.createAutoValue(key, value)
+        return NetworkTable.getGlobalAutoUpdateValue(self.absoluteKeyCache.get(key), defaultValue, writeDefault)
 
     # Deprecated Methods
     putInt = putNumber
