@@ -11,6 +11,7 @@ from networktables2 import (
 
 __all__ = ["NetworkTable"]
 
+
 class NetworkTableConnectionListenerAdapter:
     """An adapter that changes the source of a connection event
     """
@@ -805,8 +806,9 @@ class NetworkTable:
         '''Returns an object that will be automatically updated when the
         value is updated by networktables.
         
-        Does not work with complex types. If you modify the returned type,
-        the value will NOT be written back to NetworkTables.
+        .. note:: Does not work with complex types. If you modify the
+                  returned type, the value will NOT be written back to
+                  NetworkTables.
         
         :param key: the key name
         :type  key: str
@@ -817,6 +819,8 @@ class NetworkTable:
         :type  writeDefault: bool
         
         :rtype: :class:`.AutoUpdateValue`
+        
+        .. seealso:: :func:`.ntproperty` is a better alternative to use
         
         .. versionadded:: 2015.1.3
         '''

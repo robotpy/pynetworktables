@@ -27,3 +27,13 @@ Auto Listener Example
 ---------------------
 
 .. literalinclude:: ../samples/auto_listener.py
+
+Global Listener Example
+---------------------
+
+.. literalinclude:: ../samples/global_listener.py
+
+ntproperty Example
+------------------
+
+.. literalinclude:: ../samples/ntproperty_client.py

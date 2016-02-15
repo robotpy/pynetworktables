@@ -2,6 +2,57 @@
 from networktables2 import StringArray
 from .networktable import NetworkTable
 
+
+def ntproperty(key, defaultValue, writeDefault=True):
+    '''
+        A property that you can add to your classes to access NetworkTables
+        variables like a normal variable.
+        
+        :param key: A full NetworkTables key (eg ``/SmartDashboard/foo``)
+        :type  key: str
+        :param defaultValue: Default value to use if not in the table
+        :type  defaultValue: any
+        :param writeDefault: If True, put the default value to the table,
+                             overwriting existing values
+        :type  writeDefault: bool
+        
+        Example usage::
+        
+            class Foo(object):
+            
+                something = ntproperty('/SmartDashboard/something', True)
+                
+                ...
+                
+                def do_thing(self):
+                    if self.something:    # reads from value
+                        ...
+                        
+                        self.something = False # writes value
+        
+        .. note:: Does not work with complex types.
+        
+                  Getting the value of this property should be reasonably
+                  fast, but setting the value will have just as much overhead
+                  as :meth:`.NetworkTable.putValue`
+                  
+        .. versionadded:: 2015.3.0
+    '''
+    ntvalue = NetworkTable.getGlobalAutoUpdateValue(key, defaultValue, writeDefault)
+    nttable = []
+    
+    def _get(_):
+        return ntvalue.value
+    
+    def _set(_, value):
+        if not nttable:
+            nttable.append(NetworkTable.getGlobalTable())
+        nttable[0].putValue(key, value)
+    
+    return property(fget=_get, fset=_set)
+
+
+
 class ChooserControl(object):
     '''
         Interacts with a :class:`wpilib.sendablechooser.SendableChooser`
