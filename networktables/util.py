@@ -48,6 +48,7 @@ def ntproperty(key, defaultValue, writeDefault=True):
         if not nttable:
             nttable.append(NetworkTable.getGlobalTable())
         nttable[0].putValue(key, value)
+        ntvalue._AutoUpdateValue__value = value
     
     return property(fget=_get, fset=_set)
 
