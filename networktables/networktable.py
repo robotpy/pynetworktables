@@ -9,6 +9,8 @@ from networktables2 import (
     SocketServerStreamProvider
 )
 
+from networktables2._dashboard import DashboardSocketStreamFactory
+
 __all__ = ["NetworkTable"]
 
 
@@ -276,6 +278,18 @@ def _create_client_node(ipAddress, port):
     client = NetworkTableClient(SocketStreamFactory(ipAddress, port))
     return client
     
+def _create_dashboard_node(ipAddress, port):
+    """Creates a network tables client node with a dashboard listener
+    
+    :param ipAddress: the IP address configured by the user
+    :param port: the port configured by the user
+    :returns: a new node that can back a network table
+    """
+    if ipAddress is not None:
+        raise ValueError("IP address should not be set in dashboard mode")
+    client = NetworkTableClient(DashboardSocketStreamFactory(ipAddress, port))
+    return client
+    
 def _create_test_node(ipAddress, port):
     
     class NullStreamFactory:
@@ -370,6 +384,26 @@ class NetworkTable:
         with NetworkTable._staticMutex:
             NetworkTable.checkInit()
             NetworkTable._mode_fn = staticmethod(_create_client_node)
+            
+    @staticmethod
+    def setDashboardMode():
+        """This will allow the driver station to connect to your code and
+        receive the IP address of the robot from it. You must not call
+        :meth:`setClientMode`, :meth:`setTeam`, or :meth:`setIPAddress`
+        
+        .. warning:: Only use this if your pynetworktables client is running
+                     on the same host as the driver station, or nothing will
+                     happen! 
+                     
+                     This mode will only connect to the robot if the FRC
+                     Driver Station is able to connect to the robot and the
+                     LabVIEW dashboard has been disabled.
+        
+        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
+        """
+        with NetworkTable._staticMutex:
+            NetworkTable.checkInit()
+            NetworkTable._mode_fn = staticmethod(_create_dashboard_node)
             
     @staticmethod
     def setTestMode():
