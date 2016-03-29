@@ -99,7 +99,7 @@ class ClientConnectionAdapter:
     
     def getRemoteAddress(self):
         with self.connectionLock:
-            if self.isConnected():
+            if self.connection is not None:
                 try:
                     return self.connection.stream.getRemoteAddress()
                 except Exception:
