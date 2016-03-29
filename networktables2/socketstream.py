@@ -16,6 +16,9 @@ class SocketStream:
 
     def getOutputStream(self):
         return _impl.sock_makefile(self.conn, 'wb')
+    
+    def getRemoteAddress(self):
+        return self.conn.getpeername()[0]
 
     def close(self):
         self.conn.close()

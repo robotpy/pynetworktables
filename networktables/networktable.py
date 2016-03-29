@@ -496,6 +496,17 @@ class NetworkTable:
 
     def __str__(self):
         return "NetworkTable: "+self.path
+    
+    def getRemoteAddress(self):
+        '''
+            Only returns a valid address if connected to the server. If
+            this is a server, returns None
+            
+            :returns: IP address of server or None
+            
+            .. versionadded:: 2015.3.2
+        '''
+        return self.node.getRemoteAddress()
 
     def isConnected(self):
         return self.node.isConnected()

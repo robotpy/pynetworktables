@@ -96,6 +96,14 @@ class ClientConnectionAdapter:
         """:returns: the state of the connection
         """
         return self.connectionState
+    
+    def getRemoteAddress(self):
+        with self.connectionLock:
+            if self.isConnected():
+                try:
+                    return self.connection.stream.getRemoteAddress()
+                except Exception:
+                    pass
 
     def isConnected(self):
         """:returns: if the client is connected to the server
@@ -332,6 +340,9 @@ class NetworkTableClient(NetworkTableNode):
     def stop(self):
         self.writeManager.stop()
         self.close()
+        
+    def getRemoteAddress(self):
+        return self.adapter.getRemoteAddress()
 
     def isConnected(self):
         return self.adapter.isConnected()
