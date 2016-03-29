@@ -33,7 +33,7 @@ def valueChanged(table, key, value, isNew):
 class ConnectionListener:
 
     def connected(self, table):
-        print("Connected", table)
+        print("Connected to", table.getRemoteAddress(), table)
 
     def disconnected(self, table):
         print("Disconnected", table)

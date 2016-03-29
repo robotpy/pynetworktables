@@ -114,6 +114,9 @@ class NetworkTableNode:
         """
         pass
     
+    def getRemoteAddress(self):
+        return None
+    
     def isConnected(self):
         raise NotImplementedError()
 
@@ -147,5 +150,5 @@ class NetworkTableNode:
         for listener in self.tableListeners:
             try:
                 listener.valueChanged(None, key, value, isNew)
-            except:
+            except Exception:
                 logger.exception('Exception in valueChanged callback!')
