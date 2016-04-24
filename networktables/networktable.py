@@ -151,9 +151,10 @@ class AutoUpdateValue:
     of this.
     """
     
-    __slots__ = ['__value']
+    __slots__ = ['key', '__value']
     
-    def __init__(self, default):
+    def __init__(self, key, default):
+        self.key = key
         self.__value = default
         
     def get(self):
@@ -201,7 +202,7 @@ class AutoUpdateListener:
             self.hasListener = True
         
     def createAutoValue(self, key, default):
-        new_value = AutoUpdateValue(default)
+        new_value = AutoUpdateValue(key, default)
         return self.keys.setdefault(key, new_value)
     
     def _valueChanged(self, key, value, isNew):
