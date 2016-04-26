@@ -80,8 +80,8 @@ class DashboardSocketStreamFactory(SocketStreamFactory):
         self.port = port
         
         self.lock = threading.Condition()
-        self.thread = threading.Thread(target=self._run, name="DashboardListener",
-                                       daemon=True)
+        self.thread = threading.Thread(target=self._run, name="DashboardListener")
+        self.thread.daemon = True
         self.thread.start()
         
         logger.info("Dashboard mode enabled, listening for DS comms")
