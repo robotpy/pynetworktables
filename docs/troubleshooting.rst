@@ -24,7 +24,7 @@ Code to do that looks like this::
 
 
 Yes, I know it says `setIPAddress`... it will accept a hostname also. If you
-are team 1234, then the hostname would be 'roborio-1234.local'. Make sure you
+are team 1234, then the hostname would be 'roborio-1234-frc.local'. Make sure you
 have an mDNS client installed on the coprocessor (like avahi)!
 
 How to tell if a connection is made
