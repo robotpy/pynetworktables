@@ -81,7 +81,7 @@ class NetworkTableNode:
                 type = DefaultEntryTypes.BOOLEAN
             elif isinstance(value, (float, int)):
                 type = DefaultEntryTypes.DOUBLE
-            elif isinstance(value, str):
+            elif isinstance(value, basestring):
                 type = DefaultEntryTypes.STRING
             elif isinstance(value, ComplexData):
                 type = value.getType()
