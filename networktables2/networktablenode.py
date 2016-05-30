@@ -3,6 +3,11 @@ from .type import DefaultEntryTypes, ComplexData, ComplexEntryType
 import logging
 logger = logging.getLogger('nt')
 
+try:
+    str_instance = basestring
+except NameError:
+    str_instance = str
+
 __all__ = ["NetworkTableNode"]
 
 class NetworkTableNode:
@@ -81,7 +86,7 @@ class NetworkTableNode:
                 type = DefaultEntryTypes.BOOLEAN
             elif isinstance(value, (float, int)):
                 type = DefaultEntryTypes.DOUBLE
-            elif isinstance(value, basestring):
+            elif isinstance(value, str_instance):
                 type = DefaultEntryTypes.STRING
             elif isinstance(value, ComplexData):
                 type = value.getType()
