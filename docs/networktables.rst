@@ -1,31 +1,25 @@
 API Reference
 =============
 
-.. autoclass:: networktables.networktable.NetworkTable
+NetworkTables API
+-----------------
+
+.. autoclass:: networktables.NetworkTables
     :members:
     :undoc-members:
 
-.. autoclass:: networktables.networktable.AutoUpdateValue
+NetworkTable Instances
+----------------------
+
+.. autoclass:: networktables.NetworkTable
     :members:
     :undoc-members:
-
-Types
------
-
-.. autoclass:: networktables2.type.BooleanArray
-    :members:
-    :undoc-members:
-    :show-inheritance:
+    :exclude-members: initialize, shutdown, setClientMode, setServerMode, setTeam, setIPAddress, setPort, setPersistentFilename, setNetworkIdentity, globalDeleteAll, flush, setUpdateRate, setWriteFlushPeriod, savePersistent, loadPersistent, setDashboardMode, setTestMode, getTable, getGlobalTable, addGlobalListener, removeGlobalListener, getGlobalAutoUpdateValue, addConnectionListener, removeConnectionListener, getRemoteAddress, isConnected, isServer,  setWriteFlushPeriod
     
-.. autoclass:: networktables2.type.NumberArray
+
+.. autoclass:: networktables.autovalue.AutoUpdateValue
     :members:
     :undoc-members:
-    :show-inheritance:
-    
-.. autoclass:: networktables2.type.StringArray
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 Utilities
 ---------

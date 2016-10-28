@@ -1,860 +1,898 @@
 
-import threading
-
-from networktables2 import (
-    DefaultEntryTypes,
-    NetworkTableClient,
-    NetworkTableServer,
-    SocketStreamFactory,
-    SocketServerStreamProvider
-)
-
-from networktables2._dashboard import DashboardSocketStreamFactory
-
 __all__ = ["NetworkTable"]
 
+# TODO: in 2018, remove this circular import
+from .networktables import NetworkTables as _NT
 
-class NetworkTableConnectionListenerAdapter:
-    """An adapter that changes the source of a connection event
-    """
-
-    def __init__(self, targetSource, targetListener):
-        """
-        :param targetSource: the source where the event will appear to come
-                             from
-        :param targetListener: the listener where events will be forwarded
-        """
-        self.targetSource = targetSource
-        self.targetListener = targetListener
-        
-        assert callable(self.targetListener.connected)
-        assert callable(self.targetListener.disconnected)
+from ntcore.constants import (
+    NT_BOOLEAN,
+    NT_DOUBLE,
+    NT_STRING,
+    NT_RAW,
+    NT_BOOLEAN_ARRAY,
+    NT_DOUBLE_ARRAY,
+    NT_STRING_ARRAY,
     
-    def connected(self, remote):
-        self.targetListener.connected(self.targetSource)
-
-    def disconnected(self, remote):
-        self.targetListener.disconnected(self.targetSource)
-
-class NetworkTableGlobalListenerAdapter:
-
-    def __init__(self, listener):
-        self.listener = listener
-        assert callable(self.listener)
-
-    def valueChanged(self, source, key, value, isNew):
-        self.listener(key, value, isNew)
-
-class NetworkTableKeyListenerAdapter:
-    """An adapter that is used to filter value change notifications for a
-    specific key
-    """
-
-    def __init__(self, relativeKey, fullKey, targetSource, targetListener):
-        """Create a new adapter
-        
-        :param relativeKey: the name of the key relative to the table (this
-                            is what the listener will receiver as the key)
-        :param fullKey: the full name of the key in the NetworkTableNode
-        :param targetSource: the source that events passed to the target
-                             listener will appear to come from
-        :param targetListener: the callable where events are forwarded to
-        """
-        assert callable(targetListener)
-        self.relativeKey = relativeKey
-        self.fullKey = fullKey
-        self.targetSource = targetSource
-        self.targetListener = targetListener
-
-    def valueChanged(self, source, key, value, isNew):
-        if key == self.fullKey:
-            self.targetListener(self.targetSource,
-                                self.relativeKey, value, isNew)
-
-class NetworkTableListenerAdapter:
-    """An adapter that is used to filter value change notifications and make
-    the path relative to the NetworkTable
-    """
-
-    def __init__(self, prefix, targetSource, targetListener):
-        """Create a new adapter
-        
-        :param prefix: the prefix that will be filtered/removed from the
-                       beginning of the key
-        :param targetSource: the source that events passed to the target
-                             listener will appear to come from
-        :param targetListener: the callable where events are forwarded to
-        """
-        assert callable(targetListener)
-        self.prefix = prefix
-        self.targetSource = targetSource
-        self.targetListener = targetListener
-
-    def valueChanged(self, source, key, value, isNew):
-        #TODO use string cache
-        if key.startswith(self.prefix):
-            relativeKey = key[len(self.prefix):]
-            if NetworkTable.PATH_SEPARATOR in relativeKey:
-                return
-            self.targetListener(self.targetSource, relativeKey,
-                                value, isNew)
-
-class NetworkTableSubListenerAdapter:
-    """An adapter that is used to filter sub table change notifications and
-    make the path relative to the NetworkTable
-    """
-
-    def __init__(self, prefix, targetSource, targetListener):
-        """Create a new adapter
-        
-        :param prefix: the prefix of the current table
-        :param targetSource: the source that events passed to the target
-                             listener will appear to come from
-        :param targetListener: the callable where events are forwarded to
-        """
-        assert callable(targetListener)
-        self.prefix = prefix
-        self.targetSource = targetSource
-        self.targetListener = targetListener
-        self.notifiedTables = set()
-
-    def valueChanged(self, source, key, value, isNew):
-        #TODO use string cache
-        if not key.startswith(self.prefix):
-            return
-
-        key = key[len(self.prefix):]
-
-        if key.startswith(NetworkTable.PATH_SEPARATOR):
-            key = key[len(NetworkTable.PATH_SEPARATOR):]
-
-        #TODO implement sub table listening better
-        keysplit = key.split(NetworkTable.PATH_SEPARATOR)
-        if len(keysplit) < 2:
-            return
-
-        subTableKey = keysplit[0]
-
-        if subTableKey in self.notifiedTables:
-            return
-
-        self.notifiedTables.add(subTableKey)
-        self.targetListener(self.targetSource, subTableKey,
-                self.targetSource.getSubTable(subTableKey), True)
-
-class AutoUpdateValue:
-    """Holds a value from NetworkTables, and changes it as new entries
-    come in. Updates to this value are NOT passed on to NetworkTables.
+    NT_PERSISTENT,
     
-    Do not create this object directly, as it only holds the value. 
-    Use :meth:`.NetworkTable.getAutoUpdateValue` to obtain an instance
-    of this.
-    """
-    
-    __slots__ = ['key', '__value']
-    
-    def __init__(self, key, default):
-        self.key = key
-        self.__value = default
-        
-    def get(self):
-        '''Returns the value held by this object'''
-        return self.__value
-    
-    @property
-    def value(self):
-        return self.__value
-    
-    # Comparison operators et al
-    
-    def __lt__(self, other):
-        raise TypeError("< not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    def __le__(self, other):
-        raise TypeError("<= not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    def __eq__(self, other):
-        raise TypeError("== not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    def __ne__(self, other):
-        raise TypeError("!= not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    def __gt__(self, other):
-        raise TypeError("> not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    def __ge__(self, other):
-        raise TypeError(">= not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    
-    def __bool__(self):
-        raise TypeError("< not allowed on AutoUpdateValue objects. Use the .value attribute instead")
-    
-    def __hash__(self):
-        raise TypeError("__hash__ not allowed on AutoUpdateValue objects")
-    
-    def __repr__(self):
-        return '<AutoUpdateValue: %s>' % (self.__value.__repr__(), )
+    NT_NOTIFY_IMMEDIATE,
+    NT_NOTIFY_LOCAL,
+    NT_NOTIFY_NEW,
+    NT_NOTIFY_DELETE,
+    NT_NOTIFY_UPDATE,
+    NT_NOTIFY_FLAGS
+)
 
-class AutoUpdateListener:
-    
-    def __init__(self):
-        # no lock required if we use atomic operations (setdefault, get) on it
-        self.keys = {}
-        self.hasListener = False
-        
-    def init(self):
-        if not self.hasListener:
-            NetworkTable.addGlobalListener(self._valueChanged, False)
-            self.hasListener = True
-        
-    def createAutoValue(self, key, default):
-        new_value = AutoUpdateValue(key, default)
-        return self.keys.setdefault(key, new_value)
-    
-    def _valueChanged(self, key, value, isNew):
-        auto_value = self.keys.get(key)
-        if auto_value is not None:
-            auto_value._AutoUpdateValue__value = value
+_is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
+
+from ntcore.value import Value
+
+import logging
+logger = logging.getLogger('nt')
 
 
-class NetworkTableProvider:
-    """Provides a NetworkTable for a given NetworkTableNode
-    """
+class _defaultValueSentry:
+    pass
 
-    def __init__(self, node):
-        """Create a new NetworkTableProvider for a given NetworkTableNode
-        
-        :param node: the node that handles the actual network table
-        """
-        self.node = node
-        self.tables = {}
-        self.global_listeners = {}
-
-    def getRootTable(self):
-        return self.getTable("")
-
-    def getTable(self, key):
-        table = self.tables.get(key)
-        if table is None:
-            table = NetworkTable(key, self)
-            self.tables[key] = table
-        return table
-
-    def getNode(self):
-        """:returns: the Network Table node that backs the Tables returned by
-        this provider
-        """
-        return self.node
-
-    def close(self):
-        """close the backing network table node
-        """
-        self.node.stop()
-
-    def addGlobalListener(self, listener, immediateNotify):
-        adapter = self.global_listeners.get(listener)
-        if adapter is None:
-            adapter = NetworkTableGlobalListenerAdapter(listener)
-            self.global_listeners[listener] = adapter
-            self.node.addTableListener(adapter, immediateNotify)
-
-    def removeGlobalListener(self, listener):
-        adapter = self.global_listeners.get(listener)
-        if adapter is not None:
-            self.node.removeTableListener(adapter)
-            del self.global_listeners[listener]
-
-def _create_server_node(ipAddress, port):
-    """Creates a network tables server node
-    
-    :param ipAddress: the IP address configured by the user
-    :param port: the port configured by the user
-    :returns: a new node that can back a network table
-    """
-    return NetworkTableServer(SocketServerStreamProvider(port))
-
-def _create_client_node(ipAddress, port):
-    """Creates a network tables client node
-    
-    :param ipAddress: the IP address configured by the user
-    :param port: the port configured by the user
-    :returns: a new node that can back a network table
-    """
-    if ipAddress is None:
-        raise ValueError("IP address cannot be None when in client mode")
-    client = NetworkTableClient(SocketStreamFactory(ipAddress, port))
-    return client
-    
-def _create_dashboard_node(ipAddress, port):
-    """Creates a network tables client node with a dashboard listener
-    
-    :param ipAddress: the IP address configured by the user
-    :param port: the port configured by the user
-    :returns: a new node that can back a network table
-    """
-    if ipAddress is not None:
-        raise ValueError("IP address should not be set in dashboard mode")
-    client = NetworkTableClient(DashboardSocketStreamFactory(ipAddress, port))
-    return client
-    
-def _create_test_node(ipAddress, port):
-    
-    class NullStreamFactory:
-        def createStream(self):
-            return None
-        
-    return NetworkTableClient(NullStreamFactory())
-    
-    
 class NetworkTable:
-    """
-    This is the primary object that you will use when interacting with
-    NetworkTables. You should not directly create a NetworkTable object,
-    but instead use the :meth:`getTable` method to create an appropriate
-    object instead.
+    '''
+        This is a NetworkTable instance, it allows you to interact with
+        NetworkTables in a table-based manner. You should not directly
+        create a NetworkTable object, but instead use
+        :meth:`.NetworkTables.getTable` to retrieve a NetworkTable instance.
+        
+        For example, to interact with the SmartDashboard::
 
-    For example, to interact with the SmartDashboard::
-
-        from networktables import NetworkTable
-        sd = NetworkTable.getTable('SmartDashboard')
-
-        sd.putNumber('someNumber', 1234)
-        ...
-
-    """
-
-    #: The path separator for sub-tables and keys
+            from networktables import NetworkTables
+            sd = NetworkTables.getTable('SmartDashboard')
+    
+            sd.putNumber('someNumber', 1234)
+            ...
+            
+        .. seealso::
+           - The examples in the documentation.
+           - :class:`.NetworkTables`
+    '''
+    
     PATH_SEPARATOR = '/'
-    #: The default port that network tables operates on
-    DEFAULT_PORT = 1735
-
-    _staticProvider = None
-    _mode_fn = staticmethod(_create_server_node)
     
-    _queuedAutoUpdateValues = []
-    _autoListener = AutoUpdateListener()
+    # These static aliases are deprecated and will be removed in 2018!
     
-    port = DEFAULT_PORT
-    ipAddress = None
-
-    _staticMutex = threading.RLock()
-
-    class _defaultValueSentry:
-        pass
-
-    @staticmethod
-    def checkInit():
-        with NetworkTable._staticMutex:
-            if NetworkTable._staticProvider is not None:
-                raise RuntimeError("Network tables has already been initialized")
-
-    @staticmethod
-    def initialize():
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable._staticProvider = NetworkTableProvider(
-                    NetworkTable._mode_fn(NetworkTable.ipAddress,
-                                          NetworkTable.port))
-            
-            if NetworkTable._queuedAutoUpdateValues:
-                q = NetworkTable._queuedAutoUpdateValues
-                NetworkTable._queuedAutoUpdateValues = None
-                for args in q:
-                    NetworkTable.getGlobalAutoUpdateValue(*args)
-
-    @staticmethod
-    def setTableProvider(provider):
-        """set the table provider for static network tables methods
+    initialize = _NT.initialize
+    shutdown = _NT.shutdown
+    setClientMode = _NT.setClientMode
+    setServerMode = _NT.setServerMode
+    setTeam = _NT.setTeam
+    setIPAddress = _NT.setIPAddress
+    setPort = _NT.setPort
+    setPersistentFilename = _NT.setPersistentFilename
+    setNetworkIdentity = _NT.setNetworkIdentity
+    globalDeleteAll = _NT.globalDeleteAll
+    flush = _NT.flush
+    setUpdateRate = _NT.setUpdateRate
+    setWriteFlushPeriod = _NT.setWriteFlushPeriod
+    savePersistent = _NT.savePersistent
+    loadPersistent = _NT.loadPersistent
+    setDashboardMode = _NT.setDashboardMode
+    setTestMode = _NT.setTestMode
+    getTable = _NT.getTable
+    getGlobalTable = _NT.getGlobalTable
+    addGlobalListener = _NT.addGlobalListener
+    removeGlobalListener = _NT.removeGlobalListener
+    getGlobalAutoUpdateValue = _NT.getGlobalAutoUpdateValue
+    
+    addConnectionListener = _NT.addConnectionListener
+    removeConnectionListener = _NT.removeConnectionListener
+    
+    getRemoteAddress = _NT.getRemoteAddress
+    isConnected = _NT.isConnected
+    isServer = _NT.isServer
+    
+    
+    def __init__(self, path, api):
         
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable._staticProvider = provider
-
-    @staticmethod
-    def setServerMode():
-        """set that network tables should be a server (this is the default)
-        
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable._mode_fn = staticmethod(_create_server_node)
-
-    @staticmethod
-    def setClientMode():
-        """set that network tables should be a client
-        
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable._mode_fn = staticmethod(_create_client_node)
-            
-    @staticmethod
-    def setDashboardMode():
-        """This will allow the driver station to connect to your code and
-        receive the IP address of the robot from it. You must not call
-        :meth:`setClientMode`, :meth:`setTeam`, or :meth:`setIPAddress`
-        
-        .. warning:: Only use this if your pynetworktables client is running
-                     on the same host as the driver station, or nothing will
-                     happen! 
-                     
-                     This mode will only connect to the robot if the FRC
-                     Driver Station is able to connect to the robot and the
-                     LabVIEW dashboard has been disabled.
-        
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable._mode_fn = staticmethod(_create_dashboard_node)
-            
-    @staticmethod
-    def setTestMode():
-        """Setup network tables to run in unit test mode
-        
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable._mode_fn = staticmethod(_create_test_node)
-
-    @staticmethod
-    def setTeam(team):
-        """set the team the robot is configured for (this will set the ip
-        address that network tables will connect to in client mode)
-        
-        :param team: the team number
-        
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        NetworkTable.setIPAddress("10.%d.%d.2" % divmod(team, 100))
-
-    @staticmethod
-    def setIPAddress(address):
-        """:param address: the adress that network tables will connect to in
-            client mode
-        
-        .. warning:: This must be called before :meth:`initalize` or :meth:`getTable`
-        """
-        with NetworkTable._staticMutex:
-            NetworkTable.checkInit()
-            NetworkTable.ipAddress = address
-
-    @staticmethod
-    def setWriteFlushPeriod(flushPeriod):
-        """Sets the period of time between writes to the network. 
-        
-        WPILib's networktables and SmartDashboard default to 100ms, we have
-        set it to 50ms instead for quicker response time. You should not set
-        this value too low, as it could potentially increase the volume of
-        data sent over the network.
-        
-        .. warning:: If you don't know what this setting affects, don't mess
-                     with it!
-        
-        :param latency: Write flush period in seconds (default is 0.050,
-                        or 50ms)
-        """
-        from networktables2.client import WriteManager
-        WriteManager.SLEEP_TIME = flushPeriod
-
-    @staticmethod
-    def getTable(key):
-        """Gets the table with the specified key. If the table does not exist,
-        a new table will be created.
-
-        This will automatically initialize network tables if it has not been
-        already
-
-        :param key: the key name
-        :returns: the network table requested
-        :rtype: :class:`NetworkTable`
-        """
-        with NetworkTable._staticMutex:
-            if NetworkTable._staticProvider is None:
-                NetworkTable.initialize()
-            if not key.startswith(NetworkTable.PATH_SEPARATOR):
-                key = NetworkTable.PATH_SEPARATOR + key
-            return NetworkTable._staticProvider.getTable(key)
-
-    @staticmethod
-    def getGlobalTable():
-        """Returns an object that allows you to write values to raw network table
-        keys (which are paths with / separators).
-
-        This will automatically initialize network tables if it has not been
-        already.
-
-        .. warning:: Generally, you should not use this object. Prefer to use
-                     :meth:`getTable` instead and do operations on individual
-                     NetworkTables.
-
-        .. versionadded:: 2015.2.0
-
-        :rtype: :class:`.NetworkTableNode`
-        """
-        with NetworkTable._staticMutex:
-            if NetworkTable._staticProvider is None:
-                NetworkTable.initialize()
-            return NetworkTable._staticProvider.getNode()
-
-    @staticmethod
-    def addGlobalListener(listener, immediateNotify=True):
-        '''Adds a listener that will be notified when any key in any
-        NetworkTable is changed. The keys that are received using this
-        listener will be full NetworkTable keys. Most users will not
-        want to use this listener type.
-
-        The listener is called from the NetworkTables I/O thread, and should
-        return as quickly as possible.
-
-        This will automatically initialize network tables if it has not been
-        already.
-
-        :param listener: A callable that has this signature: `callable(key, value, isNew)`
-        :param immediateNotify: If True, the listener will be called immediately with the current values of the table
-
-        .. versionadded:: 2015.2.0
-
-        .. warning:: You may call the NetworkTables API from within the
-                     listener, but it is not recommended as we are not
-                     currently sure if deadlocks will occur
-        '''
-        with NetworkTable._staticMutex:
-            if NetworkTable._staticProvider is None:
-                NetworkTable.initialize()
-            NetworkTable._staticProvider.addGlobalListener(listener, immediateNotify)
-
-    @staticmethod
-    def removeGlobalListener(listener):
-        '''Removes a global listener
-
-        .. versionadded:: 2015.2.0
-        '''
-        with NetworkTable._staticMutex:
-            NetworkTable._staticProvider.removeGlobalListener(listener)
-            
-    @staticmethod
-    def getGlobalAutoUpdateValue(key, defaultValue, writeDefault):
-        '''Global version of getAutoUpdateValue. This function will not initialize
-        NetworkTables.
-        
-        .. versionadded:: 2015.3.0
-        '''
-        with NetworkTable._staticMutex:
-            
-            autoListener = NetworkTable._autoListener
-            
-            if NetworkTable._staticProvider is None:
-                NetworkTable._queuedAutoUpdateValues.append((key, defaultValue, writeDefault))
-                gtable = None
-            else:
-                # initialize auto listener if not already done
-                autoListener.init()
-                gtable = NetworkTable._staticProvider.getNode()
-        
-        value = defaultValue
-        
-        if gtable:
-            if writeDefault:
-                gtable.putValue(key, value)
-            else:
-                try:
-                    value = gtable.getValue(key)
-                except KeyError:
-                    gtable.putValue(key, value)
-        
-        return autoListener.createAutoValue(key, value)
-
-    def __init__(self, path, provider):
+        #: Path of table without trailing slash
         self.path = path
-        self.absoluteKeyCache = NetworkTable._KeyCache(path)
-        self.provider = provider
-        self.node = provider.getNode()
-        self.connectionListenerMap = {}
-        self.listenerMap = {}
-        self.mutex = threading.RLock()
+        self._path = path + self.PATH_SEPARATOR
+        self._pathsz = len(self._path)
+            
+        self._api = api
+        
+        self._listeners = {}
 
     def __str__(self):
-        return "NetworkTable: "+self.path
+        return "NetworkTable: "+self._path
     
-    def getRemoteAddress(self):
-        '''
-            Only returns a valid address if connected to the server. If
-            this is a server, returns None
-            
-            :returns: IP address of server or None
-            
-            .. versionadded:: 2015.3.2
-        '''
-        return self.node.getRemoteAddress()
+    def __repr__(self):
+        return "<NetworkTable path=%s>" % self._path
 
-    def isConnected(self):
-        return self.node.isConnected()
-
-    def isServer(self):
-        return self.node.isServer()
-
-    class _KeyCache:
-        def __init__(self, path):
-            if path[-len(NetworkTable.PATH_SEPARATOR):] == NetworkTable.PATH_SEPARATOR:
-                path = path[:-len(NetworkTable.PATH_SEPARATOR)]
-            self.path = path
-            self.cache = {}
-
-        def get(self, key):
-            cachedValue = self.cache.get(key)
-            if cachedValue is None:
-                cachedValue = self.path + NetworkTable.PATH_SEPARATOR + key
-                self.cache[key] = cachedValue
-            return cachedValue
-
-    def addConnectionListener(self, listener, immediateNotify=False):
-        '''Adds a listener that will be notified when a new connection to a 
-        NetworkTables client/server is established.
-        
-        The listener is called from the NetworkTables I/O thread, and should
-        return as quickly as possible.
-        
-        :param listener: An object that has a 'connected' function and a
-                         'disconnected' function. Each function will be called
-                         with this NetworkTable object as the first parameter
-        :param immediateNotify: If True, the listener will be called immediately
-                                with the current values of the table
-        
-        .. warning:: You may call the NetworkTables API from within the
-                     listener, but it is not recommended as we are not
-                     currently sure if deadlocks will occur
-        '''
-        adapter = self.connectionListenerMap.get(listener)
-        if adapter is not None:
-            raise ValueError("Cannot add the same listener twice")
-        adapter = NetworkTableConnectionListenerAdapter(self, listener)
-        self.connectionListenerMap[listener] = adapter
-        self.node.addConnectionListener(adapter, immediateNotify)
-
-    def removeConnectionListener(self, listener):
-        '''Removes a connection listener
-        
-        :param listener: The object registered for connection notifications
-        '''
-        adapter = self.connectionListenerMap.get(listener)
-        if adapter is not None:
-            self.node.removeConnectionListener(adapter)
-            del self.connectionListenerMap[listener]
-
-    def addTableListener(self, listener, immediateNotify=False, key=None):
+    def addTableListener(self, listener, immediateNotify=False, key=None,
+                               localNotify=False):
         '''Adds a listener that will be notified when any key in this
         NetworkTable is changed, or when a specified key changes.
         
         The listener is called from the NetworkTables I/O thread, and should
         return as quickly as possible.
         
-        :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
+        :param listener: A callable with signature `callable(source, key, value, isNew)`
         :param immediateNotify: If True, the listener will be called immediately with the current values of the table
+        :type immediateNotify: bool
         :param key: If specified, the listener will only be called when this key is changed
-        
+        :type key: str
+        :param localNotify: True if you wish to be notified of changes made locally (default is False)
+        :type localNotify: bool
         
         .. warning:: You may call the NetworkTables API from within the
-                     listener, but it is not recommended as we are not
-                     currently sure if deadlocks will occur
+                     listener, but it is not recommended
+                     
+        .. versionchanged:: 2017.0.0
+           Added localNotify parameter (defaults to False, which is different from NT2)
+        
         '''
-        adapters = self.listenerMap.setdefault(listener, [])
-        if key is not None:
-            adapter = NetworkTableKeyListenerAdapter(
-                    key, self.absoluteKeyCache.get(key), self, listener)
+        flags = NT_NOTIFY_NEW | NT_NOTIFY_UPDATE
+        if immediateNotify:
+            flags |= NT_NOTIFY_IMMEDIATE
+        if localNotify:
+            flags |= NT_NOTIFY_LOCAL
+            
+        self.addTableListenerEx(listener, flags, key=key)
+        
+    def addTableListenerEx(self, listener, flags, key=None,
+                           paramIsNew=True):
+        '''Adds a listener that will be notified when any key in this
+        NetworkTable is changed, or when a specified key changes.
+        
+        The listener is called from the NetworkTables I/O thread, and should
+        return as quickly as possible.
+        
+        :param listener: A callable with signature `callable(source, key, value, param)`
+        :param flags: Bitmask of flags that indicate the types of notifications you wish to receive
+        :type flags: :class:`.NotifyFlags`
+        :param key: If specified, the listener will only be called when this key is changed
+        :type key: str
+        :param paramIsNew: If True, the listener fourth parameter is a boolean set to True
+                           if the listener is being called because of a new value in the
+                           table. Otherwise, the parameter is an integer of the raw
+                           `NT_NOTIFY_*` flags
+        :type paramIsNew: bool
+        
+        .. warning:: You may call the NetworkTables API from within the
+                     listener, but it is not recommended
+        
+        .. versionadded:: 2017.0.0
+        '''
+        
+        if key is None:
+            _pathsz = self._pathsz
+            if paramIsNew:
+                def callback(key_, value_, flags_):
+                    key_ = key_[_pathsz:]
+                    if '/' not in key_:
+                        listener(self, key_, value_, (flags_ & _is_new) != 0)
+            else:
+                def callback(key_, value_, flags_):
+                    key_ = key_[_pathsz:]
+                    if '/' not in key_:
+                        listener(self, key_, value_, flags_)
+    
+        # Hack: Internal flag used by addGlobalListener*
+        elif key == 0xdeadbeef:
+            if paramIsNew:
+                def callback(key_, value_, flags_):
+                    listener(key_, value_, (flags_ & _is_new) != 0)
+            else:
+                callback = listener
+                
         else:
-            adapter = NetworkTableListenerAdapter(
-                    self.path+self.PATH_SEPARATOR, self, listener)
-        adapters.append(adapter)
-        self.node.addTableListener(adapter, immediateNotify)
+            path = self._path + key
+            if paramIsNew:
+                def callback(key_, value_, flags_):
+                    if path == key_:
+                        listener(self, key, value_, (flags_ & _is_new) != 0)
+            else:
+                def callback(key_, value_, flags_):
+                    if path == key_:
+                        listener(self, key, value_, flags_)
+        
+        uid = self._api.addEntryListener(self._path, callback, flags)
+        self._listeners.setdefault(listener, []).append(uid)
 
-    def addSubTableListener(self, listener):
+    def addSubTableListener(self, listener, localNotify=False):
         '''Adds a listener that will be notified when any key in a subtable of
         this NetworkTable is changed.
         
         The listener is called from the NetworkTables I/O thread, and should
         return as quickly as possible.
         
-        :param listener: A callable that has this signature: `callable(source, key, value, isNew)`
+        :param listener: Callable to call when previously unseen table appears.
+                         Function signature is `callable(source, key, subtable, True)`
+        :param localNotify: True if you wish to be notified when local changes
+                            result in a new table
+        :type localNotify: bool
         
         .. warning:: You may call the NetworkTables API from within the
                      listener, but it is not recommended as we are not
                      currently sure if deadlocks will occur
+                     
+        .. versionchanged:: 2017.0.0
+           Added localNotify parameter
         '''
-        adapters = self.listenerMap.setdefault(listener, [])
-        adapter = NetworkTableSubListenerAdapter(self.path, self, listener)
-        adapters.append(adapter)
-        self.node.addTableListener(adapter, True)
+        notified_tables = {}
+        
+        def _callback(key, value, _):
+            key = key[self._pathsz:]
+            if '/' in key:
+                skey = key[:key.index('/')]
+                
+                o = object()
+                if notified_tables.setdefault(skey, o) is o:
+                    try:
+                        listener(self, skey, self.getSubTable(skey), True)
+                    except Exception:
+                        logger.warning("Unhandled exception in %s", listener, exc_info=True)
+        
+        flags = NT_NOTIFY_NEW | NT_NOTIFY_IMMEDIATE
+        if localNotify:
+            flags |= NT_NOTIFY_LOCAL
+        
+        uid = self._api.addEntryListener(self._path, _callback, flags)
+        self._listeners.setdefault(listener, []).append(uid)
+        
 
     def removeTableListener(self, listener):
         '''Removes a table listener
         
-        :param listener: callable that was passed to :meth:`addTableListener`
-                         or :meth:`addSubTableListener`
+        :param listener: callable that was passed to :meth:`.addTableListener`
+                         or :meth:`.addSubTableListener`
         '''
-        adapters = self.listenerMap.get(listener)
-        if adapters is not None:
-            for adapter in adapters:
-                self.node.removeTableListener(adapter)
-            del adapters[:]
+        uids = self._listeners.pop(listener, [])
+        for uid in uids:
+            self._api.removeEntryListener(uid)
 
     def getSubTable(self, key):
         """Returns the table at the specified key. If there is no table at the
         specified key, it will create a new table
 
         :param key: the key name
+        :type key: str
+        
         :returns: the networktable to be returned
-        :rtype: :class:`NetworkTable`
+        :rtype: :class:`.NetworkTable`
         """
-        with self.mutex:
-            return self.provider.getTable(self.absoluteKeyCache.get(key))
+        path = self._path + key
+        return _NT.getTable(path)
+        
 
     def containsKey(self, key):
-        """Checks the table and tells if it contains the specified key
-
-        :param key: the key to be checked
+        """Determines whether the given key is in this table.
+        
+        :param key: the key to search for
+        :type key: str
+        
+        :returns: True if the table as a value assigned to the given key
+        :rtype: bool
         """
-        with self.mutex:
-            return self.node.containsKey(self.absoluteKeyCache.get(key))
+        path = self._path + key
+        return self._api.getEntryValue(path) is not None
 
     def __contains__(self, key):
         return self.containsKey(key)
 
     def containsSubTable(self, key):
-        subtablePrefix = self.absoluteKeyCache.get(key)+self.PATH_SEPARATOR
-        for key in self.node.getEntryStore().keys():
-            if key.startswith(subtablePrefix):
-                return True
-        return False
+        """Determines whether there exists a non-empty subtable for this key
+        in this table.
+        
+        :param key: the key to search for (must not end with path separator)
+        :type key: str
+        
+        :returns: True if there is a subtable with the key which contains at least
+                  one key/subtable of its own
+        :rtype: bool
+        """
+        path = self._path + key + self.PATH_SEPARATOR
+        return len(self._api.getEntryInfo(path, 0)) > 0
+    
+    def getKeys(self, types=0):
+        """
+        :param types: bitmask of types; 0 is treated as a "don't care".
+        :type types: :class:`.EntryTypes`
+        
+        :returns: keys currently in the table
+        :rtype: list
+        
+        .. versionadded:: 2017.0.0
+        """
+        keys = []
+        for entry in self._api.getEntryInfo(self._path, types):
+            relative_key = entry.name[len(self._path):]
+            if self.PATH_SEPARATOR in relative_key:
+                continue
+            
+            keys.append(relative_key)
+        
+        return keys
+        
+    def getSubTables(self):
+        """:returns: subtables currently in the table
+        :rtype: list
+        
+        .. versionadded:: 2017.0.0
+        """
+        keys = set()
+        for entry in self._api.getEntryInfo(self._path, 0):
+            relative_key = entry.name[len(self._path):]
+            subst = relative_key.split(self.PATH_SEPARATOR)
+            if len(subst) == 1:
+                continue
+            
+            keys.add(subst[0])
+        
+        return list(keys)
+    
+    def setPersistent(self, key):
+        """Makes a key's value persistent through program restarts.
+        
+        :param key: the key to make persistent
+        :type key: str
+        
+        .. versionadded:: 2017.0.0
+        """
+        self.setFlags(key, NT_PERSISTENT)
+        
+    def clearPersistent(self, key):
+        """Stop making a key's value persistent through program restarts.
+        
+        :param key: the key name
+        :type key: str
+        
+        .. versionadded:: 2017.0.0
+        """
+        self.clearFlags(key, NT_PERSISTENT)
+    
+    def isPersistent(self, key):
+        """Returns whether the value is persistent through program restarts.
+        
+        :param key: the key name
+        :type key: str
+        
+        .. versionadded:: 2017.0.0
+        """
+        return self.getFlags(key) & NT_PERSISTENT != 0
+        
+    def delete(self, key):
+        """Deletes the specified key in this table.
+        
+        :param key: the key name
+        :type key: str
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        self._api.deleteEntry(path)
+    
+    def setFlags(self, key, flags):
+        """Sets entry flags on the specified key in this table.
+        
+        :param key: the key name
+        :type key: str
+        :param flags: the flags to set (bitmask)
+        :type flags: :class:`.EntryFlags`
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        self._api.setEntryFlags(path, self._api.getEntryFlags(path) | flags)
+        
+    def clearFlags(self, key, flags):
+        """Clears entry flags on the specified key in this table.
+        
+        :param key: the key name
+        :type key: str
+        :param flags: the flags to clear (bitmask)
+        :type flags: :class:`.EntryFlags`
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        self._api.setEntryFlags(path, self._api.getEntryFlags(path) & ~flags)
+        
+    def getFlags(self, key):
+        """Returns the entry flags for the specified key.
+        
+        :param key: the key name
+        :type key: str
+        :returns: the flags, or 0 if the key is not defined
+        :rtype: :class:`.EntryFlags`
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.getEntryFlags(path)
 
     def putNumber(self, key, value):
-        """Maps the specified key to the specified value in this table. The key
-        can not be None. The value can be retrieved by calling the get method
-        with a key that is equal to the original key.
-
-        :param key: the key
-        :param value: the value
+        """Put a number in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: int, float
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
         """
-        self.node.putValue(self.absoluteKeyCache.get(key), float(value), DefaultEntryTypes.DOUBLE)
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeDouble(value))
+
+    def setDefaultNumber(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: int, float
+        
+        :returns: False if the table key exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeDouble(defaultValue))
 
     def getNumber(self, key, defaultValue=_defaultValueSentry):
-        """Returns the key that the name maps to. If the key is None, it will
-        return the default value (or raise KeyError if a default value is not
-        provided).
-
-        :param key: the key name
-        :param defaultValue: the default value if the key is None.  If not
-                             specified, raises KeyError if the key is None.
-        :returns: the key
+        """Gets the number associated with the given name.
+        
+        :param key: the key to look up
+        :type key: str
+        :param defaultValue: the value to be returned if no value is found
+        :type defaultValue: int, float
+        
+        :returns: the value associated with the given key or the given default value
+                  if there is no value associated with the key
+        :rtype: int, float
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
         """
-        try:
-            return self.node.getDouble(self.absoluteKeyCache.get(key))
-        except KeyError:
-            if defaultValue is NetworkTable._defaultValueSentry:
-                raise
-            return defaultValue
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_DOUBLE:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
 
     def putString(self, key, value):
-        """Maps the specified key to the specified value in this table. The key
-        can not be None. The value can be retrieved by calling the get method
-        with a key that is equal to the original key.
-
-        :param key: the key
-        :param value: the value
+        """Put a string in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: str
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
         """
-        self.node.putValue(self.absoluteKeyCache.get(key), str(value), DefaultEntryTypes.STRING)
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeString(value))
+
+    def setDefaultString(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: str
+        
+        :returns: False if the table key exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeString(defaultValue))
 
     def getString(self, key, defaultValue=_defaultValueSentry):
-        """Returns the key that the name maps to. If the key is None, it will
-        return the default value (or raise KeyError if a default value is not
-        provided).
-
-        :param key: the key name
-        :param defaultValue: the default value if the key is None.  If not
-                             specified, raises KeyError if the key is None.
-        :returns: the key
+        """Gets the string associated with the given name. If the key does not
+        exist or is of different type, it will return the default value.
+        
+        :param key: the key to look up
+        :type key: str
+        :param defaultValue: the value to be returned if no value is found
+        :type defaultValue: str
+        
+        :returns: the value associated with the given key or the given default value
+                  if there is no value associated with the key
+        :rtype: str
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
         """
-        try:
-            return self.node.getString(self.absoluteKeyCache.get(key))
-        except KeyError:
-            if defaultValue is NetworkTable._defaultValueSentry:
-                raise
-            return defaultValue
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_STRING:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
 
     def putBoolean(self, key, value):
-        """Maps the specified key to the specified value in this table. The key
-        can not be None. The value can be retrieved by calling the get method
-        with a key that is equal to the original key.
-
-        :param key: the key
-        :param value: the value
+        """Put a boolean in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: bool
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
         """
-        self.node.putValue(self.absoluteKeyCache.get(key), bool(value), DefaultEntryTypes.BOOLEAN)
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeBoolean(value))
+
+    def setDefaultBoolean(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: bool
+        
+        :returns: False if the table key exists with a different type
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeBoolean(defaultValue))
 
     def getBoolean(self, key, defaultValue=_defaultValueSentry):
-        """Returns the key that the name maps to. If the key is None, it will
-        return the default value (or raise KeyError if a default value is not
-        provided).
+        """Gets the boolean associated with the given name. If the key does not
+        exist or is of different type, it will return the default value.
 
         :param key: the key name
+        :type key: str
         :param defaultValue: the default value if the key is None.  If not
                              specified, raises KeyError if the key is None.
+        :type defaultValue: bool
+        
         :returns: the key
-        """
-        try:
-            return self.node.getBoolean(self.absoluteKeyCache.get(key))
-        except KeyError:
-            if defaultValue is NetworkTable._defaultValueSentry:
-                raise
-            return defaultValue
-
-    def retrieveValue(self, key, externalValue):
-        """Retrieves the data associated with a complex data type (such as
-        arrays) and stores it.
+        :rtype: bool
         
-        For example, to retrieve a type which is an array of strings::
-        
-            val = networktables.StringArray()
-            nt.retrieveValue('some key', val)
-            
-        :param key: the key name
-        :param externalValue: The complex data member
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
         """
-        self.node.retrieveValue(self.absoluteKeyCache.get(key), externalValue)
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_BOOLEAN:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
 
+        return value.value
+
+    def putBooleanArray(self, key, value):
+        """Put a boolean array in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: list(bool)
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeBooleanArray(value))
+    
+    def setDefaultBooleanArray(self, key, defaultValue=_defaultValueSentry):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: list(bool)
+        
+        :returns: False if the table key exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeBooleanArray(defaultValue))
+        
+    def getBooleanArray(self, key, defaultValue=_defaultValueSentry):
+        """Returns the boolean array the key maps to. If the key does not exist or is
+        of different type, it will return the default value.
+        
+        :param key: the key to look up
+        :type key: str
+        :param defaultValue: the value to be returned if no value is found
+        :type defaultValue: list(bool)
+        
+        :returns: the value associated with the given key or the given default value
+                  if there is no value associated with the key
+        :rtype: list(bool)
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_BOOLEAN_ARRAY:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
+    
+    def putNumberArray(self, key, value):
+        """Put a number array in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: list(bool)
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeDoubleArray(value))
+    
+    def setDefaultNumberArray(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: list(int, float)
+        
+        :returns: False if the table key exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeDoubleArray(defaultValue))
+    
+    def getNumberArray(self, key, defaultValue=_defaultValueSentry):
+        """Returns the number array the key maps to. If the key does not exist or is
+        of different type, it will return the default value.
+        
+        :param key: the key to look up
+        :type key: str
+        :param defaultValue: the value to be returned if no value is found
+        :type defaultValue: list(int, float)
+        
+        :returns: the value associated with the given key or the given default value
+                  if there is no value associated with the key
+        :rtype: list(int, float)
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_DOUBLE_ARRAY:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
+        
+    def putStringArray(self, key, value):
+        """Put a string array in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: list(str)
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeStringArray(value))
+    
+    def setDefaultStringArray(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: list(str)
+        
+        :returns: False if the table key exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeStringArray(defaultValue))
+    
+    def getStringArray(self, key, defaultValue=_defaultValueSentry):
+        """Returns the string array the key maps to. If the key does not exist or is
+        of different type, it will return the default value.
+        
+        :param key: the key to look up
+        :type key: str
+        :param defaultValue: the value to be returned if no value is found
+        :type defaultValue: list(str)
+        
+        :returns: the value associated with the given key or the given default value
+                  if there is no value associated with the key
+        :rtype: list(str)
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_STRING_ARRAY:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
+        
+    def putRaw(self, key, value):
+        """Put a raw value (byte array) in the table
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: bytes
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setEntryValue(path, Value.makeRaw(value))
+        
+    def setDefaultRaw(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: bytes
+        
+        :returns: False if the table key exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, Value.makeRaw(defaultValue))
+    
+    def getRaw(self, key, defaultValue=_defaultValueSentry):
+        """Returns the raw value (byte array) the key maps to. If the key does not
+        exist or is of different type, it will return the default value.
+        
+        :param key: the key to look up
+        :type key: str
+        :param defaultValue: the value to be returned if no value is found
+        :type defaultValue: bytes
+        
+        :returns: the value associated with the given key or the given default value
+                  if there is no value associated with the key
+        :rtype: bytes
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
+        
+        .. versionadded:: 2017.0.0
+        """
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value or value.type != NT_RAW:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
+    
     def putValue(self, key, value):
-        """Maps the specified key to the specified value in this table. The key
-        can not be None. The value can be retrieved by calling the get method
-        with a key that is equal to the original key.
-
-        :param key: the key name
-        :param value: the value to be put
+        """Put a value in the table, trying to autodetect the NT type of
+        the value. Refer to this table to determine the type mapping:
+        
+        ======= ============================ =================================
+        PyType  NT Type                       Notes
+        ======= ============================ =================================
+        bool    :attr:`.EntryTypes.BOOLEAN`
+        int     :attr:`.EntryTypes.DOUBLE`
+        float   :attr:`.EntryTypes.DOUBLE`
+        str     :attr:`.EntryTypes.STRING`
+        bytes   :attr:`.EntryTypes.RAW`      Doesn't work in Python 2.7
+        list    Error                        Use `putXXXArray` methods instead
+        tuple   Error                        Use `putXXXArray` methods instead
+        ======= ============================ =================================
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param value: the value that will be assigned
+        :type value: bool, int, float, str, bytes
+        
+        :returns: False if the table key already exists with a different type
+        :rtype: bool
+        
+        .. versionadded:: 2017.0.0
         """
-        self.node.putValue(self.absoluteKeyCache.get(key), value)
+        value = Value.makeUnknown(value)
+        path = self._path + key
+        return self._api.setEntryValue(path, value)
+
+    def setDefaultValue(self, key, defaultValue):
+        """If the key doesn't currently exist, then the specified value will
+        be assigned to the key.
+        
+        :param key: the key to be assigned to
+        :type key: str
+        :param defaultValue: the default value to set if key doesn't exist.
+        :type defaultValue: bool, int, float, str, bytes
+        
+        :returns: False if the table key exists with a different type
+        
+        .. versionadded:: 2017.0.0
+        
+        .. seealso:: :meth:`.putValue`
+        """
+        defaultValue = Value.makeUnknown(defaultValue)
+        path = self._path + key
+        return self._api.setDefaultEntryValue(path, defaultValue)
 
     def getValue(self, key, defaultValue=_defaultValueSentry):
-        """Returns the key that the name maps to. If the key is None, it will
-        return the default value (or raise KeyError if a default value is not
-        provided).
-
-        :param key: the key name
-        :param defaultValue: the default value if the key is None.  If not
-                             specified, raises KeyError if the key is None.
-        :returns: the key
+        """Gets the value associated with a key. This supports all
+        NetworkTables types (unlike :meth:`putValue`).
+        
+        :param key: the key of the value to look up
+        :type key: str
+        :param defaultValue: The default value to return if the key doesn't exist
+        :type defaultValue: any
+        
+        :returns: the value associated with the given key
+        :rtype: bool, int, float, str, bytes, list
+        
+        :raises KeyError: If the value doesn't exist and no default is provided, or
+                          if it is the wrong type
+        
+        .. versionadded:: 2017.0.0
         """
-        try:
-            return self.node.getValue(self.absoluteKeyCache.get(key))
-        except KeyError:
-            if defaultValue is NetworkTable._defaultValueSentry:
-                raise
-            return defaultValue
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value:
+            if defaultValue != _defaultValueSentry:
+                return defaultValue
+            raise KeyError(path)
+
+        return value.value
     
     def getAutoUpdateValue(self, key, defaultValue, writeDefault=True):
         '''Returns an object that will be automatically updated when the
         value is updated by networktables.
-        
-        .. note:: Does not work with complex types. If you modify the
-                  returned type, the value will NOT be written back to
-                  NetworkTables.
         
         :param key: the key name
         :type  key: str
@@ -866,15 +904,14 @@ class NetworkTable:
         
         :rtype: :class:`.AutoUpdateValue`
         
+        .. note:: If you modify the returned value, the value will NOT
+                  be written back to NetworkTables. See :func:`.ntproperty`
+                  if you're looking for that sort of thing.
+        
         .. seealso:: :func:`.ntproperty` is a better alternative to use
         
         .. versionadded:: 2015.1.3
         '''
-        return NetworkTable.getGlobalAutoUpdateValue(self.absoluteKeyCache.get(key), defaultValue, writeDefault)
+        return _NT.getGlobalAutoUpdateValue(self._path + key, defaultValue, writeDefault)
 
-    # Deprecated Methods
-    putInt = putNumber
-    getInt = getNumber
-    putDouble = putNumber
-    getDouble = getNumber
     

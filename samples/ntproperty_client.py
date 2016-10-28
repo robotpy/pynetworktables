@@ -10,7 +10,7 @@
 
 import sys
 import time
-from networktables import NetworkTable
+from networktables import NetworkTables
 from networktables.util import ntproperty
 
 # To see messages from networktables, you must setup logging
@@ -23,9 +23,7 @@ if len(sys.argv) != 2:
 
 ip = sys.argv[1]
 
-NetworkTable.setIPAddress(ip)
-NetworkTable.setClientMode()
-NetworkTable.initialize()
+NetworkTables.initialize(server=ip)
 
 
 class SomeClient(object):

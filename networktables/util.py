@@ -1,7 +1,7 @@
 
-from networktables2 import StringArray
-from .networktable import NetworkTable
+from .networktables import NetworkTables
 
+from ntcore.value import Value, stringtype
 
 def ntproperty(key, defaultValue, writeDefault=True):
     '''
@@ -36,19 +36,34 @@ def ntproperty(key, defaultValue, writeDefault=True):
                   fast, but setting the value will have just as much overhead
                   as :meth:`.NetworkTable.putValue`
                   
+        .. warning:: When using python 2.x, the property must be assigned to
+                     a new-style class or it won't work!
+                  
         .. versionadded:: 2015.3.0
     '''
-    ntvalue = NetworkTable.getGlobalAutoUpdateValue(key, defaultValue, writeDefault)
+    
+    nt = NetworkTables
+    
+    ntvalue = nt.getGlobalAutoUpdateValue(key, defaultValue, writeDefault)
     nttable = []
+    
+    # Optimization: assume that the type will never change
+    if isinstance(defaultValue, bool):
+        mkv = Value.makeBoolean
+    elif isinstance(defaultValue, (int, float)):
+        mkv = Value.makeDouble
+    elif isinstance(defaultValue, stringtype):
+        mkv = Value.makeString
+    elif isinstance(defaultValue, bytes):
+        mkv = Value.makeRaw
+    else:
+        raise TypeError("Cannot determine type of ntproperty %s" % key)
     
     def _get(_):
         return ntvalue.value
     
     def _set(_, value):
-        if not nttable:
-            nttable.append(NetworkTable.getGlobalTable())
-        nttable[0].putValue(key, value)
-        ntvalue._AutoUpdateValue__value = value
+        nt._api.setEntryValue(key, mkv(value))
     
     return property(fget=_get, fset=_set)
 
@@ -70,7 +85,7 @@ class ChooserControl(object):
                                  selection changes. Signature: fn(value)
         '''
         
-        self.subtable = NetworkTable.getTable('SmartDashboard').getSubTable(key)
+        self.subtable = NetworkTables.getTable('SmartDashboard').getSubTable(key)
 
         self.on_choices = on_choices
         self.on_selected = on_selected
@@ -86,16 +101,11 @@ class ChooserControl(object):
     def getChoices(self):
         '''
             Returns the current choices. If the chooser doesn't exist, this
-            will return an empty array.
+            will return an empty tuple.
         
-            :rtype: :class:`.StringArray`
+            :rtype: tuple
         '''
-        choices = StringArray()
-        try:
-            self.subtable.retrieveValue('options', choices)
-        except KeyError:
-            pass
-        return choices
+        return self.subtable.getStringArray('options', ())
     
     def getSelected(self):
         '''

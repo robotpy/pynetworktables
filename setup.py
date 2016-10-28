@@ -3,7 +3,7 @@ from __future__ import print_function
 
 from os.path import dirname, exists, join
 import sys, subprocess
-from setuptools import setup
+from setuptools import find_packages, setup
 
 setup_dir = dirname(__file__)
 git_dir = join(setup_dir, '.git')
@@ -37,14 +37,19 @@ with open(join(setup_dir, base_package, 'version.py'), 'r') as fp:
 with open(join(setup_dir, 'README.rst'), 'r') as readme_file:
     long_description = readme_file.read()
 
+install_requires = []
+if sys.version_info[0] <= 2:
+    install_requires.append('monotonic')
+
 setup(
     name='pynetworktables',
     version=__version__,
     description='A pure python implementation of NetworkTables, used for Robot communications in the FIRST Robotics Competition.',
     long_description=long_description,
-    author='Peter Johnson, Dustin Spicuzza',
+    author='Dustin Spicuzza, Peter Johnson',
     author_email='robotpy@googlegroups.com',
     url='https://github.com/robotpy/pynetworktables',
     keywords='frc first robotics wpilib networktables',
-    packages=[base_package, 'networktables2'],
+    packages=find_packages(exclude='tests'),
+    install_requires=install_requires,
     )

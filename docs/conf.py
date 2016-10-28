@@ -15,8 +15,7 @@ import os
 
 from os.path import abspath, join, dirname
 
-sys.path.insert(0, abspath(join(dirname(__file__), '..', 'networktables')))
-sys.path.insert(0, abspath(join(dirname(__file__), '..', 'networktables2')))
+sys.path.insert(0, abspath(join(dirname(__file__), '..')))
 
 import networktables
 
@@ -35,7 +34,7 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    'wpilib': ('http://robotpy.readthedocs.org/en/latest/', None)
+    'wpilib': ('http://robotpy.readthedocs.io/en/latest/', None)
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -52,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'RobotPy NetworkTables'
-copyright = '2014, RobotPy development team'
+copyright = '2016, RobotPy Development Team'
 
 
 # The version info for the project you're documenting, acts as replacement for
@@ -60,7 +59,7 @@ copyright = '2014, RobotPy development team'
 # built documents.
 #
 # The short X.Y version.
-version = networktables.__version__.split('.')[:2]
+version = '.'.join(networktables.__version__.split('.')[:2])
 # The full version, including alpha/beta/rc tags.
 release = networktables.__version__
 
@@ -218,7 +217,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'networktables.tex', 'RobotPy networktables Documentation',
-   'RobotPy development team', 'manual'),
+   'RobotPy Development Team', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -248,7 +247,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'networktables', 'RobotPy networktables Documentation',
-     ['RobotPy development team'], 1)
+     ['RobotPy Development Team'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -262,7 +261,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'networktables', 'RobotPy networktables Documentation',
-   'RobotPy development team', 'networktables', 'One line description of project.',
+   'RobotPy Development Team', 'networktables', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -283,9 +282,9 @@ texinfo_documents = [
 
 # Bibliographic Dublin Core info.
 epub_title = 'RobotPy NetworkTables'
-epub_author = 'RobotPy development team'
-epub_publisher = 'RobotPy development team'
-epub_copyright = '2014, RobotPy development team'
+epub_author = 'RobotPy Development Team'
+epub_publisher = 'RobotPy Development Team'
+epub_copyright = '2014, RobotPy Development Team'
 
 # The basename for the epub file. It defaults to the project name.
 #epub_basename = 'RobotPy WPILib'

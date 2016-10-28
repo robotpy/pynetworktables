@@ -15,13 +15,13 @@
 #
 
 import time
-from networktables import NetworkTable
+from networktables import NetworkTables
 
 # To see messages from networktables, you must setup logging
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-sd = NetworkTable.getTable("SmartDashboard")
+sd = NetworkTables.getTable("SmartDashboard")
 
 i = 0
 while True:

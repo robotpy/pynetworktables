@@ -10,7 +10,7 @@
 
 import sys
 import time
-from networktables import NetworkTable
+from networktables import NetworkTables
 
 # To see messages from networktables, you must setup logging
 import logging
@@ -22,11 +22,9 @@ if len(sys.argv) != 2:
 
 ip = sys.argv[1]
 
-NetworkTable.setIPAddress(ip)
-NetworkTable.setClientMode()
-NetworkTable.initialize()
+NetworkTables.initialize(server=ip)
 
-sd = NetworkTable.getTable("SmartDashboard")
+sd = NetworkTables.getTable("SmartDashboard")
 auto_value = sd.getAutoUpdateValue('robotTime', 0)
 
 while True:

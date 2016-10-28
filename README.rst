@@ -4,12 +4,12 @@ RobotPy NetworkTables Project
 .. image:: https://travis-ci.org/robotpy/pynetworktables.svg
     :target: https://travis-ci.org/robotpy/pynetworktables
 
-A pure python implementation of NetworkTables, originally derived from the
-java implementation.  NetworkTables are used to pass non-Driver
-Station data to and from the robot across the network.
+This is a pure python implementation of the NetworkTables protocol, derived
+from the wpilib ntcore C++ implementation. In FRC, the NetworkTables protocol
+is used to pass non-Driver Station data to and from the robot across the network.
 
-This implementation is intended to be compatible with python 2.7 and 3.4. All
-commits to the repository are automatically tested on all supported python
+This implementation is intended to be compatible with python 2.7 and python 3.3+.
+All commits to the repository are automatically tested on all supported python
 versions using Travis-CI.
 
 .. note:: NetworkTables is a protocol used for robot communication in the
@@ -74,7 +74,7 @@ think others can use:
 Authors & Contributors
 ======================
 
-* Peter Johnson, FRC Team 294
 * Dustin Spicuzza, FRC Team 1418/2423
+* Peter Johnson, FRC Team 294
 
 

@@ -1,28 +1,17 @@
 
+#
+# These tests are leftover from the original pynetworktables tests
+#
+
 import pytest
 
-from networktables.networktable import NetworkTableProvider
-from networktables2 import NetworkTableClient
-
-class NullStreamFactory:
-    def createStream(self):
-        return None
-
 @pytest.fixture(scope='function')
-def client():
-    return NetworkTableClient(NullStreamFactory())
-
-@pytest.fixture(scope='function')
-def provider(client):
-    return NetworkTableProvider(client)
-
-@pytest.fixture(scope='function')
-def table1(provider):
-    return provider.getTable('/test1')
+def table1(nt):
+    return nt.getTable('/test1')
     
 @pytest.fixture(scope='function')
-def table2(provider):
-    return provider.getTable('/test2')
+def table2(nt):
+    return nt.getTable('/test2')
 
 
 def test_put_double(table1):
@@ -117,12 +106,70 @@ def test_multi_table(table1, table2):
     with pytest.raises(KeyError):
         table1.getString('table2string')
 
-def test_get_table(provider, table1, table2):
-    assert provider.getTable('/test1') is table1
-    assert provider.getTable('/test2') is table2
+def test_get_table(nt, table1, table2):
+    assert nt.getTable('test1') is table1
+    assert nt.getTable('test2') is table2
+    
+    assert nt.getTable('/test1') is table1
+    assert nt.getTable('/test2') is table2
+    
+    assert nt.getTable('/test1/') is table1
+    assert nt.getTable('/test1/').path == '/test1'
     
     assert table1 is not table2
 
-    table3 = provider.getTable('/test3')
+    table3 = nt.getTable('/test3')
     assert table1 is not table3
     assert table2 is not table3
+    
+def test_get_subtable(nt, table1):
+    assert not table1.containsSubTable('test1')
+    
+    st1 = table1.getSubTable('test1')
+    
+    assert nt.getTable('/test1/test1') is st1
+    assert table1.getSubTable('test1') is st1
+    
+    # weird, but true -- subtable only exists when key exists
+    assert not table1.containsSubTable('test1')
+    st1.putBoolean('hi', True)
+    assert table1.containsSubTable('test1')
+    
+    assert table1.getSubTables() == ['test1']
+    assert st1.getSubTables() == []
+    
+def test_getkeys(table1):
+    assert table1.getKeys() == []
+    assert not table1.containsKey('hi')
+    assert 'hi' not in table1
+    
+    table1.putBoolean('hi', True)
+    assert table1.getKeys() == ['hi']
+    
+    assert table1.containsKey('hi')
+    assert 'hi' in table1
+ 
+def test_flags(table1):
+    table1.putBoolean('foo', True)
+    assert not table1.isPersistent('foo')
+    
+    table1.setPersistent('foo')
+    assert table1.isPersistent('foo')
+    
+    table1.clearPersistent('foo')
+    assert not table1.isPersistent('foo')
+    
+def test_delete(table1):
+    table1.putBoolean('foo', True)
+    assert table1.getBoolean('foo') == True
+    
+    table1.delete('foo')
+    with pytest.raises(KeyError):
+        table1.getBoolean('foo')
+    
+def test_different_type(table1):
+    assert table1.putBoolean('foo', True)
+    assert table1.getBoolean('foo') == True
+    
+    assert not table1.putNumber('foo', 1)
+    assert table1.getBoolean('foo') == True     

@@ -11,7 +11,7 @@
 
 import sys
 import time
-from networktables import NetworkTable
+from networktables import NetworkTables
 
 # To see messages from networktables, you must setup logging
 import logging
@@ -23,26 +23,20 @@ if len(sys.argv) != 2:
 
 ip = sys.argv[1]
 
-NetworkTable.setIPAddress(ip)
-NetworkTable.setClientMode()
-NetworkTable.initialize()
+NetworkTables.initialize(server=ip)
+
 
 def valueChanged(table, key, value, isNew):
     print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
 
-class ConnectionListener:
+def connectionListener(connected, info):
+    print(info, '; Connected=%s' % connected)
 
-    def connected(self, table):
-        print("Connected to", table.getRemoteAddress(), table)
 
-    def disconnected(self, table):
-        print("Disconnected", table)
+NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
 
-c_listener = ConnectionListener()
-
-sd = NetworkTable.getTable("SmartDashboard")
+sd = NetworkTables.getTable("SmartDashboard")
 sd.addTableListener(valueChanged)
-sd.addConnectionListener(c_listener)
 
 while True:
     time.sleep(1)

@@ -1,0 +1,26 @@
+[NetworkTables Storage 3.0]
+boolean "\x00\x03\x05\n"=true
+boolean "boolean/false"=false
+boolean "boolean/true"=true
+array boolean "booleanarr/empty"=
+array boolean "booleanarr/one"=true
+array boolean "booleanarr/two"=true,false
+double "double/big"=1.3e+08
+double "double/neg"=-1.5
+double "double/zero"=0
+array double "doublearr/empty"=
+array double "doublearr/one"=0.5
+array double "doublearr/two"=0.5,-0.25
+raw "raw/empty"=
+raw "raw/normal"=aGVsbG8=
+raw "raw/special"=AAMFCg==
+string "string/empty"=""
+string "string/normal"="hello"
+string "string/special"="\x00\x03\x05\n"
+# comment
+array string "stringarr/empty"=
+array string "stringarr/one"="hello"
+array string "stringarr/two"="hello","world\n"
+double "=" =0.0
+double "[Section]"=0.0
+

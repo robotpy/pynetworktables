@@ -25,7 +25,7 @@ import time
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-from networktables import NetworkTable
+from networktables import NetworkTables
 
 class Benchmark(object):
 
@@ -35,15 +35,13 @@ class Benchmark(object):
         
         if len(sys.argv) > 1:
             client = True
-            NetworkTable.setIPAddress(sys.argv[1])
-            NetworkTable.setClientMode()
-            NetworkTable.initialize()
+            NetworkTables.initialize(server=sys.argv[1])
          
         # Default write flush is 0.05, could adjust for less latency   
         #NetworkTable.setWriteFlushPeriod(0.01)
         
         
-        self.nt = NetworkTable.getTable('/benchmark')
+        self.nt = NetworkTables.getTable('/benchmark')
         self.updates = 0
         
         if client:
