@@ -1,3 +1,4 @@
 [git-source-track]
 original_root = ../ntcore
 validation_root = ntcore
+exclude_commits_file = .gittrackexclude
