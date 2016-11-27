@@ -167,10 +167,10 @@ class NetworkConnection(object):
     def last_update(self):
         return self.m_last_update
     
-    def notifyIfActive(self):
+    def notifyIfActive(self, callback):
         with self.m_state_mutex:
             if self.m_state == self.State.kActive:
-                self.m_notifier.notifyConnection(True, self.info())
+                self.m_notifier.notifyConnection(True, self.info(), callback)
     
     def set_process_incoming(self, func):
         self.m_process_incoming = func
