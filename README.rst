@@ -21,7 +21,7 @@ Documentation
 -------------
 
 For usage, detailed installation information, and other notes, please see
-our documentation at http://pynetworktables.readthedocs.org/en/latest/
+our documentation at http://pynetworktables.readthedocs.io
 
 Installation
 ------------
