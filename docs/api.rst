@@ -1,6 +1,10 @@
 API Reference
 =============
 
+.. toctree::
+    
+    examples
+
 NetworkTables API
 -----------------
 
