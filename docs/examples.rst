@@ -1,3 +1,5 @@
+.. _pynetworktables_examples:
+
 Examples
 ========
 
