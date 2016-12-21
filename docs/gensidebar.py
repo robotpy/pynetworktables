@@ -29,7 +29,10 @@ def generate_sidebar(conf, conf_api):
     ]
     
     def toctree(name):
-        lines.extend(['.. toctree::', '    :caption: %s' % name, ''])
+        lines.extend(['.. toctree::',
+                      '    :caption: %s' % name,
+                      '    :maxdepth: 2',
+                      ''])
     
     def endl():
         lines.append('')
@@ -59,7 +62,8 @@ def generate_sidebar(conf, conf_api):
     toctree('Robot Programming')
     write('Getting Started', 'getting_started')
     write('Installation', 'install/index')
-    write('Programmers Guide', 'guide/index')
+    write("Programmer's Guide", 'guide/index')
+    write('Frameworks', 'frameworks/index')
     write('Hardware & Sensors', 'hw')
     endl()
     
