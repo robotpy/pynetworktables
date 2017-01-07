@@ -1,4 +1,4 @@
-# validated: 2016-10-27 DS cc1b94a wpiutil/src/tcpsockets/TCPStream.cpp
+# validated: 2017-01-07 DS 95e5295666c6 wpiutil/src/tcpsockets/TCPStream.cpp
 
 import select
 import socket
