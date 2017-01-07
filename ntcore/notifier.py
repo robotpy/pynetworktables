@@ -169,7 +169,8 @@ class Notifier(object):
                 else:
                     if item.only:
                         try:
-                            item.only(0, item.connected, item.conn_info)
+                            # ntcore difference: no uid in callback
+                            item.only(item.connected, item.conn_info)
                         except Exception:
                             logger.warn("Unhandled exception processing notify callback", exc_info=True)
                         continue
