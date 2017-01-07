@@ -841,7 +841,7 @@ class NetworkTable:
         
         .. versionadded:: 2017.0.0
         """
-        value = Value.makeUnknown(value)
+        value = Value.getFactory(value)(value)
         path = self._path + key
         return self._api.setEntryValue(path, value)
 
@@ -860,7 +860,7 @@ class NetworkTable:
         
         .. seealso:: :meth:`.putValue`
         """
-        defaultValue = Value.makeUnknown(defaultValue)
+        defaultValue = Value.getFactory(defaultValue)(defaultValue)
         path = self._path + key
         return self._api.setDefaultEntryValue(path, defaultValue)
 

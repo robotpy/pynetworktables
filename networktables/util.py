@@ -3,6 +3,12 @@ from .networktables import NetworkTables
 
 from ntcore.value import Value, stringtype
 
+__all__ = [
+    'ntproperty',
+    'ChooserControl'
+]
+
+
 def ntproperty(key, defaultValue, writeDefault=True):
     '''
         A property that you can add to your classes to access NetworkTables
@@ -30,7 +36,7 @@ def ntproperty(key, defaultValue, writeDefault=True):
                         
                         self.something = False # writes value
         
-        .. note:: Does not work with complex types.
+        .. note:: Does not work with empty lists/tuples.
         
                   Getting the value of this property should be reasonably
                   fast, but setting the value will have just as much overhead
@@ -45,19 +51,7 @@ def ntproperty(key, defaultValue, writeDefault=True):
     nt = NetworkTables
     
     ntvalue = nt.getGlobalAutoUpdateValue(key, defaultValue, writeDefault)
-    nttable = []
-    
-    # Optimization: assume that the type will never change
-    if isinstance(defaultValue, bool):
-        mkv = Value.makeBoolean
-    elif isinstance(defaultValue, (int, float)):
-        mkv = Value.makeDouble
-    elif isinstance(defaultValue, stringtype):
-        mkv = Value.makeString
-    elif isinstance(defaultValue, bytes):
-        mkv = Value.makeRaw
-    else:
-        raise TypeError("Cannot determine type of ntproperty %s" % key)
+    mkv = ntvalue._valuefn
     
     def _get(_):
         return ntvalue.value

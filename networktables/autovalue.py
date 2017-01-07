@@ -9,11 +9,12 @@ class AutoUpdateValue:
     of this.
     """
     
-    __slots__ = ['key', '__value']
+    __slots__ = ['key', '__value', '_valuefn']
     
-    def __init__(self, key, default):
+    def __init__(self, key, default, valuefn):
         self.key = key
         self.__value = default
+        self._valuefn = valuefn
         
     def get(self):
         '''Returns the value held by this object'''

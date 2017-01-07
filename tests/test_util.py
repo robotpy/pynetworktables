@@ -1,5 +1,6 @@
 
 from networktables.util import ntproperty, ChooserControl
+import pytest
 
 
 def test_autoupdatevalue(nt):
@@ -30,6 +31,7 @@ def test_ntproperty(nt, nt_flush):
     class Foo(object):
         robotTime = ntproperty('/SmartDashboard/robotTime', 0, writeDefault=False)
         dsTime = ntproperty('/SmartDashboard/dsTime', 0, writeDefault=True)
+        testArray = ntproperty('/SmartDashboard/testArray', [1,2,3], writeDefault=True)
         
     f = Foo()
     
@@ -43,7 +45,19 @@ def test_ntproperty(nt, nt_flush):
     
     t.putNumber('robotTime', 4)
     assert f.robotTime == 4
+    
+    assert f.testArray == [1,2,3]
+    f.testArray = [4,5,6]
+    assert f.testArray == (4,5,6)
 
+def test_ntproperty_emptyarray(nt):
+    with pytest.raises(TypeError):
+        class Foo1(object):
+            testArray = ntproperty('/SmartDashboard/testArray', [], writeDefault=True)
+            
+    with pytest.raises(TypeError):
+        class Foo2(object):
+            testArray = ntproperty('/SmartDashboard/testArray', [], writeDefault=False)
 
 def test_chooser_control(nt):
     

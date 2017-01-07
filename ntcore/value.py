@@ -73,20 +73,33 @@ class Value(object):
         return ValueType(NT_RPC, str(value))
 
     @staticmethod
-    def makeUnknown(value):
+    def getFactory(value):
         if isinstance(value, bool):
-            return Value.makeBoolean(value)
+            return Value.makeBoolean
         elif isinstance(value, (int, float)):
-            return Value.makeDouble(value)
+            return Value.makeDouble
         elif isinstance(value, stringtype):
-            return Value.makeString(value)
+            return Value.makeString
         elif isinstance(value, bytes):
-            return ValueType(NT_RAW, value)
+            return Value.makeRaw
         
-        # TODO: decide how to deal with arrays
+        # Do best effort for arrays, but can't catch all cases
+        # .. if you run into an error here, use a less generic type
+        elif isinstance(value, (list, tuple)):
+            if not value:
+                raise TypeError("If you use a list here, cannot be empty")
+            
+            first = value[0]
+            if isinstance(first, bool):
+                return Value.makeBooleanArray
+            elif isinstance(first, (int, float)):
+                return Value.makeDoubleArray
+            elif isinstance(first, (stringtype)):
+                return Value.makeStringArray
+            else:
+                raise ValueError("Can only use lists of bool/int/float/strings")
         
         elif value is None:
             raise ValueError("Cannot put None into NetworkTable")
         else:
-            raise ValueError("Can only put bool/int/str/bytes")
-
+            raise ValueError("Can only put bool/int/float/str/bytes or lists/tuples of them")

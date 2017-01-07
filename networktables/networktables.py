@@ -574,15 +574,20 @@ class NetworkTables:
         
         # Use raw NT api to avoid having to initialize networktables
         value = None
+        valuefn = None # optimization for ntproperty
+        
         if not writeDefault:
             value = cls._api.getEntryValue(key)
             
         if value is None:
-            cls._api.setEntryValue(key, Value.makeUnknown(defaultValue))
+            valuefn = Value.getFactory(defaultValue)
+            cls._api.setEntryValue(key, valuefn(defaultValue))
             value = defaultValue
+        else:
+            valuefn = Value.getFactory(value)
         
         return cls._api.createAutoValue(key,
-                                        AutoUpdateValue(key, value))
+                                        AutoUpdateValue(key, value, valuefn))
 
     @classmethod
     def getRemoteAddress(cls):
