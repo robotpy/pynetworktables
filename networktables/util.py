@@ -1,7 +1,7 @@
 
 from .networktables import NetworkTables
 
-from ntcore.value import Value, stringtype
+from ntcore.value import Value
 
 __all__ = [
     'ntproperty',

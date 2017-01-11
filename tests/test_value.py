@@ -148,3 +148,12 @@ def test_StringArrayComparison():
     # different size
     v2 = Value.makeStringArray(["hello", "goodbye"])
     assert v1 != v2
+
+#
+# Additional Python tests
+#
+
+def test_unicode():
+    # copyright symbol
+    v1 = Value.makeString(u'\xA9')
+    assert v1.value == u'\xA9'
