@@ -23,7 +23,7 @@ from .constants import (
     NT_RPC,
 )
 
-from .support.compat import stringtype
+from .support.compat import basestring, unicode
 
 ValueType = namedtuple('Value', ['type', 'value'])
 
@@ -48,7 +48,7 @@ class Value(object):
 
     @staticmethod
     def makeString(value):
-        return ValueType(NT_STRING, str(value))
+        return ValueType(NT_STRING, unicode(value))
     
     @staticmethod
     def makeRaw(value):
@@ -66,7 +66,7 @@ class Value(object):
     
     @staticmethod
     def makeStringArray(value):
-        return ValueType(NT_STRING_ARRAY, tuple(str(v) for v in value))
+        return ValueType(NT_STRING_ARRAY, tuple(unicode(v) for v in value))
 
     @staticmethod
     def makeRpc(value):
@@ -78,7 +78,7 @@ class Value(object):
             return Value.makeBoolean
         elif isinstance(value, (int, float)):
             return Value.makeDouble
-        elif isinstance(value, stringtype):
+        elif isinstance(value, basestring):
             return Value.makeString
         elif isinstance(value, bytes):
             return Value.makeRaw
@@ -94,7 +94,7 @@ class Value(object):
                 return Value.makeBooleanArray
             elif isinstance(first, (int, float)):
                 return Value.makeDoubleArray
-            elif isinstance(first, (stringtype)):
+            elif isinstance(first, basestring):
                 return Value.makeStringArray
             else:
                 raise ValueError("Can only use lists of bool/int/float/strings")

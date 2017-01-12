@@ -20,11 +20,13 @@ except ImportError:
 
 if sys.version_info[0] <= 2:
     range = xrange
-    stringtype = basestring
+    basestring = basestring
+    unicode = unicode
     PY2 = True
 else:
     range = range
-    stringtype = str
+    basestring = str
+    unicode = str
     PY2 = False
     
 #
