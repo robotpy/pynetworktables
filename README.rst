@@ -23,6 +23,9 @@ Documentation
 For usage, detailed installation information, and other notes, please see
 our documentation at http://pynetworktables.readthedocs.io
 
+Don't understand this NetworkTables thing? Check out our `basic overview of
+NetworkTables <http://robotpy.readthedocs.io/en/stable/guide/nt.html>`_.
+
 Installation
 ------------
 

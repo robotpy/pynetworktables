@@ -33,7 +33,8 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    'wpilib': ('http://robotpy-wpilib.readthedocs.io/en/%s/' % rtd_version, None)
+    'robotpy': ('http://robotpy.readthedocs.io/en/%s/' % rtd_version, None),
+    'wpilib': ('http://robotpy-wpilib.readthedocs.io/en/%s/' % rtd_version, None),
 }
 
 # Add any paths that contain templates here, relative to this directory.
