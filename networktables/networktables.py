@@ -583,6 +583,9 @@ class NetworkTables:
             valuefn = Value.getFactory(defaultValue)
             cls._api.setEntryValue(key, valuefn(defaultValue))
             value = defaultValue
+        elif not writeDefault:
+            value = value.value
+            valuefn = Value.getFactory(value)
         else:
             valuefn = Value.getFactory(value)
         
