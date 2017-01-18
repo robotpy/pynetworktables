@@ -889,8 +889,10 @@ class Storage(object):
         
         # copy values out of storage as quickly as possible so lock isn't held
         with self.m_mutex:
-            if periodic and self.m_persistent_dirty:
+            if periodic and not self.m_persistent_dirty:
                 return False
+            
+            self.m_persistent_dirty = False
             
             entries = [(entry.name, entry.value) for entry in self.m_entries.values() \
                        if entry.isPersistent()]
