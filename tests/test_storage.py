@@ -101,8 +101,8 @@ def storage_populated(storage_empty, outgoing):
 def storage_persistent(storage_empty, outgoing):
     storage = storage_empty
     
-    storage.setEntryTypeValue("boolean/True", Value.makeBoolean(True))
-    storage.setEntryTypeValue("boolean/False", Value.makeBoolean(False))
+    storage.setEntryTypeValue("boolean/true", Value.makeBoolean(True))
+    storage.setEntryTypeValue("boolean/false", Value.makeBoolean(False))
     storage.setEntryTypeValue("double/neg", Value.makeDouble(-1.5))
     storage.setEntryTypeValue("double/zero", Value.makeDouble(0.0))
     storage.setEntryTypeValue("double/big", Value.makeDouble(1.3e8))
@@ -122,6 +122,7 @@ def storage_persistent(storage_empty, outgoing):
     storage.setEntryTypeValue("stringarr/one", Value.makeStringArray(["hello"]))
     storage.setEntryTypeValue("stringarr/two", Value.makeStringArray(["hello", "world\n"]))
     storage.setEntryTypeValue("\0\3\5\n",Value.makeBoolean(True))
+    storage.setEntryTypeValue("CaseSensitive/KeyName", Value.makeBoolean(True))
     del outgoing[:]
     
     return storage
@@ -690,6 +691,8 @@ def test_savePersistent(storage_persistent):
     line = fp.readline()[:-1]
     assert "boolean \"\\x00\\x03\\x05\\n\"=true" == py2(line)
     line = fp.readline()[:-1]
+    assert "boolean \"CaseSensitive/KeyName\"=true" == py2(line)
+    line = fp.readline()[:-1]
     assert "boolean \"boolean/false\"=false" == py2(line)
     line = fp.readline()[:-1]
     assert "boolean \"boolean/true\"=true" == py2(line)
@@ -889,6 +892,7 @@ def test_loadPersistent(storage_empty, outgoing):
     
     inp = "[NetworkTables Storage 3.0]\n"
     inp += "boolean \"\\x00\\x03\\x05\\n\"=true\n"
+    inp += "boolean \"CaseSensitive/KeyName\"=true\n"
     inp += "boolean \"boolean/false\"=false\n"
     inp += "boolean \"boolean/true\"=true\n"
     inp += "array boolean \"booleanarr/empty\"=\n"
@@ -913,8 +917,8 @@ def test_loadPersistent(storage_empty, outgoing):
     fp = StringIO(inp)
     assert storage.loadPersistent(fp=fp) is None
     
-    assert 21 == len(storage.m_entries)
-    assert 21 == len(outgoing)
+    assert 22 == len(storage.m_entries)
+    assert 22 == len(outgoing)
 
     assert Value.makeBoolean(True) == storage.getEntryValue("boolean/true")
     assert Value.makeBoolean(False) == storage.getEntryValue("boolean/false")
@@ -937,6 +941,7 @@ def test_loadPersistent(storage_empty, outgoing):
     assert Value.makeStringArray(["hello"]) == storage.getEntryValue("stringarr/one")
     assert Value.makeStringArray(["hello", "world\n"]) == storage.getEntryValue("stringarr/two")
     assert Value.makeBoolean(True) == storage.getEntryValue("\0\3\5\n")
+    assert Value.makeBoolean(True) == storage.getEntryValue("CaseSensitive/KeyName")
 
 
 def test_LoadPersistentWarn(storage_empty, outgoing):

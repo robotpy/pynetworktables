@@ -64,6 +64,7 @@ def load_entries(fp, filename):
     entries = []
     
     parser = RawConfigParser()
+    parser.optionxform = str
     
     try:
         if hasattr(parser, 'read_file'):
@@ -189,6 +190,7 @@ def load_entries(fp, filename):
 def save_entries(fp, entries):
     
     parser = RawConfigParser()
+    parser.optionxform = str
     parser.add_section(PERSISTENT_SECTION)
     
     for name, value in entries:
