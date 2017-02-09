@@ -65,6 +65,7 @@ def generate_sidebar(conf, conf_api):
     write("Programmer's Guide", 'guide/index')
     write('Frameworks', 'frameworks/index')
     write('Hardware & Sensors', 'hw')
+    write('Camera & Vision', 'vision/index')
     endl()
     
     toctree('API Reference')
@@ -78,6 +79,7 @@ def generate_sidebar(conf, conf_api):
     toctree('Additional Info')
     write("Troubleshooting", 'troubleshooting')
     write('Support', 'support')
+    write('FAQ', 'faq')
     endl()
     
     toctree('RobotPy Developers')
