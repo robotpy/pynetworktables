@@ -641,7 +641,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
-        :type value: list(bool)
+        :type value: list(float)
         
         :returns: False if the table key already exists with a different type
         :rtype: bool
