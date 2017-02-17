@@ -9,7 +9,7 @@ __all__ = [
 ]
 
 
-def ntproperty(key, defaultValue, writeDefault=True):
+def ntproperty(key, defaultValue, writeDefault=True, doc=None):
     '''
         A property that you can add to your classes to access NetworkTables
         variables like a normal variable.
@@ -21,6 +21,8 @@ def ntproperty(key, defaultValue, writeDefault=True):
         :param writeDefault: If True, put the default value to the table,
                              overwriting existing values
         :type  writeDefault: bool
+        :param doc: If given, will be the docstring of the property.
+        :type  doc: str
         
         Example usage::
         
@@ -59,7 +61,7 @@ def ntproperty(key, defaultValue, writeDefault=True):
     def _set(_, value):
         nt._api.setEntryValue(key, mkv(value))
     
-    return property(fget=_get, fset=_set)
+    return property(fget=_get, fset=_set, doc=doc)
 
 
 
