@@ -191,11 +191,11 @@ class WireCodec(object):
     
     def read_string_v2(self, rstream):
         slen = rstream.readStruct(self._string_fmt)[0]
-        return rstream.read(slen).decode('utf-8')
+        return rstream.read(slen).decode('utf-8', 'replace')
     
     def read_string_v3(self, rstream):
         slen = leb128.read_uleb128(rstream)
-        return rstream.read(slen).decode('utf-8')
+        return rstream.read(slen).decode('utf-8', 'replace')
     
     
     def write_arraylen_v2(self, a, out):
