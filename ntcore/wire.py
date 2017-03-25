@@ -54,7 +54,7 @@ class WireCodec(object):
     _bool_fmt = struct.Struct('?')
     _double_fmt = struct.Struct('>d')
     _string_fmt = struct.Struct('>H')
-    _array_fmt = struct.Struct('b')
+    _array_fmt = struct.Struct('B')
     _short_fmt = struct.Struct('>H')
         
     clientHello = _clientHello
@@ -67,9 +67,9 @@ class WireCodec(object):
     def set_proto_rev(self, proto_rev):
         self.proto_rev = proto_rev
         if proto_rev == 0x0200:
-            self.read_arraylen = self.read_arraylen_v2
+            self.read_arraylen = self.read_arraylen_v2_v3
             self.read_string = self.read_string_v2
-            self.write_arraylen = self.write_arraylen_v2
+            self.write_arraylen = self.write_arraylen_v2_v3
             self.write_string = self.write_string_v2
             
             self.entryAssign = _entryAssignV2
@@ -82,9 +82,9 @@ class WireCodec(object):
             self._del('rpcResponse')
             
         elif proto_rev == 0x0300:
-            self.read_arraylen = self.read_arraylen_v3
+            self.read_arraylen = self.read_arraylen_v2_v3
             self.read_string = self.read_string_v3
-            self.write_arraylen = self.write_arraylen_v3
+            self.write_arraylen = self.write_arraylen_v2_v3
             self.write_string = self.write_string_v3
             
             self.entryAssign = _entryAssignV3
@@ -183,11 +183,12 @@ class WireCodec(object):
     # v2/v3 routines
     #
     
-    def read_arraylen_v2(self, rstream):
+    def read_arraylen_v2_v3(self, rstream):
         return rstream.readStruct(self._array_fmt)[0]
     
-    def read_arraylen_v3(self, rstream):
-        return leb128.read_uleb128(rstream) 
+    # v4 perhaps
+    #def read_arraylen_v3(self, rstream):
+    #    return leb128.read_uleb128(rstream) 
     
     def read_string_v2(self, rstream):
         slen = rstream.readStruct(self._string_fmt)[0]
@@ -198,15 +199,16 @@ class WireCodec(object):
         return rstream.read(slen).decode('utf-8')
     
     
-    def write_arraylen_v2(self, a, out):
+    def write_arraylen_v2_v3(self, a, out):
         alen = min(len(a), 0xff)
         out.append(self._array_fmt.pack(alen))
         return alen
     
-    def write_arraylen_v3(self, a, out):
-        alen = len(a)
-        out.append(leb128.encode_uleb128(alen))
-        return alen
+    # v4 perhaps
+    #def write_arraylen_v3(self, a, out):
+    #    alen = len(a)
+    #    out.append(leb128.encode_uleb128(alen))
+    #    return alen
     
     def write_string_v2(self, s, out):
         s = s.encode('utf-8')

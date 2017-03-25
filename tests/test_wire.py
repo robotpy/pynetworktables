@@ -79,6 +79,9 @@ def test_wire_boolArray1(v_round_trip):
     
 def test_wire_boolArray2(v_round_trip):
     v_round_trip(Value.makeBooleanArray([True, False]))
+    
+def test_wire_boolArray3(v_round_trip):
+    v_round_trip(Value.makeBooleanArray([True]*255))
 
 def test_wire_doubleArray1(v_round_trip):
     v_round_trip(Value.makeDoubleArray([]))
@@ -86,11 +89,17 @@ def test_wire_doubleArray1(v_round_trip):
 def test_wire_doubleArray2(v_round_trip):
     v_round_trip(Value.makeDoubleArray([0, 1]))
     
+def test_wire_doubleArray3(v_round_trip):
+    v_round_trip(Value.makeDoubleArray([0]*255))
+    
 def test_wire_stringArray1(v_round_trip):
     v_round_trip(Value.makeStringArray([]))
     
 def test_wire_stringArray2(v_round_trip):
     v_round_trip(Value.makeStringArray(["hi", "there"]))
+    
+def test_wire_stringArray3(v_round_trip):
+    v_round_trip(Value.makeStringArray(["hi"]*255))
 
 def test_wire_rpc1(v_round_trip):
     v_round_trip(Value.makeRpc(''), minver=0x0300)
