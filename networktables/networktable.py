@@ -581,7 +581,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
-        :type value: list(bool)
+        :type value: iterable(bool)
         
         :returns: False if the table key already exists with a different type
         :rtype: bool
@@ -598,7 +598,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
-        :type defaultValue: list(bool)
+        :type defaultValue: iterable(bool)
         
         :returns: False if the table key exists with a different type
         :rtype: bool
@@ -615,11 +615,10 @@ class NetworkTable:
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
-        :type defaultValue: list(bool)
         
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
-        :rtype: list(bool)
+        :rtype: tuple(bool)
         
         :raises KeyError: If the value doesn't exist and no default is provided, or
                           if it is the wrong type
@@ -641,7 +640,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
-        :type value: list(float)
+        :type value: iterable(float)
         
         :returns: False if the table key already exists with a different type
         :rtype: bool
@@ -658,7 +657,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
-        :type defaultValue: list(int, float)
+        :type defaultValue: iterable(int or float)
         
         :returns: False if the table key exists with a different type
         :rtype: bool
@@ -675,11 +674,10 @@ class NetworkTable:
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
-        :type defaultValue: list(int, float)
         
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
-        :rtype: list(int, float)
+        :rtype: tuple(int or float)
         
         :raises KeyError: If the value doesn't exist and no default is provided, or
                           if it is the wrong type
@@ -701,7 +699,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
-        :type value: list(str)
+        :type value: iterable(str)
         
         :returns: False if the table key already exists with a different type
         :rtype: bool
@@ -718,7 +716,7 @@ class NetworkTable:
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
-        :type defaultValue: list(str)
+        :type defaultValue: iterable(str)
         
         :returns: False if the table key exists with a different type
         :rtype: bool
@@ -735,11 +733,10 @@ class NetworkTable:
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
-        :type defaultValue: list(str)
         
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
-        :rtype: list(str)
+        :rtype: tuple(str)
         
         :raises KeyError: If the value doesn't exist and no default is provided, or
                           if it is the wrong type
@@ -874,7 +871,7 @@ class NetworkTable:
         :type defaultValue: any
         
         :returns: the value associated with the given key
-        :rtype: bool, int, float, str, bytes, list
+        :rtype: bool, int, float, str, bytes, tuple
         
         :raises KeyError: If the value doesn't exist and no default is provided, or
                           if it is the wrong type
