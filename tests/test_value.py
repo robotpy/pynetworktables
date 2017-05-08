@@ -157,3 +157,10 @@ def test_unicode():
     # copyright symbol
     v1 = Value.makeString(u'\xA9')
     assert v1.value == u'\xA9'
+
+
+def test_bytearray():
+    v1 = Value.makeRaw(bytearray(b'\x01\x02\x00'))
+    assert v1.type == NT_RAW
+    assert v1.value == bytearray(b'\x01\x02\x00')
+    assert v1.value == b'\x01\x02\x00'
