@@ -80,7 +80,7 @@ class Value(object):
             return Value.makeDouble
         elif isinstance(value, basestring):
             return Value.makeString
-        elif isinstance(value, bytes):
+        elif isinstance(value, (bytes, bytearray)):
             return Value.makeRaw
         
         # Do best effort for arrays, but can't catch all cases
