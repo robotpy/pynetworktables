@@ -1,4 +1,4 @@
-# validated: 2016-10-23 DS c2ae897 wpiutil/src/support/leb128.cpp
+# novalidate
 '''
     Operations related to LEB128 encoding/decoding
 

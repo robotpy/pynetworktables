@@ -1,4 +1,4 @@
-# validated: 2016-10-27 DS 86c43df src/NetworkConnection.cpp src/NetworkConnection.h
+# validated: 2016-10-27 DS 86c43df cpp/NetworkConnection.cpp cpp/NetworkConnection.h
 '''----------------------------------------------------------------------------'''
 ''' Copyright (c) FIRST 2015. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''

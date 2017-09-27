@@ -1,4 +1,4 @@
-# validated: 2016-10-27 DS a7eca7d src/Storage.cpp src/Storage.h
+# validated: 2016-10-27 DS a7eca7d cpp/Storage.cpp cpp/Storage.h
 '''
     This tries to stay compatible with ntcore's persistence mechanism,
     but if you go outside the realm of normal operations it may differ.

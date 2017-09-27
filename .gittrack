@@ -1,6 +1,6 @@
 [git-source-track]
-upstream_commit = 3e2631f49b0c2d9e41f4b77ff3e7d0dee6535bd4
+upstream_commit = 8edc02b06d9ed3df25f5e1c34495bb2dc5394278
 validation_root = ntcore
 exclude_commits_file = .gittrackexclude
-upstream_root = ../ntcore
+upstream_root = ../ntcore/src/main/native
 

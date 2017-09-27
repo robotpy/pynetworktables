@@ -1,4 +1,4 @@
-# validated: 2016-10-21 DS c0ce427 src/ntcore_cpp.cpp
+# validated: 2016-10-21 DS c0ce427 cpp/ntcore_cpp.cpp
 
 from .dispatcher import Dispatcher
 from .notifier import Notifier

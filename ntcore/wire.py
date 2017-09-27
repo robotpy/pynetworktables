@@ -1,4 +1,4 @@
-# validated: 2016-10-27 DS c2ae897 src/WireDecoder.cpp src/WireDecoder.h src/WireEncoder.cpp src/WireEncoder.h
+# validated: 2016-10-27 DS c2ae897 cpp/WireDecoder.cpp cpp/WireDecoder.h cpp/WireEncoder.cpp cpp/WireEncoder.h
 '''
     This encompasses the WireEncoder and WireDecoder stuff in ntcore
     

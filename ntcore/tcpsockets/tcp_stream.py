@@ -1,4 +1,4 @@
-# validated: 2017-01-07 DS 95e5295666c6 wpiutil/src/tcpsockets/TCPStream.cpp
+# novalidate
 
 import select
 import socket

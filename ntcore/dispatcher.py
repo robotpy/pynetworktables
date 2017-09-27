@@ -1,4 +1,4 @@
-# validated: 2016-10-27 DS 273a395 src/Dispatcher.cpp
+# validated: 2016-10-27 DS 273a395 cpp/Dispatcher.cpp
 '''----------------------------------------------------------------------------'''
 ''' Copyright (c) FIRST 2015. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''
