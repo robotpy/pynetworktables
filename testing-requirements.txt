@@ -1,4 +1,4 @@
-pytest
+pytest>=3.0
 coverage
 mock
-monotonic
+monotonic; python_version < '3.3'
