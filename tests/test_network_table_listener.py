@@ -42,7 +42,7 @@ def subtable4(nt):
     
     
 
-def test_key_listener_immediate_notify(table1, notifier, nt_flush):
+def test_key_listener_immediate_notify(table1, nt_flush):
     
     listener1 = Mock()
     
@@ -50,8 +50,7 @@ def test_key_listener_immediate_notify(table1, notifier, nt_flush):
     table1.putBoolean("MyKey1", False)
     table1.putBoolean("MyKey2", True)
     table1.putBoolean("MyKey4", False)
-    
-    assert not notifier.m_active
+    nt_flush()
     
     table1.addTableListener(listener1.valueChanged, True, localNotify=True)
     

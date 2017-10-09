@@ -99,4 +99,4 @@ class TcpAcceptor(object):
                 pass
             return
         
-        return TCPStream(sd, peer_ip, peer_port)
+        return TCPStream(sd, peer_ip, peer_port, 'server')

@@ -1,4 +1,4 @@
-# validated: 2016-10-21 DS a73166a cpp/Value.cpp
+# validated: 2017-09-28 DS 5ab20bb27c97 cpp/Value.cpp include/networktables/NetworkTableValue.h
 '''
     Internal storage for ntcore values
     

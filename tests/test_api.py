@@ -6,115 +6,10 @@
 
 from __future__ import print_function
 
-from contextlib import contextmanager
 import pytest
 
-from networktables import NetworkTables
-from ntcore.support.compat import monotonic
-
-import threading
-
 import logging
-logger = logging.getLogger('nt.test')
-
-class NtTestBase(NetworkTables):
-    
-    _wait_lock = threading.Condition()
-    
-    @classmethod
-    def _init_common(cls, proto_rev):
-        # This resets the instance to be independent
-        cls.shutdown()
-        cls._api.dispatcher.setDefaultProtoRev(proto_rev)
-        cls.proto_rev = proto_rev
-        
-        cls.enableVerboseLogging()
-        cls._wait_init()
-    
-    @classmethod
-    def _init_server(cls, proto_rev, server_port=0):
-        cls._init_common(proto_rev)
-        
-        cls.port = server_port
-        cls._serverListenAddress = '127.0.0.1'
-        cls.initialize()
-        
-        assert cls._api.dispatcher.m_server_acceptor.waitForStart(timeout=1)
-        cls.port = cls._api.dispatcher.m_server_acceptor.m_port
-    
-    @classmethod
-    def _init_client(cls, server, proto_rev):
-        cls._init_common(proto_rev)
-        
-        cls.setPort(server.port)
-        cls.initialize(server='127.0.0.1')
-    
-    @classmethod
-    def _wait_init(cls):
-        cls._wait = 0
-        
-        cls._api.addEntryListener('', cls._wait_cb, 
-                                  NetworkTables.NotifyFlags.NEW |
-                                  NetworkTables.NotifyFlags.UPDATE |
-                                  NetworkTables.NotifyFlags.DELETE |
-                                  NetworkTables.NotifyFlags.FLAGS)
-    
-    @classmethod
-    def _wait_cb(cls, *args):
-        with cls._wait_lock:
-            cls._wait += 1
-            cls._wait_lock.notify()
-    
-    
-    @classmethod
-    @contextmanager
-    def expect_changes(cls, count):
-        '''Use this on the *other* instance that you're making 
-        changes on, to wait for the changes to propagate to the
-        other instance'''
-        
-        with cls._wait_lock:
-            cls._wait = 0
-        
-        logger.info("Begin actions")
-        yield
-        logger.info("Waiting for %s changes", count)
-        
-        with cls._wait_lock:
-            wait_until = monotonic() + 1
-            while cls._wait != count:
-                cls._wait_lock.wait(1)
-                if monotonic() > wait_until:
-                    assert False, "Timeout waiting for %s changes (got %s)" % (count, cls._wait)
-
-# Each test should cover each NT version combination
-# 0x0200 -> 0x0300
-# 0x0300 -> 0x0200
-# 0x0300 -> 0x0300
-
-@pytest.fixture(params=[
-    0x0200, 0x0300
-])
-def nt_server(request):
-    
-    class NtServer(NtTestBase):
-        pass
-    
-    NtServer._init_server(request.param)
-    yield NtServer
-    NtServer.shutdown()
-
-@pytest.fixture(params=[
-    0x0200, 0x0300
-])
-def nt_client(request, nt_server):
-    
-    class NtClient(NtTestBase):
-        pass
-    
-    NtClient._init_client(nt_server, request.param)
-    yield NtClient
-    NtClient.shutdown()
+logger = logging.getLogger('test')
 
 
 # test defaults
@@ -237,7 +132,9 @@ def do(nt1, nt2, t):
         assert t2.getBoolean('bool') is False
 
 
-def test_basic(nt_client, nt_server):
+def test_basic(nt_live):
+    
+    nt_server, nt_client = nt_live
     
     assert nt_server.isServer()
     assert not nt_client.isServer()
@@ -255,9 +152,9 @@ def test_basic(nt_client, nt_server):
     assert nt_server.isConnected()
     
 
-def test_reconnect(nt_client, nt_server):
+def test_reconnect(nt_live):
     
-    server_port = nt_server.port
+    nt_server, nt_client = nt_live
     
     with nt_server.expect_changes(1):
         ct = nt_client.getTable('t')
@@ -269,21 +166,26 @@ def test_reconnect(nt_client, nt_server):
     # Client disconnect testing
     nt_client.shutdown()
     
+    logger.info("Shutdown the client")
+    
     with nt_client.expect_changes(1):
-        nt_client._init_client(nt_server, nt_client.proto_rev)
+        nt_client.start_test()
         ct = nt_client.getTable('t')
-        
+    
     assert ct.getBoolean('foo') == True
     
     # Server disconnect testing
     nt_server.shutdown()
+    logger.info("Shutdown the server")
+    
+    # synchronization change: if the client doesn't touch the entry locally,
+    # then it won't get transferred back to the server on reconnect. Touch
+    # it here to ensure that it comes back
+    ct.putBoolean('foo', True)
     
     with nt_server.expect_changes(1):
-        nt_server._init_server(nt_server.proto_rev, server_port)
+        nt_server.start_test()
         
     st = nt_server.getTable('t')
     assert st.getBoolean('foo') == True
 
-
-    
-    

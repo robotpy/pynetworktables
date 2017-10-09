@@ -165,34 +165,39 @@ class NetworkTable:
         if key is None:
             _pathsz = self._pathsz
             if paramIsNew:
-                def callback(key_, value_, flags_):
+                def callback(item):
+                    key_, value_, flags_, _ = item
                     key_ = key_[_pathsz:]
                     if '/' not in key_:
-                        listener(self, key_, value_, (flags_ & _is_new) != 0)
+                        listener(self, key_, value_.value, (flags_ & _is_new) != 0)
             else:
-                def callback(key_, value_, flags_):
+                def callback(item):
+                    key_, value_, flags_, _ = item
                     key_ = key_[_pathsz:]
                     if '/' not in key_:
-                        listener(self, key_, value_, flags_)
+                        listener(self, key_, value_.value, flags_)
     
         # Hack: Internal flag used by addGlobalListener*
         elif key == 0xdeadbeef:
             if paramIsNew:
-                def callback(key_, value_, flags_):
-                    listener(key_, value_, (flags_ & _is_new) != 0)
+                def callback(item):
+                    key_, value_, flags_, _ = item
+                    listener(key_, value_.value, (flags_ & _is_new) != 0)
             else:
                 callback = listener
                 
         else:
             path = self._path + key
             if paramIsNew:
-                def callback(key_, value_, flags_):
+                def callback(item):
+                    key_, value_, flags_, _ = item
                     if path == key_:
-                        listener(self, key, value_, (flags_ & _is_new) != 0)
+                        listener(self, key, value_.value, (flags_ & _is_new) != 0)
             else:
-                def callback(key_, value_, flags_):
+                def callback(item):
+                    key_, value_, flags_, _ = item
                     if path == key_:
-                        listener(self, key, value_, flags_)
+                        listener(self, key, value_.value, flags_)
         
         uid = self._api.addEntryListener(self._path, callback, flags)
         self._listeners.setdefault(listener, []).append(uid)
@@ -219,7 +224,8 @@ class NetworkTable:
         '''
         notified_tables = {}
         
-        def _callback(key, value, _):
+        def _callback(item):
+            key, value_, _1, _2 = item
             key = key[self._pathsz:]
             if '/' in key:
                 skey = key[:key.index('/')]

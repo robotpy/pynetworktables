@@ -3,7 +3,7 @@ from ntcore.storage import _Entry
 
 def test_sequence_numbers():
     
-    e = _Entry('name')
+    e = _Entry('name', 0)
     
     #
     # Test rollover
@@ -32,3 +32,8 @@ def test_sequence_numbers():
     e.seq_num = 10
     assert e.isSeqNewerThan(50000) == True
     
+    e.seq_num = 20
+    assert e.isSeqNewerThan(20) == True
+    
+    e.seq_num = 50000
+    assert e.isSeqNewerThan(50000) == True
