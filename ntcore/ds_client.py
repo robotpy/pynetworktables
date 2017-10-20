@@ -6,13 +6,16 @@
 ''' the project.                                                               '''
 '''----------------------------------------------------------------------------'''
 
+import logging
+logger = logging.getLogger('nt')
+
 class DsClient(object):
     
     def __init__(self, dispatcher, verbose=False):
         pass
     
     def start(self, port):
-        pass
+        logging.warn("Dashboard client mode not currently implemented")
     
     def stop(self):
         pass
