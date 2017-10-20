@@ -43,6 +43,7 @@ NT_NET_MODE_SERVER = 0x01    # running in server mode
 NT_NET_MODE_CLIENT = 0x02    # running in client mode
 NT_NET_MODE_STARTING = 0x04  # flag for starting (either client or server)
 NT_NET_MODE_FAILURE = 0x08   # flag for failure (either client or server)
+NT_NET_MODE_TEST = 0x10      # flag indicating test mode (either client or server)
 
 # NetworkTables entry flags
 NT_PERSISTENT = 0x01

@@ -32,6 +32,7 @@ from .constants import (
     NT_NET_MODE_CLIENT,
     NT_NET_MODE_STARTING,
     NT_NET_MODE_FAILURE,
+    NT_NET_MODE_TEST,
 )
 
 import logging
@@ -85,12 +86,10 @@ class Dispatcher(object):
     def setVerboseLogging(self, verbose):
         self.m_verbose = verbose
     
-    def startServer(self, persist_filename, listen_address, port):
-        acceptor = TcpAcceptor(port, listen_address)
-        self._startServer(persist_filename, acceptor)
-    
     def setServer(self, server_or_servers):
-        # servers is a tuple of (server, port) or a list of tuples
+        """
+            :param server_or_servers: a tuple of (server, port) or a list of tuples of (server, port)
+        """
         self._setConnector(server_or_servers)
         
     def setServerTeam(self, team, port):
@@ -108,14 +107,35 @@ class Dispatcher(object):
     
     def clearServerOverride(self):
         self._clearConnectorOverride()
+        
+    def getNetworkMode(self):
+        return self.m_networkMode
     
-    def _startServer(self, persist_filename, acceptor):
+    # python-specific
+    def startTestMode(self, is_server):
+        with self.m_user_mutex:
+            if self.m_active:
+                return False
+            self.m_active = True
+        
+            if is_server:
+                self.m_networkMode = NT_NET_MODE_SERVER | NT_NET_MODE_TEST
+            else:
+                self.m_networkMode = NT_NET_MODE_CLIENT | NT_NET_MODE_TEST
+        
+        return True
+    
+    def startServer(self, persist_filename, listen_address, port):
         
         with self.m_user_mutex:
             if self.m_active:
-                return
+                return False
             self.m_active = True
-    
+        
+        logger.info("NetworkTables initialized in server mode")
+        
+        acceptor = TcpAcceptor(port, listen_address)
+        
         self.m_networkMode = NT_NET_MODE_SERVER | NT_NET_MODE_STARTING
         self.m_persist_filename = persist_filename
         self.m_server_acceptor = acceptor
@@ -133,12 +153,15 @@ class Dispatcher(object):
                                             name='nt-dispatch-thread') 
         self.m_clientserver_thread = SafeThread(target=self._serverThreadMain,
                                                 name='nt-server-thread')
+        return True
         
     def startClient(self):
         with self.m_user_mutex:
             if self.m_active:
-                return
+                return False
             self.m_active = True
+            
+        logger.info("NetworkTables initialized in client mode")
     
         self.m_networkMode = NT_NET_MODE_CLIENT | NT_NET_MODE_STARTING
         self.m_storage.setDispatcher(self, False)
@@ -147,6 +170,8 @@ class Dispatcher(object):
                                             name='nt-dispatch-thread') 
         self.m_clientserver_thread = SafeThread(target=self._clientThreadMain,
                                                 name='nt-client-thread')
+        
+        return False
 
     def stop(self):
         with self.m_user_mutex:
@@ -154,6 +179,10 @@ class Dispatcher(object):
                 return
             
             self.m_active = False
+            
+            # python-specific
+            if self.m_networkMode & NT_NET_MODE_TEST != 0:
+                return
         
         # wake up dispatch thread with a flush
         with self.m_flush_mutex:

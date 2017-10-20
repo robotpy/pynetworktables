@@ -185,20 +185,23 @@ class NtCoreApi(object):
     
     def getNetworkMode(self):
         return self.dispatcher.getNetworkMode()
+    
+    # python-specific
+    def startTestMode(self, is_server):
+        if self.dispatcher.startTestMode(is_server):
+            self.storage.m_server = is_server
+            return True
+        else:
+            return False
         
     def startServer(self, persist_filename, listen_address, port):
-        self.dispatcher.startServer(persist_filename, listen_address, port)
+        return self.dispatcher.startServer(persist_filename, listen_address, port)
     
     def stopServer(self):
         self.dispatcher.stop()
         
-    def startClient(self, server_or_servers):
-        self.dispatcher.setServer(server_or_servers)
-        self.dispatcher.startClient()
-    
-    def startClientTeam(self, teamNumber):
-        self.dispatcher.setServerTeam(teamNumber)
-        self.dispatcher.startClient()
+    def startClient(self):
+        return self.dispatcher.startClient()
         
     def stopClient(self):
         self.dispatcher.stop()
