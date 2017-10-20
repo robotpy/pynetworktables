@@ -30,7 +30,7 @@ logger = logging.getLogger('nt')
 
 class NetworkTable:
     '''
-        This is a NetworkTable instance, it allows you to interact with
+        This is a NetworkTable object, it allows you to interact with
         NetworkTables in a table-based manner. You should not directly
         create a NetworkTable object, but instead use
         :meth:`.NetworkTables.getTable` to retrieve a NetworkTable instance.
@@ -46,7 +46,7 @@ class NetworkTable:
             
         .. seealso::
            - The examples in the documentation.
-           - :class:`.NetworkTables`
+           - :class:`.NetworkTablesInstance`
     '''
     
     PATH_SEPARATOR = '/'
@@ -70,8 +70,10 @@ class NetworkTable:
         return "<NetworkTable path=%s>" % self._path
     
     def getEntry(self, key):
-        """Gets the entry for a subkey
-        :rtype: `.NetworkTableEntry`
+        """Gets the entry for a subkey. This is the preferred API to use
+        to access NetworkTable keys.
+        
+        :rtype: :class:`.NetworkTableEntry`
         
         .. versionadded:: 2018.0.0
         """
@@ -860,7 +862,7 @@ class NetworkTable:
         .. versionadded:: 2015.1.3
         
         .. versionchanged:: 2018.0.0
-           This now returns the same as :meth:`.getEntry`
+           This now returns the same as :meth:`.NetworkTable.getEntry`
         
         '''
         return self._inst.getGlobalAutoUpdateValue(self._path + key, defaultValue, writeDefault)

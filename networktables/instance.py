@@ -15,31 +15,43 @@ __all__ = ["NetworkTablesInstance"]
 
 class NetworkTablesInstance:
     """
-    This is the global singleton that you use to initialize NetworkTables
-    connections, configure global settings and listeners, and to create
-    NetworkTable instances which can be used to send data to/from
-    NetworkTable servers and clients.
-    
-    First, you must initialize NetworkTables::
-    
-        from networktables import NetworkTables
+        The object ``networktables.NetworkTables`` is a global singleton that
+        you can use to initialize NetworkTables connections, configure global
+        settings and listeners, and to create table objects which can be used
+        to send data to/from NetworkTable servers and clients.
         
-        # As a client to connect to a robot
-        NetworkTables.initialize(server='roborio-XXX-frc.local')
-    
+        First, you must initialize NetworkTables::
+        
+            from networktables import NetworkTables
+            
+            # As a client to connect to a robot
+            NetworkTables.initialize(server='roborio-XXX-frc.local')
+        
+        Then, to interact with the SmartDashboard you get an instance of the
+        table, and you can call the various methods::
 
-    Then, to interact with the SmartDashboard you get an instance of the
-    table, and you can call the various methods::
-
-        sd = NetworkTables.getTable('SmartDashboard')
+            sd = NetworkTables.getTable('SmartDashboard')
+            
+            sd.putNumber('someNumber', 1234)
+            otherNumber = sd.getNumber('otherNumber')
         
-        sd.putNumber('someNumber', 1234)
-        otherNumber = sd.getNumber('otherNumber')
-        ...
+        You can create additional NetworkTablesInstance objects.
+        Instances are completely independent from each other.  Table operations on
+        one instance will not be visible to other instances unless the instances are
+        connected via the network.  The main limitation on instances is that you
+        cannot have two servers on the same network port.  The main utility of
+        instances is for unit testing, but they can also enable one program to
+        connect to two different NetworkTables networks.
         
-    .. seealso::
-       - The examples in the documentation.
-       - :class:`.NetworkTable`
+        The global "default" instance (as returned by :meth:`.NetworkTablesInstance.getDefault`) is
+        always available, and is intended for the common case when there is only
+        a single NetworkTables instance being used in the program.
+        
+        Additional instances can be created with the :meth:`.create` function.
+        
+        .. seealso::
+           - The examples in the documentation.
+           - :class:`.NetworkTable`
     """
     
     class EntryTypes:
@@ -131,8 +143,7 @@ class NetworkTablesInstance:
     @classmethod
     def create(cls):
         """Create an instance.
-        Note: A reference to the returned instance must be retained to ensure the
-        instance is not garbage collected.
+        
         :returns: Newly created instance
         """
         return cls()
@@ -163,6 +174,7 @@ class NetworkTablesInstance:
     
     def getEntry(self, name):
         """Gets the entry for a key.
+        
         :param name: Absolute path of key
         :returns: Network table entry.
         
@@ -177,9 +189,10 @@ class NetworkTablesInstance:
         only return a subset of all entries.
         
         :param prefix: entry name required prefix; only entries whose name
-        starts with this string are returned
+                       starts with this string are returned
         :param types: bitmask of types; 0 is treated as a "don't care"
-        :returns: Array of entries.
+        :returns: List of matching entries.
+        :rtype: list of :class:`.NetworkTableEntry`
         
         .. versionadded:: 2018.0.0
         """
@@ -191,7 +204,7 @@ class NetworkTablesInstance:
         only return a subset of all entries.
         
         :param prefix: entry name required prefix; only entries whose name
-        starts with this string are returned
+                       starts with this string are returned
         :param types: bitmask of types; 0 is treated as a "don't care"
         :returns: List of entry information.
         
@@ -313,7 +326,8 @@ class NetworkTablesInstance:
     
     def removeEntryListener(self, listener):
         """Remove an entry listener.
-        :param listener: Listener handle to remove
+        
+        :param listener: Listener to remove
         
         .. versionadded:: 2018.0.0
            
@@ -328,8 +342,9 @@ class NetworkTablesInstance:
         for deterministic testing.  This blocks until either the entry listener
         queue is empty (e.g. there are no more events that need to be passed along
         to callbacks or poll queues) or the timeout expires.
+        
         :param timeout: timeout, in seconds.  Set to 0 for non-blocking behavior,
-        or None to block indefinitely
+                        or None to block indefinitely
         :returns: False if timed out, otherwise true.
         """
         return self._api.waitForEntryListenerQueue(timeout)
@@ -371,8 +386,9 @@ class NetworkTablesInstance:
         for deterministic testing.  This blocks until either the connection listener
         queue is empty (e.g. there are no more events that need to be passed along
         to callbacks or poll queues) or the timeout expires.
+        
         :param timeout: timeout, in seconds.  Set to 0 for non-blocking behavior,
-        or a negative value to block indefinitely
+                        or a negative value to block indefinitely
         :returns: False if timed out, otherwise true.
         
         .. versionadded:: 2018.0.0
@@ -412,7 +428,7 @@ class NetworkTablesInstance:
         
         :param persistFilename: the name of the persist file to use
         :param listenAddress: the address to listen on, or empty to listen on any
-        address
+                              address
         :param port: port to communicate over
         
         .. versionadded:: 2018.0.0
@@ -535,7 +551,9 @@ class NetworkTablesInstance:
     def getConnections(self):
         """Gets information on the currently established network connections.
         If operating as a client, this will return either zero or one values.
-        :returns: array of connection information
+        
+        :returns: list of connection information
+        :rtype: list
         
         .. versionadded:: 2018.0.0
         """
@@ -589,6 +607,7 @@ class NetworkTablesInstance:
     def saveEntries(self, filename, prefix):
         """Save table values to a file.  The file format used is identical to
         that used for SavePersistent.
+        
         :param filename: filename
         :param prefix: save only keys starting with this prefix
         
@@ -601,6 +620,7 @@ class NetworkTablesInstance:
     def loadEntries(self, filename, prefix):
         """Load table values from a file.  The file format used is identical to
         that used for SavePersistent / LoadPersistent.
+        
         :param filename: filename
         :param prefix: load only keys starting with this prefix
         
@@ -703,7 +723,7 @@ class NetworkTablesInstance:
         .. versionadded:: 2015.3.0
         
         .. versionchanged:: 2018.0.0
-           This now returns the same as :meth:`.getEntry`
+           This now returns the same as :meth:`NetworkTablesInstance.getEntry`
         '''
         assert key.startswith('/')
         
