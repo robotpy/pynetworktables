@@ -16,26 +16,13 @@ logger = logging.getLogger('test')
 def doc(nt):
     t = nt.getTable('nope')
     
-    with pytest.raises(KeyError):
-        t.getBoolean('b')
-    
-    with pytest.raises(KeyError):
-        t.getNumber('n')
-        
-    with pytest.raises(KeyError):
-        t.getString('s')
-    
-    with pytest.raises(KeyError):
-        t.getBooleanArray('ba')
-    
-    with pytest.raises(KeyError):
-        t.getNumberArray('na')
-        
-    with pytest.raises(KeyError):
-        t.getStringArray('sa')
-        
-    with pytest.raises(KeyError):
-        t.getValue('v')
+    assert t.getBoolean('b', None) is None
+    assert t.getNumber('n', None) is None
+    assert t.getString('s', None) is None
+    assert t.getBooleanArray('ba', None) is None
+    assert t.getNumberArray('na', None) is None
+    assert t.getStringArray('sa', None) is None
+    assert t.getValue('v', None) is None
     
     assert t.getBoolean('b', True) is True
     assert t.getNumber('n', 1) == 1
@@ -59,14 +46,14 @@ def do(nt1, nt2, t):
         t1.putStringArray('sa', ('s', 't'))
     
     t2 = nt2.getTable(t)
-    assert t2.getBoolean('bool') is True
-    assert t2.getNumber('number1') == 1
-    assert t2.getNumber('number2') == 1.5
-    assert t2.getString('string') == 'string'
-    assert t2.getString('unicode') == u'\xA9'  # copyright symbol
-    assert t2.getBooleanArray('ba') == (True, False) 
-    assert t2.getNumberArray('na') == (1, 2)
-    assert t2.getStringArray('sa') == ('s', 't')
+    assert t2.getBoolean('bool', None) is True
+    assert t2.getNumber('number1', None) == 1
+    assert t2.getNumber('number2', None) == 1.5
+    assert t2.getString('string', None) == 'string'
+    assert t2.getString('unicode', None) == u'\xA9'  # copyright symbol
+    assert t2.getBooleanArray('ba', None) == (True, False) 
+    assert t2.getNumberArray('na', None) == (1, 2)
+    assert t2.getStringArray('sa', None) == ('s', 't')
     
     # Value testing
     with nt2.expect_changes(6):
@@ -79,12 +66,12 @@ def do(nt1, nt2, t):
         t1.putValue('v_v', 0)
         
     print(t2.getKeys())
-    assert t2.getBoolean('v_b') is False
-    assert t2.getNumber('v_n1') == 2
-    assert t2.getNumber('v_n2') == 2.5
-    assert t2.getString('v_s') == 'ssss'
-    assert t2.getString('v_s2') == u'\xA9'
-    assert t2.getValue('v_v') == 0
+    assert t2.getBoolean('v_b', None) is False
+    assert t2.getNumber('v_n1', None) == 2
+    assert t2.getNumber('v_n2', None) == 2.5
+    assert t2.getString('v_s', None) == 'ssss'
+    assert t2.getString('v_s2', None) == u'\xA9'
+    assert t2.getValue('v_v', None) == 0
     
     # Ensure that updating values work!
     with nt2.expect_changes(8):
@@ -98,14 +85,14 @@ def do(nt1, nt2, t):
         t1.putStringArray('sa', ('t', 's'))
     
     t2 = nt2.getTable(t)
-    assert t2.getBoolean('bool') is False
-    assert t2.getNumber('number1') == 2
-    assert t2.getNumber('number2') == 2.5
-    assert t2.getString('string') == 'sss'
-    assert t2.getString('unicode') == u'\u2122'
-    assert t2.getBooleanArray('ba') == (False, True, False) 
-    assert t2.getNumberArray('na') == (2, 1)
-    assert t2.getStringArray('sa') == ('t', 's')
+    assert t2.getBoolean('bool', None) is False
+    assert t2.getNumber('number1', None) == 2
+    assert t2.getNumber('number2', None) == 2.5
+    assert t2.getString('string', None) == 'sss'
+    assert t2.getString('unicode', None) == u'\u2122'
+    assert t2.getBooleanArray('ba', None) == (False, True, False) 
+    assert t2.getNumberArray('na', None) == (2, 1)
+    assert t2.getStringArray('sa', None) == ('t', 's')
     
     # Try out deletes -- but NT2 doesn't support them
     if nt2.proto_rev == 0x0300:
@@ -113,15 +100,14 @@ def do(nt1, nt2, t):
             with nt2.expect_changes(1):
                 t1.delete('bool')
                 
-            with pytest.raises(KeyError):
-                t2.getBoolean('bool')
+            assert t2.getBoolean('bool', None) == None
         else:
             t1.delete('bool')
             
             with nt2.expect_changes(1):
                 t1.putBoolean('ooo', True)
                 
-            assert t2.getBoolean('bool') is False
+            assert t2.getBoolean('bool', None) is False
             
     else:
         t1.delete('bool')
@@ -129,7 +115,7 @@ def do(nt1, nt2, t):
         with nt2.expect_changes(1):
             t1.putBoolean('ooo', True)
                 
-        assert t2.getBoolean('bool') is False
+        assert t2.getBoolean('bool', None) is False
 
 
 def test_basic(nt_live):
@@ -161,7 +147,7 @@ def test_reconnect(nt_live):
         ct.putBoolean('foo', True)
         
     st = nt_server.getTable('t')
-    assert st.getBoolean('foo') == True
+    assert st.getBoolean('foo', None) == True
     
     # Client disconnect testing
     nt_client.shutdown()
@@ -172,7 +158,7 @@ def test_reconnect(nt_live):
         nt_client.start_test()
         ct = nt_client.getTable('t')
     
-    assert ct.getBoolean('foo') == True
+    assert ct.getBoolean('foo', None) == True
     
     # Server disconnect testing
     nt_server.shutdown()
@@ -187,5 +173,5 @@ def test_reconnect(nt_live):
         nt_server.start_test()
         
     st = nt_server.getTable('t')
-    assert st.getBoolean('foo') == True
+    assert st.getBoolean('foo', None) == True
 

@@ -3,7 +3,7 @@ from ntcore.storage import _Entry
 
 def test_sequence_numbers():
     
-    e = _Entry('name', 0)
+    e = _Entry('name', 0, None)
     
     #
     # Test rollover

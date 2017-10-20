@@ -17,6 +17,7 @@ logger = logging.getLogger('conftest')
 import pytest
 
 from networktables import NetworkTables
+from networktables.instance import NetworkTablesInstance
 from ntcore.support.compat import Condition
 
 #
@@ -26,8 +27,7 @@ from ntcore.support.compat import Condition
 @pytest.fixture(scope='function', params=[True, False])
 def nt(request):
     '''Starts/stops global networktables instance for testing'''
-    NetworkTables.setTestMode(server=request.param)
-    NetworkTables.initialize()
+    NetworkTables.startTestMode(server=request.param)
     
     yield NetworkTables
     
@@ -57,74 +57,66 @@ def nt_flush(nt):
 # Live NT instance fixtures
 #
 
-class NtTestBase(NetworkTables):
+class NtTestBase(NetworkTablesInstance):
     '''
         Object for managing a live pair of NT server/client
     '''
     
     _wait_lock = None
     
-    @classmethod
-    def _init_common(cls, proto_rev):
+    def _init_common(self, proto_rev):
         # This resets the instance to be independent
-        cls.shutdown()
-        cls._api.dispatcher.setDefaultProtoRev(proto_rev)
-        cls.proto_rev = proto_rev
+        self.shutdown()
+        self._api.dispatcher.setDefaultProtoRev(proto_rev)
+        self.proto_rev = proto_rev
         
-        cls.enableVerboseLogging()
-        #cls._wait_init()
+        self.enableVerboseLogging()
+        #self._wait_init()
     
-    @classmethod
-    def _init_server(cls, proto_rev, server_port=0):
-        cls._init_common(proto_rev)
+    def _init_server(self, proto_rev, server_port=0):
+        self._init_common(proto_rev)
         
-        cls.port = server_port
-        cls._serverListenAddress = '127.0.0.1'
+        self.port = server_port
         
     
-    @classmethod
-    def _init_client(cls, proto_rev):
-        cls._init_common(proto_rev)
+    def _init_client(self, proto_rev):
+        self._init_common(proto_rev)
     
-    @classmethod
-    def _wait_init(cls):
-        cls._wait_lock = Condition()
-        cls._wait = 0
+    def _wait_init(self):
+        self._wait_lock = Condition()
+        self._wait = 0
         
-        cls._api.addEntryListener('', cls._wait_cb, 
-                                  NetworkTables.NotifyFlags.NEW |
-                                  NetworkTables.NotifyFlags.UPDATE |
-                                  NetworkTables.NotifyFlags.DELETE |
-                                  NetworkTables.NotifyFlags.FLAGS)
+        self._api.addEntryListener('', self._wait_cb, 
+                                  NetworkTablesInstance.NotifyFlags.NEW |
+                                  NetworkTablesInstance.NotifyFlags.UPDATE |
+                                  NetworkTablesInstance.NotifyFlags.DELETE |
+                                  NetworkTablesInstance.NotifyFlags.FLAGS)
     
-    @classmethod
-    def _wait_cb(cls, *args):
-        with cls._wait_lock:
-            cls._wait += 1
+    def _wait_cb(self, *args):
+        with self._wait_lock:
+            self._wait += 1
             #logger.info('Wait callback, got: %s', args)
-            cls._wait_lock.notify()
+            self._wait_lock.notify()
     
-    
-    @classmethod
     @contextmanager
-    def expect_changes(cls, count):
+    def expect_changes(self, count):
         '''Use this on the *other* instance that you're making 
         changes on, to wait for the changes to propagate to the
         other instance'''
         
-        if cls._wait_lock is None:
-            cls._wait_init()
+        if self._wait_lock is None:
+            self._wait_init()
         
-        with cls._wait_lock:
-            cls._wait = 0
+        with self._wait_lock:
+            self._wait = 0
         
         logger.info("Begin actions")
         yield
         logger.info("Waiting for %s changes", count)
         
-        with cls._wait_lock:
-            result = cls._wait_lock.wait_for(lambda: cls._wait == count, 4), \
-                  "Timeout waiting for %s changes (got %s)" % (count, cls._wait)
+        with self._wait_lock:
+            result = self._wait_lock.wait_for(lambda: self._wait == count, 4), \
+                  "Timeout waiting for %s changes (got %s)" % (count, self._wait)
             logger.info("expect_changes: %s", result)
             assert result
 
@@ -142,22 +134,22 @@ def nt_server(request):
         
         _test_saved_port = None
         
-        @classmethod
-        def start_test(cls):
+        def start_test(self):
             # Restore server port on restart
-            if cls._test_saved_port is not None:
-                cls.port = cls._test_saved_port
-                cls._api.dispatcher.setDefaultProtoRev(request.param)
+            if self._test_saved_port is not None:
+                self.port = self._test_saved_port
+                self._api.dispatcher.setDefaultProtoRev(request.param)
             
-            cls.initialize()
+            self.startServer(listenAddress='127.0.0.1', port=self.port)
             
-            assert cls._api.dispatcher.m_server_acceptor.waitForStart(timeout=1)
-            cls.port = cls._api.dispatcher.m_server_acceptor.m_port
-            cls._test_saved_port = cls.port
+            assert self._api.dispatcher.m_server_acceptor.waitForStart(timeout=1)
+            self.port = self._api.dispatcher.m_server_acceptor.m_port
+            self._test_saved_port = self.port
     
-    NtServer._init_server(request.param)
-    yield NtServer
-    NtServer.shutdown()
+    server = NtServer()
+    server._init_server(request.param)
+    yield server
+    server.shutdown()
 
 @pytest.fixture(params=[
     0x0200, 0x0300
@@ -165,15 +157,15 @@ def nt_server(request):
 def nt_client(request, nt_server):
     
     class NtClient(NtTestBase):
-        @classmethod
-        def start_test(cls):
-            cls._api.dispatcher.setDefaultProtoRev(request.param)
-            cls.setPort(nt_server.port)
-            cls.initialize(server='127.0.0.1')
+        
+        def start_test(self):
+            self._api.dispatcher.setDefaultProtoRev(request.param)
+            self.startClient(('127.0.0.1', nt_server.port))
     
-    NtClient._init_client(request.param)
-    yield NtClient
-    NtClient.shutdown()
+    client = NtClient()
+    client._init_client(request.param)
+    yield client
+    client.shutdown()
 
 @pytest.fixture
 def nt_live(nt_server, nt_client):

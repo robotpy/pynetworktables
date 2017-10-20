@@ -13,14 +13,13 @@ def test_autoupdatevalue(nt):
     assert foo.value == True
     assert foo.get() == True
     
-    nt.setTestMode()
-    nt.initialize()
+    nt.startTestMode()
     
     assert foo.value == True
     assert foo.get() == True
     
     t = nt.getTable('/SmartDashboard')
-    assert t.getBoolean('foo') == True
+    assert t.getBoolean('foo', None) == True
     t.putBoolean('foo', False)
     
     assert foo.value == False
@@ -38,15 +37,15 @@ def test_ntproperty(nt, nt_flush):
     t = nt.getTable('/SmartDashboard')
         
     assert f.robotTime == 0
-    assert t.getNumber('robotTime') == 0
+    assert t.getNumber('robotTime', None) == 0
     
     f.robotTime = 2
-    assert t.getNumber('robotTime') == 2 
+    assert t.getNumber('robotTime', None) == 2 
     
     t.putNumber('robotTime', 4)
     assert f.robotTime == 4
     
-    assert f.testArray == [1,2,3]
+    assert f.testArray == (1,2,3)
     f.testArray = [4,5,6]
     assert f.testArray == (4,5,6)
 
@@ -59,6 +58,22 @@ def test_ntproperty_emptyarray(nt):
         class Foo2(object):
             testArray = ntproperty('/SmartDashboard/testArray', [], writeDefault=False)
 
+def test_ntproperty_multitest(nt):
+    assert False
+    
+    # create an ntproperty
+    
+    # start an nt instance in test mode
+    
+    # see that it works
+    
+    # kill the nt instance
+    
+    # start it again in test mode
+    
+    # should still work
+
+
 def test_chooser_control(nt):
     
     c = ChooserControl('Autonomous Mode')
@@ -70,7 +85,7 @@ def test_chooser_control(nt):
     assert c.getSelected() == 'foo'
     
     t = nt.getTable('/SmartDashboard/Autonomous Mode')
-    assert t.getString('selected') == 'foo'
+    assert t.getString('selected', None) == 'foo'
     
     t.putStringArray('options', ('option1', 'option2'))
     assert c.getChoices() == ('option1', 'option2')
