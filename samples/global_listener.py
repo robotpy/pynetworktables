@@ -28,7 +28,7 @@ NetworkTables.initialize(server=ip)
 def valueChanged(key, value, isNew):
     print("valueChanged: key: '%s'; value: %s; isNew: %s" % (key, value, isNew))
 
-NetworkTables.addGlobalListener(valueChanged)
+NetworkTables.addEntryListener(valueChanged)
 
 while True:
     time.sleep(1)

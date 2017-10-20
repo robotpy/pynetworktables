@@ -28,11 +28,8 @@ sd = NetworkTables.getTable("SmartDashboard")
 
 i = 0
 while True:
-    try:
-        print('robotTime:', sd.getNumber('robotTime'))
-    except KeyError:
-        print('robotTime: N/A')
-
+    print('robotTime:', sd.getNumber('robotTime', 'N/A'))
+    
     sd.putNumber('dsTime', i)
     time.sleep(1)
     i += 1
