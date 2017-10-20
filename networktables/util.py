@@ -46,20 +46,27 @@ def ntproperty(key, defaultValue, writeDefault=True, doc=None):
                   
         .. warning:: When using python 2.x, the property must be assigned to
                      a new-style class or it won't work!
+                     
+                     Additionally, this function assumes that the value's type
+                     never changes. If it does, you'll get really strange
+                     errors... so don't do that.
                   
         .. versionadded:: 2015.3.0
     '''
     
     nt = NetworkTables
     
+    # TODO: these break in testing mode
     ntvalue = nt.getGlobalAutoUpdateValue(key, defaultValue, writeDefault)
-    mkv = ntvalue._valuefn
+    
+    # this is an optimization, but presumes the value type never changes
+    mkv = Value.getFactoryByType(ntvalue._value[0])
     
     def _get(_):
         return ntvalue.value
     
     def _set(_, value):
-        nt._api.setEntryValue(key, mkv(value))
+        nt._api.setEntryValueById(ntvalue._local_id, mkv(value))
     
     return property(fget=_get, fset=_set, doc=doc)
 

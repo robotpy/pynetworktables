@@ -65,3 +65,6 @@ kExecuteRpc =       b'\x20'
 kRpcResponse =      b'\x21'
 
 kClearAllMagic =    0xD06CB27A
+
+# The default port that network tables operates on
+NT_DEFAULT_PORT = 1735

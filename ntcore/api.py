@@ -32,6 +32,15 @@ class NtCoreApi(object):
         self.entry_notifier.stop()
         self.conn_notifier.stop()
         self.storage.stop()
+        
+    def destroy(self):
+        self.ds_client = None
+        self.dispatcher = None
+        self.rpc_server = None
+        self.entry_notifier = None
+        self.entry_notifier = None
+        self.conn_notifier = None
+        self.storage = None
 
     #
     # Table functions
@@ -100,8 +109,8 @@ class NtCoreApi(object):
     def getEntryInfo(self, prefix, types):
         return self.storage.getEntryInfo(prefix, types)
     
-    def getEntryInfoById(self, local_id, types):
-        return self.storage.getEntryInfoById(local_id, types)
+    def getEntryInfoById(self, local_id):
+        return self.storage.getEntryInfoById(local_id)
     
     #
     # Entry notification
