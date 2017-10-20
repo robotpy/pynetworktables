@@ -59,7 +59,14 @@ class Dispatcher(object):
         # Mutex for user-accessible items
         self.m_user_mutex = threading.RLock()
         self.m_connections = []
-        self.m_identity = ''
+        
+        # Circular import issue
+        try:
+            from .version import __version__
+        except ImportError:
+            __version__ = '[unknown version]'
+        
+        self.m_identity = 'pynetworktables %s' % __version__
         
         self.m_active = False # set to false to terminate threads
         self.m_update_rate = 0.050 # periodic dispatch rate, in s
