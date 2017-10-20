@@ -48,18 +48,19 @@ logger = logging.getLogger('nt')
 
 
 class _Entry(object):
-    __slots__ = ['name', 'value', 'flags',
+    __slots__ = ['name', '_value', 'flags',
                  'id', 'local_id', 'seq_num', 'local_write',
-                 'rpc_uid', 'rpc_call_uid']
+                 'rpc_uid', 'rpc_call_uid', 'user_entry']
     
-    def __init__(self, name, local_id, value=None, flags=0, seq_num=0):
+    def __init__(self, name, local_id, user_entry):
+        
         # We redundantly store the name so that it's available when accessing the
         # raw Entry* via the ID map.
         self.name = name
         
         # The current value and flags.
-        self.value = value
-        self.flags = flags
+        self._value = None
+        self.flags = 0
         
         # Unique ID for self entry as used in network messages.  The value is
         # assigned by the server, on the client this is 0xffff until an
@@ -70,7 +71,7 @@ class _Entry(object):
         self.local_id = local_id
         
         # Sequence number for update resolution.
-        self.seq_num = seq_num
+        self.seq_num = 0
         
         # If value has been written locally.  Used during initial handshake
         # on client to determine whether or not to accept remote changes.
@@ -82,6 +83,18 @@ class _Entry(object):
         # Last UID used when calling self RPC (primarily for client use).  This
         # is incremented for each call.
         self.rpc_call_uid = 0
+        
+        # python-specific: User-visible entry for optimized value retrieval
+        self.user_entry = user_entry
+        
+    @property
+    def value(self):
+        return self._value
+    
+    @value.setter
+    def value(self, value):
+        self._value = value
+        self.user_entry._value = value
         
     def isPersistent(self):
         return (self.flags & NT_PERSISTENT) != 0 
@@ -110,9 +123,12 @@ class _Entry(object):
 
 class Storage(object):
     
-    def __init__(self, entry_notifier, rpc_server):
+    def __init__(self, entry_notifier, rpc_server, user_entry_creator):
         self.m_notifier = entry_notifier
         self.m_rpc_server = rpc_server
+        
+        # python-specific
+        self.m_user_entry_creator = user_entry_creator
         
         self.m_mutex = threading.Lock()
         self.m_entries = {}
@@ -397,7 +413,7 @@ class Storage(object):
         call_uid = msg.seq_num_uid
         # XXX: TODO
         assert False
-        self.m_rpc_server.processRpc(entry.local_id, entry.call_uid,
+        self.m_rpc_server.processRpc(entry.local_id, entry.rpc_call_uid,
                                      entry.name, msg, entry.rpc_callback,
                                      conn.uid(), conn.queueOutgoing, conn.info())
     
@@ -549,6 +565,7 @@ class Storage(object):
                 return entry.value.type == value.type
             
             self._setEntryValueImpl(entry, value, outgoing, True)
+            return True
     
     def setEntryValue(self, name, value):
         if not name:
@@ -803,28 +820,38 @@ class Storage(object):
         entry = self.m_entries.get(name)
         if not entry:
             local_id = len(self.m_localmap)
-            entry = _Entry(name, local_id)
+            user_entry = self.m_user_entry_creator(name, local_id)
+            entry = _Entry(name, local_id, user_entry)
             self.m_entries[name] = entry
             self.m_localmap.append(entry)
         return entry
     
+    # ntcore: getEntry
     def getEntryId(self, name):
         if name:
             with self.m_mutex:
                 entry = self._getOrNew(name)
                 return entry.local_id
     
+    # python-specific
+    def getEntry(self, name):
+        if name:
+            with self.m_mutex:
+                entry = self._getOrNew(name)
+                return entry.user_entry
+    
+    # python-specific: returns user entries instead of ids
     def getEntries(self, prefix, types):
         with self.m_mutex:
-            ids = []
+            entries = []
             types = types if isinstance(types, int) else ord(types)
             for k, entry in self.m_entries.items():
                 if entry.value is None or not k.startswith(prefix):
                     continue
                 if types != 0 and ((types & ord(entry.value.type)) == 0):
                     continue
-                ids.append(entry.local_id)
-        return ids
+                entries.append(entry.user_entry)
+        return entries
     
     def getEntryInfoById(self, local_id):
         with self.m_mutex:
@@ -1124,7 +1151,7 @@ class Storage(object):
                         notify_flags = NT_NOTIFY_UPDATE | NT_NOTIFY_LOCAL
                         if not was_persist and persistent:
                             notify_flags |= NT_NOTIFY_FLAGS
-    
+
                         self.m_notifier.notifyEntry(entry.local_id, name, value, notify_flags)
                     elif not was_persist and persistent:
                         self.m_notifier.notifyEntry(entry.local_id, name, value,

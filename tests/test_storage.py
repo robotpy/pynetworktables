@@ -75,11 +75,15 @@ def conn():
     conn.get_proto_rev.return_value = 0x0300
     return conn
 
+class FakeUserEntry:
+    def __init__(self, *args):
+        pass
+
 @pytest.fixture
 def storage_empty(dispatcher, entry_notifier, is_server):
     rpc_server = Mock(spec=RpcServer)
     
-    storage = Storage(entry_notifier, rpc_server)
+    storage = Storage(entry_notifier, rpc_server, FakeUserEntry)
     storage.setDispatcher(dispatcher, is_server)
     
     entry_notifier.m_local_notifiers = True

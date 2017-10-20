@@ -87,9 +87,6 @@ class EntryNotifier(CallbackManager):
         CallbackManager.__init__(self, verbose)
         
         self.m_local_notifiers = False
-        
-        # Python specific: autoValue support
-        self.m_autovalues = {}
     
     def add(self, callback, prefix, flags):
         if (flags & NT_NOTIFY_LOCAL) != 0:
@@ -111,19 +108,7 @@ class EntryNotifier(CallbackManager):
             self.m_local_notifiers = True
         return self.doAdd(_EntryListenerData(None, local_id, flags, None, poller_uid))
     
-    def createAutoValue(self, key, value):
-        # Python specific: autoValue support
-        self.m_local_notifiers = True
-        return self.m_autovalues.setdefault(key, value)
-    
     def notifyEntry(self, local_id, name, value, flags, only_listener=None):
-        
-        # Python-specific autovalue support
-        vv = value.value
-        if vv is not None:
-            autovalue = self.m_autovalues.get(name)
-            if autovalue is not None:
-                autovalue._AutoUpdateValue__value = value.value
         
         # optimization: don't generate needless local queue entries if we have
         # no local listeners (as this is a common case on the server side)

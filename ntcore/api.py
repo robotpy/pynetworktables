@@ -17,11 +17,11 @@ class NtCoreApi(object):
         would want to do this.
     '''
     
-    def __init__(self, verbose=False):
+    def __init__(self, entry_creator, verbose=False):
         self.conn_notifier = ConnectionNotifier(verbose=verbose)
         self.entry_notifier = EntryNotifier(verbose=verbose)
         self.rpc_server = RpcServer(verbose=verbose)
-        self.storage = Storage(self.entry_notifier, self.rpc_server)
+        self.storage = Storage(self.entry_notifier, self.rpc_server, entry_creator)
         self.dispatcher = Dispatcher(self.storage, self.conn_notifier, verbose=verbose)
         self.ds_client = DsClient(self.dispatcher, verbose=verbose)
         
@@ -36,6 +36,9 @@ class NtCoreApi(object):
     #
     # Table functions
     #
+    
+    def getEntry(self, name):
+        return self.storage.getEntry(name)
     
     def getEntryId(self, name):
         return self.storage.getEntryId(name)
@@ -162,10 +165,6 @@ class NtCoreApi(object):
     def waitForConnectionListenerQueue(self, timeout):
         return self.conn_notifier.waitForQueue(timeout)
 
-    # Python-specific
-    def createAutoValue(self, key, value):
-        return self.entry_notifier.createAutoValue(key, value)
-    
     #
     # TODO: RPC stuff not currently implemented
     #       .. there's probably a good pythonic way to implement
