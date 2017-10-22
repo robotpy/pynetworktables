@@ -64,6 +64,11 @@ class NtTestBase(NetworkTablesInstance):
     
     _wait_lock = None
     
+    def shutdown(self):
+        NetworkTablesInstance.shutdown(self)
+        if self._wait_lock is not None:
+            self._wait_init_listener()
+    
     def _init_common(self, proto_rev):
         # This resets the instance to be independent
         self.shutdown()
@@ -85,7 +90,9 @@ class NtTestBase(NetworkTablesInstance):
     def _wait_init(self):
         self._wait_lock = Condition()
         self._wait = 0
-        
+        self._wait_init_listener()
+    
+    def _wait_init_listener(self):
         self._api.addEntryListener('', self._wait_cb, 
                                   NetworkTablesInstance.NotifyFlags.NEW |
                                   NetworkTablesInstance.NotifyFlags.UPDATE |
@@ -115,10 +122,10 @@ class NtTestBase(NetworkTablesInstance):
         logger.info("Waiting for %s changes", count)
         
         with self._wait_lock:
-            result = self._wait_lock.wait_for(lambda: self._wait == count, 4), \
+            result, msg  = self._wait_lock.wait_for(lambda: self._wait == count, 4), \
                   "Timeout waiting for %s changes (got %s)" % (count, self._wait)
-            logger.info("expect_changes: %s", result)
-            assert result
+            logger.info("expect_changes: %s %s", result, msg)
+            assert result, msg
 
 # Each test should cover each NT version combination
 # 0x0200 -> 0x0300
@@ -140,6 +147,8 @@ def nt_server(request):
                 self.port = self._test_saved_port
                 self._api.dispatcher.setDefaultProtoRev(request.param)
             
+            self.enableVerboseLogging()
+            
             self.startServer(listenAddress='127.0.0.1', port=self.port)
             
             assert self._api.dispatcher.m_server_acceptor.waitForStart(timeout=1)
@@ -159,6 +168,7 @@ def nt_client(request, nt_server):
     class NtClient(NtTestBase):
         
         def start_test(self):
+            self.enableVerboseLogging()
             self._api.dispatcher.setDefaultProtoRev(request.param)
             self.startClient(('127.0.0.1', nt_server.port))
     

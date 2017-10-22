@@ -284,7 +284,7 @@ class Storage(object):
                     self.m_notifier.notifyEntry(entry.local_id, name, entry.value, NT_NOTIFY_NEW)
                     return
 
-                may_need_update = True;  # we may need to send an update message
+                may_need_update = True  # we may need to send an update message
                 
                 # if the received flags don't match what we sent, most likely
                 # updated flags locally in the interim; send flags update message.
