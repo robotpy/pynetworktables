@@ -104,11 +104,26 @@ class _Entry(object):
         self.seq_num &= 0xffff
         
     def isSeqNewerThan(self, other):
+        '''
+            self > other
+        '''
         seq_num = self.seq_num
-        if other < seq_num:
-            return (seq_num - other) < 32768
-        elif other > seq_num:
+        if seq_num < other:
             return (other - seq_num) > 32768
+        elif seq_num > other:
+            return (seq_num - other) < 32768
+        else:
+            return False
+        
+    def isSeqNewerOrEqual(self, other):
+        '''
+            self >= other
+        '''
+        seq_num = self.seq_num
+        if seq_num < other:
+            return (other - seq_num) > 32768
+        elif seq_num > other:
+            return (seq_num - other) < 32768
         else:
             return True
         
@@ -279,7 +294,7 @@ class Storage(object):
 
         # already exists; ignore if sequence number not higher than local
         seq_num = msg.seq_num_uid
-        if not entry.isSeqNewerThan(seq_num):
+        if entry.isSeqNewerThan(seq_num):
             if may_need_update:
                 outmsg = Message.entryUpdate(entry.id, entry.seq_num,
                                              entry.value)
@@ -336,7 +351,7 @@ class Storage(object):
 
         # ignore if sequence number not higher than local
         seq_num = msg.seq_num_uid
-        if entry.isSeqNewerThan(seq_num):
+        if entry.isSeqNewerOrEqual(seq_num):
             return
         
         # update local

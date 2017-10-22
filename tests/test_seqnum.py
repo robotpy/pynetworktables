@@ -18,6 +18,7 @@ def test_sequence_numbers():
     
     #
     # test Entry.isSeqNewerThan
+    # -> operator >
     #
     
     e.seq_num = 10
@@ -33,7 +34,32 @@ def test_sequence_numbers():
     assert e.isSeqNewerThan(50000) == True
     
     e.seq_num = 20
-    assert e.isSeqNewerThan(20) == True
+    assert e.isSeqNewerThan(20) == False
     
     e.seq_num = 50000
-    assert e.isSeqNewerThan(50000) == True
+    assert e.isSeqNewerThan(50000) == False
+    
+    
+    #
+    # test Entry.isSeqNewerOrEqual
+    # -> operator >=
+    #
+    
+    e.seq_num = 10
+    assert e.isSeqNewerOrEqual(20) == False
+    
+    e.seq_num = 20
+    assert e.isSeqNewerOrEqual(10) == True
+    
+    e.seq_num = 50000
+    assert e.isSeqNewerOrEqual(10) == False
+    
+    e.seq_num = 10
+    assert e.isSeqNewerOrEqual(50000) == True
+    
+    e.seq_num = 20
+    assert e.isSeqNewerOrEqual(20) == True
+    
+    e.seq_num = 50000
+    assert e.isSeqNewerOrEqual(50000) == True
+    
