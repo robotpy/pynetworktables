@@ -248,6 +248,7 @@ class Storage(object):
                     return
                 
                 entry.flags = msg.flags
+                entry.seq_num = msg.seq_num_uid
                 self._setEntryValueImpl(entry, msg.value, outgoing, False)
                 return
             
@@ -277,6 +278,7 @@ class Storage(object):
                     # id assignment request)
                     entry.value = msg.value
                     entry.flags = msg.flags
+                    entry.seq_num = msg.seq_num_uid
                     
                     # notify
                     self.m_notifier.notifyEntry(entry.local_id, name, entry.value, NT_NOTIFY_NEW)
