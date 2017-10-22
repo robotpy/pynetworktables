@@ -1,6 +1,8 @@
 # todo: tracks NetworkTablesInstance.java
 
 
+from weakref import WeakSet
+
 from ntcore import constants
 from ntcore.api import NtCoreApi
 from ntcore.support.compat import basestring
@@ -167,6 +169,12 @@ class NetworkTablesInstance:
         self._tables = {}
         self._entry_listeners = {}
         self._conn_listeners = {}
+        
+        if not hasattr(self, '_ntproperties'):
+            self._ntproperties = WeakSet()
+        else:
+            for ntprop in self._ntproperties:
+                ntprop.reset()
         
     def __createEntry(self, key, local_id):
         return NetworkTableEntry(self._api, local_id, key)

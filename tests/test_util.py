@@ -59,19 +59,37 @@ def test_ntproperty_emptyarray(nt):
             testArray = ntproperty('/SmartDashboard/testArray', [], writeDefault=False)
 
 def test_ntproperty_multitest(nt):
-    assert False
+    '''
+        Checks to see that ntproperties still work between NT restarts
+    '''
     
-    # create an ntproperty
+    class Foo(object):
+        robotTime = ntproperty('/SmartDashboard/robotTime', 0, writeDefault=False)
+        dsTime = ntproperty('/SmartDashboard/dsTime', 0, writeDefault=True)
     
-    # start an nt instance in test mode
-    
-    # see that it works
-    
-    # kill the nt instance
-    
-    # start it again in test mode
-    
-    # should still work
+    for i in range(3):
+        print("Iteration", i)
+        
+        f = Foo()
+        
+        t = nt.getTable('/SmartDashboard')
+            
+        assert f.robotTime == 0
+        assert f.dsTime == 0
+        
+        assert t.getNumber('robotTime', None) == 0
+        assert t.getNumber('dsTime', None) == 0
+        
+        f.robotTime = 2
+        assert t.getNumber('robotTime', None) == 2 
+        assert t.getNumber('dsTime', None) == 0
+        
+        t.putNumber('robotTime', 4)
+        assert f.robotTime == 4
+        assert f.dsTime == 0
+        
+        nt.shutdown()
+        nt.startTestMode()
 
 
 def test_chooser_control(nt):
