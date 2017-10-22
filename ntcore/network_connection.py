@@ -31,6 +31,15 @@ logger = logging.getLogger('nt')
 
 _empty_pair = Pair(0, 0)
 
+_state_map = {
+    0: 'created',
+    1: 'init',
+    2: 'handshake',
+    3: 'synchronized',
+    4: 'active',
+    5: 'dead',
+}
+
 
 class NetworkConnection(object):
     
@@ -190,8 +199,13 @@ class NetworkConnection(object):
                 self.m_notifier.notifyConnection(False, info)
                 logger.info("DISCONNECTED %s port %s (%s)",
                             info.remote_ip, info.remote_port, info.remote_id)
-                
-        self.m_state = state
+        
+            if self.m_verbose:
+                logger.debug('%s: %s -> %s', self,
+                            _state_map[self.m_state],
+                            _state_map[state])
+            
+            self.m_state = state
     
     def state(self):
         return self.m_state
