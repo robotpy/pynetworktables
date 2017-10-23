@@ -479,10 +479,6 @@ class NetworkTableEntry(object):
     
     def __bool__(self):
         raise TypeError("< not allowed on NetworkTableEntry objects. Use the .value attribute instead")
-    
-    def __hash__(self):
-        raise TypeError("__hash__ not allowed on NetworkTableEntry objects")
-    
+
     def __repr__(self):
         return '<NetworkTableEntry: %s>' % (self._value.__repr__(), )
-    
