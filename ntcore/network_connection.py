@@ -1,6 +1,6 @@
-# validated: 2016-10-27 DS 86c43df cpp/NetworkConnection.cpp cpp/NetworkConnection.h
+# validated: 2017-09-28 DS cedbafeb286d cpp/NetworkConnection.cpp cpp/NetworkConnection.h cpp/INetworkConnection.h
 '''----------------------------------------------------------------------------'''
-''' Copyright (c) FIRST 2015. All Rights Reserved.                             '''
+''' Copyright (c) FIRST 2017. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''
 ''' must be accompanied by the FIRST BSD license file in the root directory of '''
 ''' the project.                                                               '''
@@ -22,6 +22,8 @@ from .wire import WireCodec
 
 from .support.compat import monotonic, Queue, Empty
 from .support.lists import Pair
+from .support.safe_thread import SafeThread
+
 from .tcpsockets.tcp_stream import StreamEOF
 
 import logging
@@ -29,11 +31,17 @@ logger = logging.getLogger('nt')
 
 _empty_pair = Pair(0, 0)
 
+_state_map = {
+    0: 'created',
+    1: 'init',
+    2: 'handshake',
+    3: 'synchronized',
+    4: 'active',
+    5: 'dead',
+}
+
 
 class NetworkConnection(object):
-    
-    s_uid = 0
-    s_uid_lock = threading.Lock()
     
     class State(object):
         kCreated = 0
@@ -43,15 +51,12 @@ class NetworkConnection(object):
         kActive = 4
         kDead = 5
     
-    def __init__(self, stream, notifier, handshake, get_entry_type, verbose=False):
+    def __init__(self, uid, stream, notifier, handshake, get_entry_type, verbose=False):
         
-        with self.s_uid_lock:
-            self.m_uid = NetworkConnection.s_uid
-            NetworkConnection.s_uid += 1
-            
         # logging debugging
         self.m_verbose = verbose
         
+        self.m_uid = uid
         self.m_stream = stream
         self.m_notifier = notifier
         self.m_handshake = handshake
@@ -86,7 +91,10 @@ class NetworkConnection(object):
         self.m_write_shutdown = False
     
         # turn off Nagle algorithm; we bundle packets for transmission
-        self.m_stream.setNoDelay()
+        try:
+            self.m_stream.setNoDelay()
+        except IOError as e:
+            logger.warn("Setting TCP_NODELAY: %s", e)
     
     def start(self):
         if self.m_active:
@@ -108,17 +116,16 @@ class NetworkConnection(object):
             self.m_write_shutdown = False
     
         # start threads
-        self.m_write_thread = threading.Thread(target=self._writeThreadMain,
-                                               name='nt_write_thread')
-        self.m_read_thread = threading.Thread(target=self._readThreadMain,
-                                               name='nt_read_thread')
-        
-        self.m_write_thread.daemon = True
-        self.m_read_thread.daemon = True
-        
-        self.m_write_thread.start()
-        self.m_read_thread.start()
+        self.m_write_thread = SafeThread(target=self._writeThreadMain,
+                                         name='nt-net-write')
+        self.m_read_thread = SafeThread(target=self._readThreadMain,
+                                        name='nt-net-read')
     
+    def __repr__(self):
+        try:
+            return '<NetworkConnection 0x%x %s>' % (id(self), self.info())
+        except Exception:
+            return '<NetworkConnection 0x%x ???>' % id(self)
     
     def stop(self):
         logger.debug("NetworkConnection stopping (%s)", self)
@@ -167,11 +174,6 @@ class NetworkConnection(object):
     def last_update(self):
         return self.m_last_update
     
-    def notifyIfActive(self, callback):
-        with self.m_state_mutex:
-            if self.m_state == self.State.kActive:
-                self.m_notifier.notifyConnection(True, self.info(), callback)
-    
     def set_process_incoming(self, func):
         self.m_process_incoming = func
         
@@ -197,8 +199,13 @@ class NetworkConnection(object):
                 self.m_notifier.notifyConnection(False, info)
                 logger.info("DISCONNECTED %s port %s (%s)",
                             info.remote_ip, info.remote_port, info.remote_id)
-                
-        self.m_state = state
+        
+            if self.m_verbose:
+                logger.debug('%s: %s -> %s', self,
+                            _state_map[self.m_state],
+                            _state_map[state])
+            
+            self.m_state = state
     
     def state(self):
         return self.m_state
@@ -270,7 +277,8 @@ class NetworkConnection(object):
                         break
             
                     if verbose:
-                        logger.debug('received type=%s with str=%s id=%s seq_num=%s value=%s',
+                        logger.debug('%s received type=%s with str=%s id=%s seq_num=%s value=%s',
+                                     self.m_stream.sock_type,
                                      msg.type, msg.str, msg.id, msg.seq_num_uid, msg.value)
                     
                     self.m_last_update = monotonic()
@@ -280,8 +288,7 @@ class NetworkConnection(object):
                 logger.debug("IOError in read thread: %s", e)
             except Exception:
                 logger.warn("Unhandled exception in read thread", exc_info=True)
-                
-            logger.debug("read thread died (%s)", self)
+            
             self.set_state(self.State.kDead)
             self.m_active = False
         
@@ -310,12 +317,13 @@ class NetworkConnection(object):
                 encoder.set_proto_rev(self.m_proto_rev)
                 
                 if verbose:
-                    logger.debug('sending %s messages', len(msgs))
+                    logger.debug('%s sending %s messages', self.m_stream.sock_type, len(msgs))
                 
                 for msg in msgs:
                     if msg:
                         if verbose:
-                            logger.debug('sending type=%s with str=%s id=%s seq_num=%s value=%s',
+                            logger.debug('%s sending type=%s with str=%s id=%s seq_num=%s value=%s',
+                                         self.m_stream.sock_type,
                                          msg.type, msg.str, msg.id, msg.seq_num_uid, msg.value)
                         
                         Message.write(msg, out, encoder)
@@ -338,9 +346,7 @@ class NetworkConnection(object):
                 logger.debug("IOError in write thread: %s", e)
         except Exception:
             logger.warn("Unhandled exception in write thread", exc_info=True)
-            
-    
-        logger.debug('write thread died (%s)', self)
+        
         self.set_state(self.State.kDead)
         self.m_active = False
         self.m_stream.close() # also kill read thread

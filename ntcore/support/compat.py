@@ -9,11 +9,6 @@ except ImportError:
     from ConfigParser import RawConfigParser, NoSectionError
 
 try:
-    from queue import Queue, Empty
-except ImportError:
-    from Queue import Queue, Empty
-
-try:
     from time import monotonic
 except ImportError:
     from monotonic import monotonic
@@ -56,7 +51,8 @@ else:                           # Windows
 #
 
 
-if sys.version_info[0] >= 3: # technically, 3.2... but we don't support 3.2
+if not PY2: # technically, 3.2... but we don't support 3.2
+    from queue import Queue, Empty
     from threading import Condition
 else:
     _time = monotonic
@@ -86,3 +82,13 @@ else:
                 self.wait(waittime)
                 result = predicate()
             return result
+    
+    from Queue import Queue as _Queue, Empty
+    
+    class Queue(_Queue):
+        def __init__(self, maxsize=0):
+            _Queue.__init__(self, maxsize=maxsize)
+            
+            self.not_empty = Condition(self.mutex)
+            self.not_full = Condition(self.mutex)
+            self.all_tasks_done = Condition(self.mutex)

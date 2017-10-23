@@ -19,7 +19,7 @@
 
 from __future__ import print_function
 
-import sys
+from argparse import ArgumentParser
 import time
 
 import logging
@@ -31,24 +31,32 @@ class Benchmark(object):
 
     def __init__(self):
         
-        client = False
+        parser = ArgumentParser()
+        parser.add_argument('client', nargs='?', default=None)
+        parser.add_argument('-r', '--rate', default=None, type=float)
+        parser.add_argument('--send', default=False, action='store_true')
         
-        if len(sys.argv) > 1:
-            client = True
-            NetworkTables.initialize(server=sys.argv[1])
+        args = parser.parse_args()
+        
+        if args.client:
+            NetworkTables.initialize(server=args.client)
+        else:
+            NetworkTables.initialize()
          
-        # Default write flush is 0.05, could adjust for less latency   
-        #NetworkTable.setWriteFlushPeriod(0.01)
-        
+        # Default write flush is 0.05, could adjust for less latency
+        if args.rate is not None:
+            print("Setting rate to %s" % args.rate)
+            NetworkTables.setUpdateRate(args.rate)
         
         self.nt = NetworkTables.getTable('/benchmark')
         self.updates = 0
         
-        if client:
-            self.nt.addTableListener(self.on_update)
-            self.recv_benchmark()
-        else:
+        self.nt.addTableListener(self.on_update)
+        
+        if args.send:
             self.send_benchmark()
+        else:
+            self.recv_benchmark()
 
     def on_update(self, *args):
         self.updates += 1

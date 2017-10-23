@@ -42,7 +42,7 @@ def subtable4(nt):
     
     
 
-def test_key_listener_immediate_notify(table1, notifier, nt_flush):
+def test_key_listener_immediate_notify(table1, nt_flush):
     
     listener1 = Mock()
     
@@ -50,10 +50,9 @@ def test_key_listener_immediate_notify(table1, notifier, nt_flush):
     table1.putBoolean("MyKey1", False)
     table1.putBoolean("MyKey2", True)
     table1.putBoolean("MyKey4", False)
+    nt_flush()
     
-    assert not notifier.m_active
-    
-    table1.addTableListener(listener1.valueChanged, True, localNotify=True)
+    table1.addEntryListener(listener1.valueChanged, True, localNotify=True)
     
     nt_flush()
     listener1.valueChanged.assert_has_calls([
@@ -97,7 +96,7 @@ def test_key_listener_not_immediate_notify(table1, nt_flush):
     table1.putBoolean("MyKey2", True)
     table1.putBoolean("MyKey4", False)
     
-    table1.addTableListener(listener1.valueChanged, False, localNotify=True)
+    table1.addEntryListener(listener1.valueChanged, False, localNotify=True)
     assert len(listener1.mock_calls) == 0
     listener1.reset_mock()
     
@@ -129,7 +128,7 @@ def test_specific_key_listener(table1, nt_flush):
     
     listener1 = Mock()
     
-    table1.addTableListener(listener1.valueChanged, False, key='MyKey1', localNotify=True)
+    table1.addEntryListener(listener1.valueChanged, False, key='MyKey1', localNotify=True)
     
     table1.putBoolean('MyKey1', True)
     nt_flush()
@@ -175,7 +174,7 @@ def test_subsubtable_listener(table3, subtable3, subtable4, nt_flush):
     
     table3.addSubTableListener(listener1.valueChanged, localNotify=True)
     subtable3.addSubTableListener(listener1.valueChanged, localNotify=True)
-    subtable4.addTableListener(listener1.valueChanged, True, localNotify=True)
+    subtable4.addEntryListener(listener1.valueChanged, True, localNotify=True)
     
     subtable4.putBoolean('MyKey1', False)
     
@@ -199,7 +198,7 @@ def test_subsubtable_listener(table3, subtable3, subtable4, nt_flush):
     
     table3.addSubTableListener(listener2.valueChanged, localNotify=True)
     subtable3.addSubTableListener(listener2.valueChanged, localNotify=True)
-    subtable4.addTableListener(listener2.valueChanged, True, localNotify=True)
+    subtable4.addEntryListener(listener2.valueChanged, True, localNotify=True)
     
     nt_flush()
     listener2.valueChanged.assert_has_calls([
@@ -215,7 +214,7 @@ def test_subsubtable_listener(table3, subtable3, subtable4, nt_flush):
 def test_global_listener(nt, nt_flush, table1, subtable3):
     listener = Mock()
     
-    nt.addGlobalListener(listener)
+    nt.addEntryListener(listener)
     listener.assert_not_called()
     
     table1.putString('t1', 'hi')
@@ -227,7 +226,7 @@ def test_global_listener(nt, nt_flush, table1, subtable3):
     ])
     listener.reset_mock()
     
-    nt.removeGlobalListener(listener)
+    nt.removeEntryListener(listener)
     
     table1.putString('s', '1')
     nt_flush()

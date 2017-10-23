@@ -1,4 +1,4 @@
-# validated: 2016-10-21 DS a73166a cpp/Value.cpp
+# validated: 2017-09-28 DS 5ab20bb27c97 cpp/Value.cpp include/networktables/NetworkTableValue.h
 '''
     Internal storage for ntcore values
     
@@ -71,7 +71,7 @@ class Value(object):
     @staticmethod
     def makeRpc(value):
         return ValueType(NT_RPC, str(value))
-
+    
     @staticmethod
     def getFactory(value):
         if isinstance(value, bool):
@@ -103,3 +103,18 @@ class Value(object):
             raise ValueError("Cannot put None into NetworkTable")
         else:
             raise ValueError("Can only put bool/int/float/str/bytes or lists/tuples of them")
+        
+    @classmethod
+    def getFactoryByType(cls, type_id):
+        return _make_map[type_id]
+
+_make_map = {
+    NT_BOOLEAN: Value.makeBoolean,
+    NT_DOUBLE: Value.makeDouble,
+    NT_STRING: Value.makeString,
+    NT_RAW: Value.makeRaw,
+    NT_BOOLEAN_ARRAY: Value.makeBooleanArray,
+    NT_DOUBLE_ARRAY: Value.makeDoubleArray,
+    NT_STRING_ARRAY: Value.makeStringArray,
+    NT_RPC: Value.makeRpc
+}

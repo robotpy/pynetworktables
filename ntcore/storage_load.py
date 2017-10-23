@@ -1,15 +1,10 @@
-# validated: 2016-10-27 DS a7eca7d cpp/Storage.cpp cpp/Storage.h
-'''
-    This tries to stay compatible with ntcore's persistence mechanism,
-    but if you go outside the realm of normal operations it may differ.
-'''
+# validated: 2017-10-08 DS 8a37b81f4e10 cpp/Storage_load.cpp
 
 import ast
 import binascii
 import base64
 import re
 
-from .constants import *
 from .value import Value
 
 from .support.compat import RawConfigParser, NoSectionError, PY2
@@ -43,23 +38,8 @@ def _unescape_string(s):
     # let python do the hard work
     return ast.literal_eval('"%s"' % s)
 
-# This is mostly what we want... unicode strings won't work properly though
-_table = {i: chr(i) if i >= 32 and i < 127 else '\\x%02x' % i for i in range(256)}
-_table[ord('"')] = '\\"'
-_table[ord('\\')] = '\\\\'
-_table[ord('\n')] = '\\n'
-_table[ord('\t')] = '\\t'
-_table[ord('\r')] = '\\r'
 
-if PY2:
-    _table = dict(map(lambda v: (v[0], unicode(v[1])), _table.items()))
-    def _escape_string(s):
-        return unicode(s).translate(_table)
-else:
-    def _escape_string(s):
-        return s.translate(_table)
-
-def load_entries(fp, filename):
+def load_entries(fp, filename, prefix):
     
     entries = []
     
@@ -88,7 +68,9 @@ def load_entries(fp, filename):
         
         # Reduces code duplication
         if value:
-            entries.append((_unescape_string(m.group(1)), value))
+            key = _unescape_string(m.group(1))
+            if key.startswith(prefix):
+                entries.append((key, value))
             
         value = None
         
@@ -182,53 +164,8 @@ def load_entries(fp, filename):
         logger.warn("Unrecognized type '%s'", k)
         
     if value:
-        entries.append((_unescape_string(m.group(1)), value))
+        key = _unescape_string(m.group(1))
+        if key.startswith(prefix):
+            entries.append((key, value))
     
     return entries
-
-
-def save_entries(fp, entries):
-    
-    parser = RawConfigParser()
-    parser.optionxform = str
-    parser.add_section(PERSISTENT_SECTION)
-    
-    for name, value in entries:
-        if not value:
-            continue
-        
-        t = value.type
-        v = value.value 
-        
-        if t == NT_BOOLEAN:
-            name = 'boolean "%s"' % _escape_string(name)
-            vrepr = 'true' if v else 'false'
-        elif t == NT_DOUBLE:
-            name = 'double "%s"' % _escape_string(name)
-            vrepr = str(v)
-        elif t == NT_STRING:
-            name = 'string "%s"' % _escape_string(name)
-            vrepr = '"%s"' % _escape_string(v)
-        elif t == NT_RAW:
-            name = 'raw "%s"' % _escape_string(name)
-            vrepr = base64.b64encode(v).decode('ascii')
-        elif t == NT_BOOLEAN_ARRAY:
-            name = 'array boolean "%s"' % _escape_string(name)
-            vrepr = ','.join(['true' if vv else 'false' for vv in v])
-        elif t == NT_DOUBLE_ARRAY:
-            name = 'array double "%s"' % _escape_string(name)
-            vrepr = ','.join([str(vv) for vv in v])
-        elif t == NT_STRING_ARRAY:
-            name = 'array string "%s"' % _escape_string(name)
-            vrepr = '","'.join([_escape_string(vv) for vv in v])
-            if vrepr:
-                vrepr = '"%s"' % vrepr
-        else:
-            continue
-        
-        parser.set(PERSISTENT_SECTION, name, vrepr)
-    
-    if PY2:
-        parser.write(fp)
-    else:
-        parser.write(fp, space_around_delimiters=False)    

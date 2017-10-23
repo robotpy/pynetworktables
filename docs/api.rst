@@ -11,20 +11,20 @@ API Reference
 NetworkTables API
 -----------------
 
-.. autoclass:: networktables.NetworkTables
+.. autoclass:: networktables.NetworkTablesInstance
     :members:
     :undoc-members:
+    :exclude-members: globalDeleteAll, addGlobalListener, addGlobalListenerEx, removeGlobalListener
 
-NetworkTable Instances
-----------------------
+NetworkTable Objects
+--------------------
 
-.. autoclass:: networktables.NetworkTable
+.. autoclass:: networktables.networktable.NetworkTable
     :members:
     :undoc-members:
-    :exclude-members: initialize, shutdown, setClientMode, setServerMode, setTeam, setIPAddress, setPort, setPersistentFilename, setNetworkIdentity, globalDeleteAll, flush, setUpdateRate, setWriteFlushPeriod, savePersistent, loadPersistent, setDashboardMode, setTestMode, getTable, getGlobalTable, addGlobalListener, removeGlobalListener, getGlobalAutoUpdateValue, addConnectionListener, removeConnectionListener, getRemoteAddress, isConnected, isServer,  setWriteFlushPeriod
-    
+    :exclude-members: addTableListener, addTableListenerEx, removeTableListener
 
-.. autoclass:: networktables.autovalue.AutoUpdateValue
+.. autoclass:: networktables.entry.NetworkTableEntry
     :members:
     :undoc-members:
 

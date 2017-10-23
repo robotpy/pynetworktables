@@ -1,13 +1,9 @@
 
 # This is imported first to avoid circular dependency problems
-try:
-    from .version import __version__
-except ImportError:
-    __version__ = 'master'
+from .version import __version__
 
+#: Alias of NetworkTablesInstance.getDefault()
 from .networktables import NetworkTables
 
-# Deprecated, will be removed in 2018
-from .networktable import NetworkTable
-
+from .instance import NetworkTablesInstance
 

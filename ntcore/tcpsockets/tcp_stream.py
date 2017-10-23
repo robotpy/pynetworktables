@@ -9,7 +9,7 @@ class StreamEOF(IOError):
 
 class TCPStream(object):
 
-    def __init__(self, sd, peer_ip, peer_port):
+    def __init__(self, sd, peer_ip, peer_port, sock_type):
         
         self.m_sd = sd
         self.m_peerIP = peer_ip
@@ -19,6 +19,9 @@ class TCPStream(object):
         self.m_wrsock = sd.makefile('wb')
         
         self.close_lock = threading.Lock()
+        
+        # Python-specific for debugging
+        self.sock_type = sock_type
     
     def read(self, size):
         
@@ -49,7 +52,7 @@ class TCPStream(object):
                     pass
                 
                 self.m_sd.close()
-                self.m_sd = None
+                #self.m_sd = None
     
     def getPeerIP(self):
         return self.m_peerIP

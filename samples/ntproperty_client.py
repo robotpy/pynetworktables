@@ -39,7 +39,7 @@ c = SomeClient()
 i = 0
 while True:
     
-    # equivalent to wpilib.SmartDashboard.getNumber('robotTime')
+    # equivalent to wpilib.SmartDashboard.getNumber('robotTime', None)
     print('robotTime:', c.robotTime)
     
     # equivalent to wpilib.SmartDashboard.putNumber('dsTime', i)

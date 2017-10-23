@@ -9,6 +9,28 @@ __all__ = [
 ]
 
 
+class _NtProperty:
+    def __init__(self, key, defaultValue, writeDefault):
+        self.key = key
+        self.defaultValue = defaultValue
+        self.writeDefault = writeDefault
+        
+        self.reset()
+    
+    def reset(self):
+        self.ntvalue = NetworkTables.getGlobalAutoUpdateValue(
+            self.key, self.defaultValue, self.writeDefault)
+        
+        # this is an optimization, but presumes the value type never changes
+        self.mkv = Value.getFactoryByType(self.ntvalue._value[0])
+    
+    def get(self, _):
+        return self.ntvalue.value
+    
+    def set(self, _, value):
+        NetworkTables._api.setEntryValueById(self.ntvalue._local_id, self.mkv(value))
+
+
 def ntproperty(key, defaultValue, writeDefault=True, doc=None):
     '''
         A property that you can add to your classes to access NetworkTables
@@ -46,22 +68,17 @@ def ntproperty(key, defaultValue, writeDefault=True, doc=None):
                   
         .. warning:: When using python 2.x, the property must be assigned to
                      a new-style class or it won't work!
+                     
+                     Additionally, this function assumes that the value's type
+                     never changes. If it does, you'll get really strange
+                     errors... so don't do that.
                   
         .. versionadded:: 2015.3.0
     '''
+    ntprop = _NtProperty(key, defaultValue, writeDefault)
+    NetworkTables._ntproperties.add(ntprop)
     
-    nt = NetworkTables
-    
-    ntvalue = nt.getGlobalAutoUpdateValue(key, defaultValue, writeDefault)
-    mkv = ntvalue._valuefn
-    
-    def _get(_):
-        return ntvalue.value
-    
-    def _set(_, value):
-        nt._api.setEntryValue(key, mkv(value))
-    
-    return property(fget=_get, fset=_set, doc=doc)
+    return property(fget=ntprop.get, fset=ntprop.set, doc=doc)
 
 
 

@@ -37,6 +37,14 @@ NT_NOTIFY_DELETE =      0x08 # deleted
 NT_NOTIFY_UPDATE =      0x10 # value changed
 NT_NOTIFY_FLAGS =       0x20 # flags changed
 
+# Client/server modes
+NT_NET_MODE_NONE = 0x00      # not running
+NT_NET_MODE_SERVER = 0x01    # running in server mode
+NT_NET_MODE_CLIENT = 0x02    # running in client mode
+NT_NET_MODE_STARTING = 0x04  # flag for starting (either client or server)
+NT_NET_MODE_FAILURE = 0x08   # flag for failure (either client or server)
+NT_NET_MODE_TEST = 0x10      # flag indicating test mode (either client or server)
+
 # NetworkTables entry flags
 NT_PERSISTENT = 0x01
 
@@ -57,3 +65,6 @@ kExecuteRpc =       b'\x20'
 kRpcResponse =      b'\x21'
 
 kClearAllMagic =    0xD06CB27A
+
+# The default port that network tables operates on
+NT_DEFAULT_PORT = 1735

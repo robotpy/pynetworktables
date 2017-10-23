@@ -36,7 +36,7 @@ def connectionListener(connected, info):
 NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
 
 sd = NetworkTables.getTable("SmartDashboard")
-sd.addTableListener(valueChanged)
+sd.addEntryListener(valueChanged)
 
 while True:
     time.sleep(1)

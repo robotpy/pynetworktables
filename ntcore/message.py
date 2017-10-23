@@ -1,4 +1,4 @@
-# validated: 2017-01-07 DS b9a08e826046 cpp/Message.cpp cpp/Message.h
+# validated: 2017-09-29 DS 5ab20bb27c97 cpp/Message.cpp cpp/Message.h
 
 from collections import namedtuple
 
