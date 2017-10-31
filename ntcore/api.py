@@ -7,6 +7,9 @@ from .entry_notifier import EntryNotifier
 from .rpc_server import RpcServer
 from .storage import Storage
 
+from ntcore.constants import NT_NOTIFY_IMMEDIATE, NT_NOTIFY_NEW
+_is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
+
 class NtCoreApi(object):
     '''
         Internal NetworkTables API wrapper
@@ -121,6 +124,18 @@ class NtCoreApi(object):
     
     def addEntryListenerById(self, local_id, callback, flags):
         return self.storage.addListenerById(local_id, callback, flags)
+    
+    def addEntryListenerByIdEx(self, fromobj, key, local_id, callback, flags, paramIsNew):
+        if paramIsNew:
+            def listener(item):
+                key_, value_, flags_, _ = item
+                callback(fromobj, key, value_.value, (flags_ & _is_new) != 0)
+        else:
+            def listener(item):
+                key_, value_, flags_, _ = item
+                callback(fromobj, key, value_.value, flags_)
+        
+        return self.storage.addListenerById(local_id, listener, flags)
     
     def createEntryListenerPoller(self):
         return self.entry_notifier.createPoller()

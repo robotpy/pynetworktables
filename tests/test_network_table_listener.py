@@ -5,6 +5,8 @@
 
 import pytest
 
+from networktables import NetworkTables
+
 try:
     from unittest.mock import call, Mock
 except ImportError:
@@ -129,6 +131,8 @@ def test_specific_key_listener(table1, nt_flush):
     listener1 = Mock()
     
     table1.addEntryListener(listener1.valueChanged, False, key='MyKey1', localNotify=True)
+    nt_flush()
+    assert len(listener1.mock_calls) == 0
     
     table1.putBoolean('MyKey1', True)
     nt_flush()
@@ -140,7 +144,26 @@ def test_specific_key_listener(table1, nt_flush):
     nt_flush()
     assert len(listener1.mock_calls) == 0
     
+def test_specific_entry_listener(table1, nt_flush):
     
+    listener1 = Mock()
+    NotifyFlags = NetworkTables.NotifyFlags
+    
+    entry = table1.getEntry('MyKey1')
+    entry.addListener(listener1.valueChanged,
+                      NotifyFlags.NEW | NotifyFlags.UPDATE | NotifyFlags.LOCAL)
+    nt_flush()
+    assert len(listener1.mock_calls) == 0
+    
+    table1.putBoolean('MyKey1', True)
+    nt_flush()
+    listener1.valueChanged.assert_called_once_with(entry, "/test1/MyKey1", True, True)
+    assert len(listener1.mock_calls) == 1
+    listener1.reset_mock()
+    
+    table1.putBoolean('MyKey2', True)
+    nt_flush()
+    assert len(listener1.mock_calls) == 0
     
 def test_subtable_listener(table2, subtable1, subtable2, nt_flush):
     

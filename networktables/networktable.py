@@ -135,6 +135,9 @@ class NetworkTable:
         .. versionadded:: 2017.0.0
         '''
         
+        #if key is None:
+            # Any key in this table (but not subtables)
+        
         if key is None:
             
             # Any key in this table (but not subtables)
@@ -165,18 +168,8 @@ class NetworkTable:
             
             uid = self._api.addEntryListener('/', callback, flags)
         else:
-            # Any specific entry
-            if paramIsNew:
-                def callback(item):
-                    key_, value_, flags_, _ = item
-                    listener(self, key, value_.value, (flags_ & _is_new) != 0)
-            else:
-                def callback(item):
-                    key_, value_, flags_, _ = item
-                    listener(self, key, value_.value, flags_)
-            
             entry_id = self._api.getEntryId(self._path + key)
-            uid = self._api.addEntryListenerById(entry_id, callback, flags)
+            uid = self._api.addEntryListenerByIdEx(self, key, entry_id, listener, flags, paramIsNew)
             
         self._listeners.setdefault(listener, []).append(uid)
 

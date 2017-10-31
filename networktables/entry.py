@@ -446,21 +446,29 @@ class NetworkTableEntry(object):
     # TODO: RPC entry stuff not implemented
     #
     
-    #def addListener(self, listener, flags):
-    #    """Add a listener for changes to the entry
-    #    :param listener: the listener to add 
-    #    :type listener: fn(EntryNotification)
-    #    :param flags: bitmask specifying desired notifications
-    #    :type flags: :class:`.NetworkTablesInstance.NotifyFlags`
-    #    :returns: listener handle
-    #    """
-    #    return self.__api.addEntryListenerById(self._local_id, listener, flags)
+    def addListener(self, listener, flags, paramIsNew=True):
+        """Add a listener for changes to the entry
+        
+        :param listener: the listener to add 
+        :type listener: `callable(entry, key, value, param)`
+        :param flags: bitmask specifying desired notifications
+        :type flags: :class:`.NetworkTablesInstance.NotifyFlags`
+        :param paramIsNew: If True, the listener fourth parameter is a boolean set to True
+                           if the listener is being called because of a new value in the
+                           table. Otherwise, the parameter is an integer of the raw
+                           `NT_NOTIFY_*` flags
+        :type paramIsNew: bool
+        
+        :returns: listener handle
+        """
+        return self.__api.addEntryListenerByIdEx(self, self.key, self._local_id, listener, flags, paramIsNew)
     
-    #def removeListener(self, listener_id):
-    #    """Remove a listener from receiving entry events
-    #    :param listener: the listener to be removed
-    #    """
-    #    self.__api.removeEntryListener(listener_id)
+    def removeListener(self, listener_id):
+        """Remove a listener from receiving entry events
+        
+        :param listener: the callable that was passed to addListener
+        """
+        self.__api.removeEntryListener(listener_id)
     
     # Comparison operators et al
     
