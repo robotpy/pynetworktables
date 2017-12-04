@@ -378,7 +378,8 @@ class NetworkTablesInstance:
            The listener is now a function
         '''
         assert callable(listener)
-        listener_id = self._api.addConnectionListener(listener, immediateNotify)
+        cb = lambda info: listener(info.connected, info.conn_info)
+        listener_id = self._api.addConnectionListener(cb, immediateNotify)
         self._conn_listeners.setdefault(listener, []).append(listener_id)
     
     def removeConnectionListener(self, listener):
