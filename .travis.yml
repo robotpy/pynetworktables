@@ -11,6 +11,12 @@ install:
 # command to run tests
 script:
   - tests/run_tests.sh
+deploy:
+- provider: pypi
+  user: $PYPI_USERNAME
+  password: $PYPI_PASSWORD
+  on:
+    tags: true
 notifications:
   webhooks:
     urls:
