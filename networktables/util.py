@@ -10,16 +10,22 @@ __all__ = [
 
 
 class _NtProperty:
-    def __init__(self, key, defaultValue, writeDefault):
+    def __init__(self, key, defaultValue, writeDefault, persistent):
         self.key = key
         self.defaultValue = defaultValue
         self.writeDefault = writeDefault
+        self.persistent = persistent
+        # never overwrite persistent values with defaults
+        if persistent:
+            self.writeDefault = False
         
         self.reset()
     
     def reset(self):
         self.ntvalue = NetworkTables.getGlobalAutoUpdateValue(
             self.key, self.defaultValue, self.writeDefault)
+        if self.persistent:
+            self.ntvalue.setPersistent()
         
         # this is an optimization, but presumes the value type never changes
         self.mkv = Value.getFactoryByType(self.ntvalue._value[0])
@@ -31,7 +37,7 @@ class _NtProperty:
         NetworkTables._api.setEntryValueById(self.ntvalue._local_id, self.mkv(value))
 
 
-def ntproperty(key, defaultValue, writeDefault=True, doc=None):
+def ntproperty(key, defaultValue, writeDefault=True, doc=None, persistent=False):
     '''
         A property that you can add to your classes to access NetworkTables
         variables like a normal variable.
@@ -45,6 +51,9 @@ def ntproperty(key, defaultValue, writeDefault=True, doc=None):
         :type  writeDefault: bool
         :param doc: If given, will be the docstring of the property.
         :type  doc: str
+        :param persistent: If True, persist set values across restarts.
+                           *writeDefault* is ignored if this is True.
+        :type  persistent: bool
         
         Example usage::
         
@@ -74,8 +83,14 @@ def ntproperty(key, defaultValue, writeDefault=True, doc=None):
                      errors... so don't do that.
                   
         .. versionadded:: 2015.3.0
+
+        .. versionchanged:: 2017.0.6
+            The *doc* parameter.
+
+        .. versionchanged:: 2018.0.0
+            The *persistent* parameter.
     '''
-    ntprop = _NtProperty(key, defaultValue, writeDefault)
+    ntprop = _NtProperty(key, defaultValue, writeDefault, persistent)
     NetworkTables._ntproperties.add(ntprop)
     
     return property(fget=ntprop.get, fset=ntprop.set, doc=doc)
