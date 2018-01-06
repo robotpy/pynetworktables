@@ -94,7 +94,7 @@ class NetworkConnection(object):
         try:
             self.m_stream.setNoDelay()
         except IOError as e:
-            logger.warn("Setting TCP_NODELAY: %s", e)
+            logger.warning("Setting TCP_NODELAY: %s", e)
     
     def start(self):
         if self.m_active:
@@ -144,11 +144,11 @@ class NetworkConnection(object):
         # wait for threads to terminate, timeout
         self.m_write_thread.join(1)
         if self.m_write_thread.is_alive():
-            logger.warn("%s did not die", self.m_write_thread.name)
+            logger.warning("%s did not die", self.m_write_thread.name)
             
         self.m_read_thread.join(1)
         if self.m_read_thread.is_alive():
-            logger.warn("%s did not die", self.m_write_thread.name)
+            logger.warning("%s did not die", self.m_write_thread.name)
         
         # clear queue
         try:
@@ -234,7 +234,7 @@ class NetworkConnection(object):
             try:
                 return Message.read(self.m_stream, decoder, self.m_get_entry_type)
             except IOError as e:
-                logger.warn("read error in handshake: %s", e)
+                logger.warning("read error in handshake: %s", e)
                 
                 # terminate connection on bad message
                 self.m_stream.close()
@@ -269,7 +269,7 @@ class NetworkConnection(object):
                             if verbose:
                                 logger.exception("read error")
                             else:
-                                logger.warn("read error: %s", e)
+                                logger.warning("read error: %s", e)
                         
                         # terminate connection on bad message
                         self.m_stream.close()
@@ -287,7 +287,7 @@ class NetworkConnection(object):
                 # connection died probably
                 logger.debug("IOError in read thread: %s", e)
             except Exception:
-                logger.warn("Unhandled exception in read thread", exc_info=True)
+                logger.warning("Unhandled exception in read thread", exc_info=True)
             
             self.set_state(self.State.kDead)
             self.m_active = False
@@ -345,7 +345,7 @@ class NetworkConnection(object):
             if not isinstance(e, StreamEOF):
                 logger.debug("IOError in write thread: %s", e)
         except Exception:
-            logger.warn("Unhandled exception in write thread", exc_info=True)
+            logger.warning("Unhandled exception in write thread", exc_info=True)
         
         self.set_state(self.State.kDead)
         self.m_active = False

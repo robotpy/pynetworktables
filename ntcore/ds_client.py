@@ -15,7 +15,7 @@ class DsClient(object):
         pass
     
     def start(self, port):
-        logging.warn("Dashboard client mode not currently implemented")
+        logging.warning("Dashboard client mode not currently implemented")
     
     def stop(self):
         pass
