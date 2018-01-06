@@ -103,7 +103,7 @@ class CallbackThread(object):
                         try:
                             self.doCallback(listener.callback, item)
                         except Exception:
-                            logger.warn("Unhandled exception processing %s callback", self.name, exc_info=True)
+                            logger.warning("Unhandled exception processing %s callback", self.name, exc_info=True)
                     elif listener.poller_uid is not None:
                         self.sendPoller(listener.poller_uid, listener_uid, item)
             else:
@@ -115,7 +115,7 @@ class CallbackThread(object):
                             try:
                                 self.doCallback(listener.callback, item)
                             except Exception:
-                                logger.warn("Unhandled exception processing %s callback", self.name, exc_info=True)
+                                logger.warning("Unhandled exception processing %s callback", self.name, exc_info=True)
                         elif listener.poller_uid is not None:
                             self.sendPoller(listener.poller_uid, listener_uid, item)
         

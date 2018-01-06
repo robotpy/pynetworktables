@@ -81,7 +81,7 @@ def load_entries(fp, filename, prefix):
             elif v == 'false':
                 value = Value.makeBoolean(False)
             else:
-                logger.warn("Unrecognized boolean value %r for %s", v, m.group(1))
+                logger.warning("Unrecognized boolean value %r for %s", v, m.group(1))
             continue
         
         m = _key_double.match(k)
@@ -89,7 +89,7 @@ def load_entries(fp, filename, prefix):
             try:
                 value = Value.makeDouble(float(v))
             except ValueError as e:
-                logger.warn("Unrecognized double value %r for %s", v, m.group(1))
+                logger.warning("Unrecognized double value %r for %s", v, m.group(1))
                 
             continue
         
@@ -102,7 +102,7 @@ def load_entries(fp, filename, prefix):
             elif PY2 and v == '':
                 value = Value.makeString('')
             else:
-                logger.warn("Unrecognized string value %r for %s", v, m.group(1))
+                logger.warning("Unrecognized string value %r for %s", v, m.group(1))
             continue
         
         m = _key_raw.match(k)
@@ -114,7 +114,7 @@ def load_entries(fp, filename, prefix):
                     v = base64.b64decode(v, validate=True)
                 value = Value.makeRaw(v)
             except binascii.Error:
-                logger.warn("Unrecognized raw value %r for %s", v, m.group(1))
+                logger.warning("Unrecognized raw value %r for %s", v, m.group(1))
             continue
         
         m = _key_bool_array.match(k)
@@ -129,7 +129,7 @@ def load_entries(fp, filename, prefix):
                     elif vv == 'false':
                         bools.append(False)
                     else:
-                        logger.warn("Unrecognized bool '%s' in bool array %s'", vv, m.group(1))
+                        logger.warning("Unrecognized bool '%s' in bool array %s'", vv, m.group(1))
                         bools = None
                         break
                 
@@ -146,7 +146,7 @@ def load_entries(fp, filename, prefix):
                     try:
                         doubles.append(float(vv))
                     except ValueError:
-                        logger.warn("Unrecognized double '%s' in double array %s", vv, m.group(1))
+                        logger.warning("Unrecognized double '%s' in double array %s", vv, m.group(1))
                         doubles = None
                         break
                 
@@ -161,7 +161,7 @@ def load_entries(fp, filename, prefix):
             value = Value.makeStringArray(strings)
             continue
         
-        logger.warn("Unrecognized type '%s'", k)
+        logger.warning("Unrecognized type '%s'", k)
         
     if value:
         key = _unescape_string(m.group(1))

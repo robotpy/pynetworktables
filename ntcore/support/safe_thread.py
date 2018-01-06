@@ -38,13 +38,13 @@ class SafeThread(object):
     def join(self, timeout=1):
         self._thread.join(timeout=timeout)
         if not self._thread.is_alive():
-            logger.warn('Thread %s did not stop!', self.name)
+            logger.warning('Thread %s did not stop!', self.name)
     
     def _run(self, target, args):
         logger.debug("Started thread %s", self.name)
         try:
             target(*args)
         except Exception:
-            logger.warn("Thread %s died unexpectedly", self.name, exc_info=True)
+            logger.warning("Thread %s died unexpectedly", self.name, exc_info=True)
         else:
             logger.debug("Thread %s exited", self.name)
