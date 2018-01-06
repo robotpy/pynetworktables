@@ -1,1 +1,5 @@
 05ca76ea990f5cca713164801960ddc410d4cba7 # clang-format
+aa2de65bad663d3d72e08fddb1c166e01cefa3e8 # llvm::Twine
+3438a173410376277ee85e7befa068be28cf8dcd # wpi::mutex (priority-aware mutex)
+19f7a5f1082148b4241333deb6ffe266a806a775 # wpiformat
+4376c94dc19920eb5a6dd1ca6f8b3a948bd28681 # bump copyright
