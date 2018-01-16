@@ -232,8 +232,8 @@ class NtCoreApi(object):
     def setServer(self, server_or_servers):
         self.dispatcher.setServer(server_or_servers)
         
-    def setServerTeam(self, teamNumber):
-        self.dispatcher.setServerTeam(teamNumber)
+    def setServerTeam(self, teamNumber, port):
+        self.dispatcher.setServerTeam(teamNumber, port)
     
     def startDSClient(self, port):
         self.ds_client.start(port)
@@ -276,5 +276,3 @@ class NtCoreApi(object):
     
     def loadEntries(self, filename, prefix):
         return self.storage.loadEntries(filename=filename, prefix=prefix)
-    
-        
