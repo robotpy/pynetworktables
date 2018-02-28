@@ -175,6 +175,7 @@ def nt_client(request, nt_server):
         
         def start_test(self):
             self.enableVerboseLogging()
+            self.setNetworkIdentity('C1')
             self._api.dispatcher.setDefaultProtoRev(request.param)
             self.startClient(('127.0.0.1', nt_server.port))
     
@@ -182,6 +183,25 @@ def nt_client(request, nt_server):
     client._init_client(request.param)
     yield client
     client.shutdown()
+
+@pytest.fixture(params=[
+    0x0300 # don't bother with other proto versions
+])
+def nt_client2(request, nt_server):
+    
+    class NtClient(NtTestBase):
+        
+        def start_test(self):
+            self.enableVerboseLogging()
+            self._api.dispatcher.setDefaultProtoRev(request.param)
+            self.setNetworkIdentity('C2')
+            self.startClient(('127.0.0.1', nt_server.port))
+    
+    client = NtClient()
+    client._init_client(request.param)
+    yield client
+    client.shutdown()
+
 
 @pytest.fixture
 def nt_live(nt_server, nt_client):
