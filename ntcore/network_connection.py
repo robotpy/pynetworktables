@@ -14,6 +14,7 @@ from .constants import (
     kFlagsUpdate,
     kEntryDelete,
     kClearEntries,
+    msgtype_str,
 )
 
 from .message import Message
@@ -279,7 +280,7 @@ class NetworkConnection(object):
                     if verbose:
                         logger.debug('%s received type=%s with str=%s id=%s seq_num=%s value=%s',
                                      self.m_stream.sock_type,
-                                     msg.type, msg.str, msg.id, msg.seq_num_uid, msg.value)
+                                     msgtype_str(msg.type), msg.str, msg.id, msg.seq_num_uid, msg.value)
                     
                     self.m_last_update = monotonic()
                     self.m_process_incoming(msg, self)
@@ -324,7 +325,7 @@ class NetworkConnection(object):
                         if verbose:
                             logger.debug('%s sending type=%s with str=%s id=%s seq_num=%s value=%s',
                                          self.m_stream.sock_type,
-                                         msg.type, msg.str, msg.id, msg.seq_num_uid, msg.value)
+                                         msgtype_str(msg.type), msg.str, msg.id, msg.seq_num_uid, msg.value)
                         
                         Message.write(msg, out, encoder)
                 

@@ -563,7 +563,7 @@ class Dispatcher(object):
                 return False
             
             if verbose:
-                logger.debug("received assign str=%s id=%s seq_num=%s",
+                logger.debug("client: received assign str=%s id=%s seq_num=%s",
                              msg.str, msg.id, msg.seq_num_uid)
     
             incoming.append(msg)

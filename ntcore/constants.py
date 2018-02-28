@@ -66,5 +66,24 @@ kRpcResponse =      b'\x21'
 
 kClearAllMagic =    0xD06CB27A
 
+_msgtypes = {
+    kKeepAlive:       'kKeepAlive',
+    kClientHello:     'kClientHello',
+    kProtoUnsup:      'kProtoUnsup',
+    kServerHelloDone: 'kServerHelloDone',
+    kServerHello:     'kServerHello',
+    kClientHelloDone: 'kClientHelloDone',
+    kEntryAssign:     'kEntryAssign',
+    kEntryUpdate:     'kEntryUpdate',
+    kFlagsUpdate:     'kFlagsUpdate',
+    kEntryDelete:     'kEntryDelete',
+    kClearEntries:    'kClearEntries',
+    kExecuteRpc:      'kExecuteRpc',
+    kRpcResponse:     'kRpcResponse',
+}
+
+def msgtype_str(msgtype):
+    return _msgtypes.get(msgtype, 'Unknown (%s)' % msgtype)
+
 # The default port that network tables operates on
 NT_DEFAULT_PORT = 1735
