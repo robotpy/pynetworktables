@@ -26,7 +26,7 @@ _EntryListenerData = namedtuple('EntryListenerData', [
     'poller_uid',
 ])
     
-# 
+#
 _EntryNotification = namedtuple('EntryNotification', [
     'name',
     'value',

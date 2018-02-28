@@ -52,11 +52,11 @@ def test_wikipedia_example():
     assert result_i == i
 
 
-@pytest.mark.parametrize('i', [ 
+@pytest.mark.parametrize('i', [
     0, 1, 16, 42, 65,
     0xff, 0xfff,
     0xffffffff,
-    0x123456789, 
+    0x123456789,
     100000000000000000000
 ])
 def test_roundtrip(i):

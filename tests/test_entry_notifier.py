@@ -298,4 +298,3 @@ def test_PollPrefixLocal(notifier):
     assert not timed_out
     print(results)
     assert len(results) == 6
-

@@ -294,7 +294,7 @@ class NetworkConnection(object):
             self.m_active = False
         
         # also kill write thread
-        self.m_outgoing.put([])  
+        self.m_outgoing.put([])
         
         with self.m_shutdown_mutex:
             self.m_read_shutdown = True

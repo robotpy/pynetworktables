@@ -156,4 +156,4 @@ def test_different_type(table1):
     assert table1.getBoolean('foo', None) == True
     
     assert not table1.putNumber('foo', 1)
-    assert table1.getBoolean('foo', None) == True     
+    assert table1.getBoolean('foo', None) == True

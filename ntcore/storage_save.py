@@ -79,7 +79,7 @@ def save_entries(fp, entries):
             continue
         
         t = value.type
-        v = value.value 
+        v = value.value
         
         if t == NT_BOOLEAN:
             name = 'boolean "%s"' % _escape_string(name)
@@ -112,4 +112,4 @@ def save_entries(fp, entries):
     if PY2:
         parser.write(fp)
     else:
-        parser.write(fp, space_around_delimiters=False)    
+        parser.write(fp, space_around_delimiters=False)

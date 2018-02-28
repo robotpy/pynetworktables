@@ -5,7 +5,7 @@
 # To run the server
 #
 #     python3 benchmark.py
-# 
+#
 # To run the client:
 #
 #    python3 benchmark.py 127.0.0.1

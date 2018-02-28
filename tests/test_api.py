@@ -1,5 +1,5 @@
 #
-# These tests stand up a separate client and server instance of 
+# These tests stand up a separate client and server instance of
 # networktables and tests the 'real' user API to ensure that it
 # works correctly
 #
@@ -51,7 +51,7 @@ def do(nt1, nt2, t):
     assert t2.getNumber('number2', None) == 1.5
     assert t2.getString('string', None) == 'string'
     assert t2.getString('unicode', None) == u'\xA9'  # copyright symbol
-    assert t2.getBooleanArray('ba', None) == (True, False) 
+    assert t2.getBooleanArray('ba', None) == (True, False)
     assert t2.getNumberArray('na', None) == (1, 2)
     assert t2.getStringArray('sa', None) == ('s', 't')
     
@@ -90,7 +90,7 @@ def do(nt1, nt2, t):
     assert t2.getNumber('number2', None) == 2.5
     assert t2.getString('string', None) == 'sss'
     assert t2.getString('unicode', None) == u'\u2122'
-    assert t2.getBooleanArray('ba', None) == (False, True, False) 
+    assert t2.getBooleanArray('ba', None) == (False, True, False)
     assert t2.getNumberArray('na', None) == (2, 1)
     assert t2.getStringArray('sa', None) == ('t', 's')
     
@@ -174,4 +174,3 @@ def test_reconnect(nt_live):
         
     st = nt_server.getTable('t')
     assert st.getBoolean('foo', None) == True
-

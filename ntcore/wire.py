@@ -127,7 +127,7 @@ class WireCodec(object):
         
         elif self.proto_rev >= 0x0300:
             if vtype == NT_RAW:
-                slen = leb128.read_uleb128(rstream) 
+                slen = leb128.read_uleb128(rstream)
                 return Value.makeRaw(rstream.read(slen))
             
             elif vtype == NT_RPC:
@@ -188,7 +188,7 @@ class WireCodec(object):
     
     # v4 perhaps
     #def read_arraylen_v3(self, rstream):
-    #    return leb128.read_uleb128(rstream) 
+    #    return leb128.read_uleb128(rstream)
     
     def read_string_v2(self, rstream):
         slen = rstream.readStruct(self._string_fmt)[0]
@@ -217,5 +217,3 @@ class WireCodec(object):
     def write_string_v3(self, s, out):
         s = s.encode('utf-8')
         out += (leb128.encode_uleb128(len(s)), s)
-
-

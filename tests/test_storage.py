@@ -114,7 +114,7 @@ def storage_populated(storage_empty, dispatcher, entry_notifier):
     
     entry_notifier.m_local_notifiers = False
     
-    entry_notifier.m_local_notifiers = False    
+    entry_notifier.m_local_notifiers = False
     storage.setEntryTypeValue("foo", Value.makeBoolean(True))
     storage.setEntryTypeValue("foo2", Value.makeDouble(0.0))
     storage.setEntryTypeValue("bar", Value.makeDouble(1.0))
@@ -752,7 +752,7 @@ def test_savePersistent(storage_persistent):
     line = fp.readline()[:-1]
     assert "array boolean \"booleanarr/two\"=true,false" == py2(line)
     line = fp.readline()[:-1]
-    # this differs from ntcore 
+    # this differs from ntcore
     assert "double \"double/big\"=130000000.0" == py2(line)
     line = fp.readline()[:-1]
     assert "double \"double/neg\"=-1.5" == py2(line)

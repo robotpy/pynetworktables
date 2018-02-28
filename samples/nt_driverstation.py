@@ -33,4 +33,3 @@ while True:
     sd.putNumber('dsTime', i)
     time.sleep(1)
     i += 1
-

@@ -26,5 +26,3 @@ def enable_lock_debugging(sock_block_period=None):
     g['create_rlock'] = _impl_debug.create_tracked_rlock
     g['sock_makefile'] = _impl_debug.blocking_sock_makefile
     g['sock_create_connection'] = _impl_debug.blocking_sock_create_connection
-
-

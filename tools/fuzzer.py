@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 #
 # A simplified fuzzer that can be used to try and discover errors in the
-# NetworkTables implementation. 
+# NetworkTables implementation.
 #
 # DON'T USE THIS ON A ROBOT CONNECTED TO REAL THINGS! Not all NetworkTables
-# implementations are robust, and may crash or malfunction when subjected 
+# implementations are robust, and may crash or malfunction when subjected
 # to this fuzzer
 #
 
@@ -103,9 +103,9 @@ def fuzz_dumb():
             randint(0, 5),
             randint(0, 5)]
 
-fuzz_routines = [fuzz_assign, 
-                 fuzz_singlebyte, 
-                 fuzz_update, 
+fuzz_routines = [fuzz_assign,
+                 fuzz_singlebyte,
+                 fuzz_update,
                  fuzz_gibberish,
                  fuzz_dumb]
 
@@ -126,7 +126,7 @@ def fuzz_thread():
             print("Opening socket")
             s.connect((ip, port))
             
-            sendbytes(s, choice(fuzz_routines)())     
+            sendbytes(s, choice(fuzz_routines)())
             s.recv(1)
             
         except socket.timeout:

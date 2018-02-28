@@ -40,7 +40,7 @@ def test_ntproperty(nt, nt_flush):
     assert t.getNumber('robotTime', None) == 0
     
     f.robotTime = 2
-    assert t.getNumber('robotTime', None) == 2 
+    assert t.getNumber('robotTime', None) == 2
     
     t.putNumber('robotTime', 4)
     assert f.robotTime == 4
@@ -81,7 +81,7 @@ def test_ntproperty_multitest(nt):
         assert t.getNumber('dsTime', None) == 0
         
         f.robotTime = 2
-        assert t.getNumber('robotTime', None) == 2 
+        assert t.getNumber('robotTime', None) == 2
         assert t.getNumber('dsTime', None) == 0
         
         t.putNumber('robotTime', 4)

@@ -134,7 +134,7 @@ def load_entries(fp, filename, prefix):
                         break
                 
             if bools is not None:
-                value = Value.makeBooleanArray(bools)    
+                value = Value.makeBooleanArray(bools)
             continue
         
         m = _key_double_array.match(k)
@@ -150,7 +150,7 @@ def load_entries(fp, filename, prefix):
                         doubles = None
                         break
                 
-            value = Value.makeDoubleArray(doubles)    
+            value = Value.makeDoubleArray(doubles)
             continue
         
         m = _key_string_array.match(k)

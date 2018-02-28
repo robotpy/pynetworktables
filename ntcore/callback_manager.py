@@ -236,7 +236,7 @@ class CallbackManager(object):
             self.m_owner = self.THREAD_CLASS(*args)
             self.m_owner.start()
     
-    # Unlike ntcore, only a single argument is supported here. This is 
+    # Unlike ntcore, only a single argument is supported here. This is
     # to ensure that it's more clear what struct is being passed through
     
     def doAdd(self, item):

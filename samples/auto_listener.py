@@ -30,4 +30,3 @@ auto_value = sd.getAutoUpdateValue('robotTime', 0)
 while True:
     print('robotTime:', auto_value.value)
     time.sleep(1)
-

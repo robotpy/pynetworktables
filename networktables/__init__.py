@@ -6,4 +6,3 @@ from .version import __version__
 from .networktables import NetworkTables
 
 from .instance import NetworkTablesInstance
-

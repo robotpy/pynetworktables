@@ -449,7 +449,7 @@ class NetworkTableEntry(object):
     def addListener(self, listener, flags, paramIsNew=True):
         """Add a listener for changes to the entry
         
-        :param listener: the listener to add 
+        :param listener: the listener to add
         :type listener: `callable(entry, key, value, param)`
         :param flags: bitmask specifying desired notifications
         :type flags: :class:`.NetworkTablesInstance.NotifyFlags`

@@ -150,7 +150,7 @@ class Dispatcher(object):
         self.m_storage.setDispatcher(self, True)
     
         self.m_dispatch_thread = SafeThread(target=self._dispatchThreadMain,
-                                            name='nt-dispatch-thread') 
+                                            name='nt-dispatch-thread')
         self.m_clientserver_thread = SafeThread(target=self._serverThreadMain,
                                                 name='nt-server-thread')
         return True
@@ -167,7 +167,7 @@ class Dispatcher(object):
         self.m_storage.setDispatcher(self, False)
     
         self.m_dispatch_thread = SafeThread(target=self._dispatchThreadMain,
-                                            name='nt-dispatch-thread') 
+                                            name='nt-dispatch-thread')
         self.m_clientserver_thread = SafeThread(target=self._clientThreadMain,
                                                 name='nt-client-thread')
         
@@ -331,7 +331,7 @@ class Dispatcher(object):
             
             # in case we were woken up to terminate
             if not self.m_active:
-                break    
+                break
             
             # perform periodic persistent save
             if is_server and self.m_persist_filename and start > next_save_time:
@@ -691,4 +691,3 @@ class Dispatcher(object):
             self.m_do_reconnect = True
     
             self.m_reconnect_cv.notify()
-

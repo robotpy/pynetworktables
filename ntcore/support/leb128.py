@@ -71,4 +71,3 @@ else:
             if (b & 0x80) == 0:
                 break
         return result
-

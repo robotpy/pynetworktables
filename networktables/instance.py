@@ -358,7 +358,7 @@ class NetworkTablesInstance:
         return self._api.waitForEntryListenerQueue(timeout)
     
     def addConnectionListener(self, listener, immediateNotify=False):
-        '''Adds a listener that will be notified when a new connection to a 
+        '''Adds a listener that will be notified when a new connection to a
         NetworkTables client/server is established.
         
         The listener is called from a NetworkTables owned thread and should
@@ -520,7 +520,7 @@ class NetworkTablesInstance:
         
         :param port: server port to use in combination with IP from DS
         
-        .. versionadded:: 2018.0.0 
+        .. versionadded:: 2018.0.0
            Was formerly called setDashboardMode
         """
         self._api.startDSClient(port)
@@ -528,7 +528,7 @@ class NetworkTablesInstance:
     setDashboardMode = startDSClient
     
     def setUpdateRate(self, interval):
-        """Sets the period of time between writes to the network. 
+        """Sets the period of time between writes to the network.
         
         WPILib's networktables and SmartDashboard default to 100ms, we have
         set it to 50ms instead for quicker response time. You should not set
@@ -692,7 +692,7 @@ class NetworkTablesInstance:
         """Enable verbose logging that can be useful when trying to diagnose
         NetworkTables issues.
         
-        .. warning:: Don't enable this in normal use, as it can potentially 
+        .. warning:: Don't enable this in normal use, as it can potentially
                      cause performance issues due to the volume of logging.
                   
         .. versionadded:: 2017.0.0

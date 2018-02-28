@@ -1,6 +1,6 @@
 # notrack
 '''
-    Instrumentation for finding deadlocks in networktables    
+    Instrumentation for finding deadlocks in networktables
 '''
 
 from __future__ import print_function
@@ -42,7 +42,7 @@ locks = {
     
     # Never held by robot thread
     'server_conn_lock': [
-        'server_conn_lock',       
+        'server_conn_lock',
     ],
     
     'trans_lock': [
@@ -74,7 +74,7 @@ class WrappedLock(threading._PyRLock):
     
     def acquire(self, blocking=True, timeout=-1):
         
-        # This check isn't strictly true.. 
+        # This check isn't strictly true..
         if isinstance(threading.current_thread(), threading._MainThread):
             assert self._name in main_locks, "%s cannot be held in main thread" % self._name
         
@@ -162,4 +162,3 @@ def _get_caller():
     curframe = inspect.currentframe()
     calframe = inspect.getouterframes(curframe, 3)
     return '%s:%s %s' % (calframe[3][1], calframe[3][2], calframe[3][3])
-

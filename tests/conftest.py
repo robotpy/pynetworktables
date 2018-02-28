@@ -93,7 +93,7 @@ class NtTestBase(NetworkTablesInstance):
         self._wait_init_listener()
     
     def _wait_init_listener(self):
-        self._api.addEntryListener('', self._wait_cb, 
+        self._api.addEntryListener('', self._wait_cb,
                                   NetworkTablesInstance.NotifyFlags.NEW |
                                   NetworkTablesInstance.NotifyFlags.UPDATE |
                                   NetworkTablesInstance.NotifyFlags.DELETE |
@@ -107,7 +107,7 @@ class NtTestBase(NetworkTablesInstance):
     
     @contextmanager
     def expect_changes(self, count):
-        '''Use this on the *other* instance that you're making 
+        '''Use this on the *other* instance that you're making
         changes on, to wait for the changes to propagate to the
         other instance'''
         

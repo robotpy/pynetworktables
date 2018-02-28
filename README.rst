@@ -79,5 +79,3 @@ Authors & Contributors
 
 * Dustin Spicuzza, FRC Team 1418/2423
 * Peter Johnson, FRC Team 294
-
-

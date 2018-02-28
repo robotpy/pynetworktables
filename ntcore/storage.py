@@ -97,7 +97,7 @@ class _Entry(object):
         self.user_entry._value = value
         
     def isPersistent(self):
-        return (self.flags & NT_PERSISTENT) != 0 
+        return (self.flags & NT_PERSISTENT) != 0
     
     def increment_seqnum(self):
         self.seq_num += 1
@@ -1081,7 +1081,7 @@ class Storage(object):
         
             try:
                 while True:
-                    result = self.m_rpc_results.pop(call_pair, None) 
+                    result = self.m_rpc_results.pop(call_pair, None)
                     if result is None:
                         if timeout == 0 or self.m_terminating:
                             return False, None
@@ -1240,5 +1240,3 @@ class Storage(object):
                     pass
                 
                 return 'Could not rename temp file to real file: %s' % e
-
-
