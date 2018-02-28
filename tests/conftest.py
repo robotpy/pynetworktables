@@ -65,9 +65,13 @@ class NtTestBase(NetworkTablesInstance):
     _wait_lock = None
     
     def shutdown(self):
+        logger.info("shutting down %s", self.__class__.__name__)
         NetworkTablesInstance.shutdown(self)
         if self._wait_lock is not None:
             self._wait_init_listener()
+    
+    def disconnect(self):
+        self._api.dispatcher.stop()
     
     def _init_common(self, proto_rev):
         # This resets the instance to be independent
@@ -142,6 +146,8 @@ def nt_server(request):
         _test_saved_port = None
         
         def start_test(self):
+            logger.info("NtServer::start_test")
+            
             # Restore server port on restart
             if self._test_saved_port is not None:
                 self.port = self._test_saved_port
