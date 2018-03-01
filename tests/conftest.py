@@ -65,9 +65,13 @@ class NtTestBase(NetworkTablesInstance):
     _wait_lock = None
     
     def shutdown(self):
+        logger.info("shutting down %s", self.__class__.__name__)
         NetworkTablesInstance.shutdown(self)
         if self._wait_lock is not None:
             self._wait_init_listener()
+    
+    def disconnect(self):
+        self._api.dispatcher.stop()
     
     def _init_common(self, proto_rev):
         # This resets the instance to be independent
@@ -142,6 +146,8 @@ def nt_server(request):
         _test_saved_port = None
         
         def start_test(self):
+            logger.info("NtServer::start_test")
+            
             # Restore server port on restart
             if self._test_saved_port is not None:
                 self.port = self._test_saved_port
@@ -169,6 +175,7 @@ def nt_client(request, nt_server):
         
         def start_test(self):
             self.enableVerboseLogging()
+            self.setNetworkIdentity('C1')
             self._api.dispatcher.setDefaultProtoRev(request.param)
             self.startClient(('127.0.0.1', nt_server.port))
     
@@ -176,6 +183,25 @@ def nt_client(request, nt_server):
     client._init_client(request.param)
     yield client
     client.shutdown()
+
+@pytest.fixture(params=[
+    0x0300 # don't bother with other proto versions
+])
+def nt_client2(request, nt_server):
+    
+    class NtClient(NtTestBase):
+        
+        def start_test(self):
+            self.enableVerboseLogging()
+            self._api.dispatcher.setDefaultProtoRev(request.param)
+            self.setNetworkIdentity('C2')
+            self.startClient(('127.0.0.1', nt_server.port))
+    
+    client = NtClient()
+    client._init_client(request.param)
+    yield client
+    client.shutdown()
+
 
 @pytest.fixture
 def nt_live(nt_server, nt_client):

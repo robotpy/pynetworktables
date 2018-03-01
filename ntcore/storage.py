@@ -1,4 +1,4 @@
-# validated: 2017-10-08 DS 8a37b81f4e10 cpp/Storage.cpp cpp/Storage.h cpp/Storage_load.cpp cpp/Storage_save.cpp
+# validated: 2018-02-28 DS fd32350dc68c cpp/Storage.cpp cpp/Storage.h cpp/Storage_load.cpp cpp/Storage_save.cpp
 '''----------------------------------------------------------------------------'''
 ''' Copyright (c) FIRST 2017. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''
@@ -492,10 +492,12 @@ class Storage(object):
                 name = msg.str
         
                 entry = self._getOrNew(name)
+                entry.seq_num = seq_num
+                entry.id = msg_id
+                
                 if entry.value is None:
                     entry.value = msg.value
                     entry.flags = msg.flags
-                    entry.seq_num = msg.seq_num_uid
                 
                     # notify
                     self.m_notifier.notifyEntry(entry.local_id, name, entry.value, NT_NOTIFY_NEW)
@@ -504,10 +506,10 @@ class Storage(object):
                     # then we don't update the local value and instead send it back to the
                     # server as an update message
                     if entry.local_write and not entry.isPersistent():
+                        entry.increment_seqnum()
                         update_msgs.append((Message.entryUpdate(entry.id, entry.seq_num, entry.value), None, None))
                     else:
                         entry.value = msg.value
-                        entry.seq_num = seq_num
                         notify_flags = NT_NOTIFY_UPDATE
                         # don't update flags from a <3.0 remote (not part of message)
                         if conn.get_proto_rev() >= 0x0300:
@@ -518,10 +520,8 @@ class Storage(object):
         
                         # notify
                         self.m_notifier.notifyEntry(entry.local_id, name, entry.value, notify_flags)
-        
-                # set id and save to idmap
-                entry.id = msg_id
                 
+                # save to idmap
                 ensure_id_exists(self.m_idmap, msg_id)
                 self.m_idmap[msg_id] = entry
             
