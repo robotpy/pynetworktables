@@ -52,10 +52,11 @@ class NetworkConnection(object):
         kActive = 4
         kDead = 5
     
-    def __init__(self, uid, stream, notifier, handshake, get_entry_type, verbose=False):
+    def __init__(self, uid, stream, notifier, handshake, get_entry_type, verbose=False, stream_debug=False):
         
         # logging debugging
         self.m_verbose = verbose
+        self.m_stream_debug = stream_debug
         
         self.m_uid = uid
         self.m_stream = stream
@@ -241,7 +242,10 @@ class NetworkConnection(object):
                 self.m_stream.close()
                 
                 return None
-            
+        
+        if self.m_stream_debug:
+            self.m_stream.enable_stream_debug(self.m_stream_debug)
+        
         self.set_state(self.State.kHandshake)
         
         try:
@@ -249,6 +253,10 @@ class NetworkConnection(object):
         except Exception:
             logger.exception("Unhandled exception during handshake")
             handshake_success = False
+            
+            # Kill self
+            if self.m_stream_debug:
+                self.m_stream.m_rdsock.writeToFile()
         
         if not handshake_success:
             self.set_state(self.State.kDead)

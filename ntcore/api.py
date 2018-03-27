@@ -20,13 +20,14 @@ class NtCoreApi(object):
         would want to do this.
     '''
     
-    def __init__(self, entry_creator, verbose=False):
+    def __init__(self, entry_creator, verbose=False, stream_debug='file.bin'):
         self.conn_notifier = ConnectionNotifier(verbose=verbose)
         self.entry_notifier = EntryNotifier(verbose=verbose)
         self.rpc_server = RpcServer(verbose=verbose)
         self.storage = Storage(self.entry_notifier, self.rpc_server, entry_creator)
-        self.dispatcher = Dispatcher(self.storage, self.conn_notifier, verbose=verbose)
+        self.dispatcher = Dispatcher(self.storage, self.conn_notifier, verbose=verbose, stream_debug=stream_debug)
         self.ds_client = DsClient(self.dispatcher, verbose=verbose)
+
         
     def stop(self):
         self.ds_client.stop()

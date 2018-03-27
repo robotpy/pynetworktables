@@ -23,6 +23,10 @@ class TCPStream(object):
         # Python-specific for debugging
         self.sock_type = sock_type
     
+    def enable_stream_debug(self, fname):
+        from ._stream_wrapper import StreamWrapper
+        self.m_rdsock = StreamWrapper(self.m_rdsock, fname)
+    
     def read(self, size):
         
         # TODO: ntcore does a select to wait for read to be available. Necessary?
