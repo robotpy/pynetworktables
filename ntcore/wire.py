@@ -17,6 +17,7 @@
     
 '''
 
+import logging
 import struct
 from .support.compat import range
 
@@ -34,6 +35,7 @@ from .constants import (
 from .support import leb128
 from .value import Value
 
+logger = logging.Logger('nt.wire')
 
 _clientHello = struct.Struct('>H')
 _protoUnsup = struct.Struct('>H')
@@ -192,13 +194,22 @@ class WireCodec(object):
     
     def read_string_v2(self, rstream):
         slen = rstream.readStruct(self._string_fmt)[0]
-        return rstream.read(slen).decode('utf-8')
-    
+        b = rstream.read(slen)
+        try:
+            return b.decode('utf-8')
+        except UnicodeDecodeError:
+            logger.warning('Received an invalid UTF-8 string: %r', b)
+            return 'INVALID UTF-8: %r' % b
+
     def read_string_v3(self, rstream):
         slen = leb128.read_uleb128(rstream)
-        return rstream.read(slen).decode('utf-8')
-    
-    
+        b = rstream.read(slen)
+        try:
+            return b.decode('utf-8')
+        except UnicodeDecodeError:
+            logger.warning('Received an invalid UTF-8 string: %r', b)
+            return 'INVALID UTF-8: %r' % b
+
     def write_arraylen_v2_v3(self, a, out):
         alen = min(len(a), 0xff)
         out.append(self._array_fmt.pack(alen))
