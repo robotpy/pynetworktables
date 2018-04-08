@@ -9,6 +9,7 @@ from io import BytesIO
 
 import pytest
 
+from ntcore.support.compat import PY2
 from ntcore.message import Message, MessageType
 from ntcore.value import Value
 from ntcore.tcpsockets.tcp_stream import TCPStream, StreamEOF
@@ -206,4 +207,22 @@ def test_wire_executeRpc(msg_round_trip):
 
 def test_wire_rpcResponse(msg_round_trip):
     msg_round_trip(Message.rpcResponse(0x1234, 0x4321, "parameter"), minver=0x0300)
+
+# Various invalid unicode
+def test_decode_invalid_string(proto_rev):
+    codec = WireCodec(proto_rev)
     
+    if proto_rev == 0x0200:
+        prefix = b'\x00\x1a'
+    else:
+        prefix = b'\x1a'
+    
+    fp = BytesIO(prefix + b'\x00\xa7>\x03eWithJoystickCommandV2')
+    rstream = ReadStream(fp)
+    
+    if PY2:
+        s = "INVALID UTF-8: '\\x00\\xa7>\\x03eWithJoystickCommandV2'"
+    else:
+        s = "INVALID UTF-8: b'\\x00\\xa7>\\x03eWithJoystickCommandV2'"
+    
+    assert codec.read_string(rstream) == s
