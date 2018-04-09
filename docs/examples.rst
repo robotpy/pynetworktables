@@ -39,3 +39,13 @@ ntproperty Example
 ------------------
 
 .. literalinclude:: ../samples/ntproperty_client.py
+
+json_logger Example
+-------------------
+
+This is a more complex example which can be used to log data from your robot
+into a JSON file. There is a corresponding
+
+As this example is a bit larger than the others, see the 'samples/json_logger'
+directory of the pynetworktables repository on github. It also includes a script
+that you can modify to plot the data.
