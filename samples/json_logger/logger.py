@@ -53,7 +53,7 @@ def translate_control_word(value):
 class DataLogger:
     
     # Change this key to whatever NT key you want to log
-    log_key = '/SmartDashboard/pfdebug'
+    log_key = '/SmartDashboard/log_data'
     
     # Data file where robot IP is stored so you don't have to keep typing it
     cache_file = '.robot'
