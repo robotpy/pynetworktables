@@ -51,4 +51,5 @@ setup(
     keywords='frc first robotics wpilib networktables',
     packages=find_packages(exclude='tests'),
     install_requires=install_requires,
+    license="BSD License",
     )
