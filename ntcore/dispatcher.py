@@ -320,7 +320,7 @@ class Dispatcher(object):
         while self.m_active:
             # handle loop taking too long
             start = monotonic()
-            if start > timeout_time:
+            if start > timeout_time or timeout_time > start + self.m_update_rate:
                 timeout_time = start
     
             # wait for periodic or when flushed
