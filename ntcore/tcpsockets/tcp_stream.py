@@ -32,6 +32,9 @@ class TCPStream(object):
             raise StreamEOF("end of file")
         return data
 
+    def readline(self):
+        return self.m_rdsock.readline()
+
     def readStruct(self, s):
         sz = s.size
         data = self.m_rdsock.read(sz)

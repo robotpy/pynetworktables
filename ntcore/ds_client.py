@@ -67,30 +67,12 @@ class DsClient(object):
                 continue
 
             while self.m_active and self.m_stream:
-                # Read JSON "{...}".  This is very limited, does not handle
-                # quoted "}" or nested {}, but is sufficient for this purpose.
-                json_blob = bytearray()
-
-                try:
-                    # Throw away characters until {
-                    while self.m_active:
-                        ch = self.m_stream.read(1)
-                        if ch == b'{':
-                            break
-                    json_blob.extend(b'{')
-
-                    # Read characters until }
-                    while self.m_active:
-                        ch = self.m_stream.read(1)
-                        json_blob.extend(ch)
-                        if ch == b'}':
-                            break
-
-                except IOError:
-                    # I think this should be protected to avoid stop() from throwing?
+                json_blob = self.m_stream.readline()
+                if not json_blob:
+                    # We've reached EOF.
                     with self.m_mutex:
+                        self.m_stream.close()
                         self.m_stream = None
-                    break
 
                 if not self.m_active:
                     break
@@ -99,7 +81,6 @@ class DsClient(object):
                     obj = json.loads(json_blob.decode())
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     continue
-
                 try:
                     ip = obj['robotIP']
                 except KeyError:
