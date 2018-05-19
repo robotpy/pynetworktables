@@ -10,6 +10,7 @@ import json
 import threading
 
 from .support.compat import Condition
+from .support.safe_thread import SafeThread
 from .tcpsockets.tcp_connector import TcpConnector
 
 import logging
@@ -23,7 +24,7 @@ class DsClient(object):
         self.verbose = verbose
 
         self.m_active = False
-        self.m_owner = None  # type: threading.Thread
+        self.m_owner = None  # type: SafeThread
 
         self.m_mutex = threading.Lock()
         self.m_cond = Condition(self.m_mutex)
@@ -36,10 +37,7 @@ class DsClient(object):
             self.m_port = port
             if not self.m_active:
                 self.m_active = True
-                self.m_owner = threading.Thread(target=self._thread_main,
-                                                name='nt-dsclient-thread')
-                self.m_owner.daemon = True
-                self.m_owner.start()
+                self.m_owner = SafeThread(target=self._thread_main, name='nt-dsclient')
 
     def stop(self):
         with self.m_mutex:
