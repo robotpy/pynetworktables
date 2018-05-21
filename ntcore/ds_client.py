@@ -82,8 +82,8 @@ class DsClient(object):
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     continue
                 try:
-                    ip = obj['robotIP']
-                except KeyError:
+                    ip = int(obj['robotIP'])
+                except (KeyError, ValueError):
                     continue
 
                 # If zero, clear the server override
