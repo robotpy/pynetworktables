@@ -3,7 +3,16 @@ from __future__ import print_function
 
 from os.path import dirname, exists, join
 import sys, subprocess
+
+import setuptools
 from setuptools import find_packages, setup
+
+try:
+    # Does setuptools support Python version environment markers in extras_require?
+    # Not using environment markers in install_requires for compatibility.
+    is_modern_setuptools = int(setuptools.__version__.split('.', 1)[0]) >= 18
+except Exception:
+    is_modern_setuptools = False
 
 setup_dir = dirname(__file__)
 git_dir = join(setup_dir, '.git')
@@ -37,13 +46,16 @@ with open(join(setup_dir, 'README.rst'), 'r') as readme_file:
     long_description = readme_file.read()
 
 install_requires = []
-if sys.version_info[0] <= 2:
+extras = {}
+if is_modern_setuptools:
+    extras[':python_version<"3"'] = ['monotonic']
+elif sys.version_info[0] <= 2:
     install_requires.append('monotonic')
 
 setup(
     name='pynetworktables',
     version=__version__,
-    description='A pure python implementation of NetworkTables, used for Robot communications in the FIRST Robotics Competition.',
+    description='A pure Python implementation of NetworkTables, used for robot communications in the FIRST Robotics Competition.',
     long_description=long_description,
     author='Dustin Spicuzza, Peter Johnson',
     author_email='robotpy@googlegroups.com',
@@ -51,5 +63,21 @@ setup(
     keywords='frc first robotics wpilib networktables',
     packages=find_packages(exclude='tests'),
     install_requires=install_requires,
-    license="BSD License",
+    extras_require=extras,
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*',
+    license="BSD-3-Clause",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Education",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.3",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Topic :: Scientific/Engineering",
+    ],
     )
