@@ -3,3 +3,7 @@ aa2de65bad663d3d72e08fddb1c166e01cefa3e8 # llvm::Twine
 3438a173410376277ee85e7befa068be28cf8dcd # wpi::mutex (priority-aware mutex)
 19f7a5f1082148b4241333deb6ffe266a806a775 # wpiformat
 4376c94dc19920eb5a6dd1ca6f8b3a948bd28681 # bump copyright
+7210a8fd289cf74ce5be34977355f3d3948083c9 # prepare allwpilib merge
+f84018af5f71d02e630b2bdad8aa61c08f6f1292 # move llvm to wpi
+7a34f5d17d174beec2fd82dd6a05223e80091a8b # checked malloc
+6729a7d6b1dfd9d23b58f51d3e7e76e5d0bf42aa # wpiformat on merged repo
