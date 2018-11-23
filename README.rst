@@ -8,7 +8,7 @@ This is a pure python implementation of the NetworkTables protocol, derived
 from the wpilib ntcore C++ implementation. In FRC, the NetworkTables protocol
 is used to pass non-Driver Station data to and from the robot across the network.
 
-This implementation is intended to be compatible with python 2.7 and python 3.3+.
+This implementation is intended to be compatible with python 3.5 and later.
 All commits to the repository are automatically tested on all supported python
 versions using Travis-CI.
 
@@ -16,6 +16,8 @@ versions using Travis-CI.
           FIRST Robotics Competition, and can be used to talk to
           SmartDashboard/SFX. It does not have any security, and should never
           be used on untrusted networks.
+
+.. note:: If you require support for Python 2.7, use pynetworktables 2018.2.0
 
 Documentation
 -------------
@@ -39,16 +41,6 @@ installed, connect to the internet, and install like so:
 ::
 
     pip install pynetworktables
-
-
-Implementation differences as of 2015
--------------------------------------
-
-* Implementation is pure python, no SIP compilation required!
-* API is now based on the Java implementation, methods are
-  now camelCase, instead of CapsCase
-* NetworkTables objects are found in the networktables package, and
-  not in the pynetworktables package
 
 Support
 -------
