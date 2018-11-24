@@ -7,8 +7,9 @@
 '''----------------------------------------------------------------------------'''
 
 from collections import deque, namedtuple
+from threading import Condition
+from queue import Queue
 
-from .support.compat import Condition, Queue
 from .support.safe_thread import SafeThread
 from .support.uidvector import UidVector
 

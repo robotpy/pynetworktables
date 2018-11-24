@@ -7,6 +7,8 @@
 '''----------------------------------------------------------------------------'''
 
 import threading
+from queue import Queue, Empty
+from time import monotonic
 
 from .constants import (
     kEntryAssign,
@@ -21,7 +23,6 @@ from .message import Message
 from .structs import ConnectionInfo
 from .wire import WireCodec
 
-from .support.compat import monotonic, Queue, Empty
 from .support.lists import Pair
 from .support.safe_thread import SafeThread
 

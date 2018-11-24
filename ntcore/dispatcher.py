@@ -15,7 +15,6 @@ from .network_connection import NetworkConnection
 from .tcpsockets.tcp_acceptor import TcpAcceptor
 from .tcpsockets.tcp_connector import TcpConnector
 
-from .support.compat import monotonic, Condition
 from .support.safe_thread import SafeThread
 
 from .constants import (
@@ -74,12 +73,12 @@ class Dispatcher(object):
         
         # Condition variable for forced dispatch wakeup (flush)
         self.m_flush_mutex = threading.Lock()
-        self.m_flush_cv = Condition(self.m_flush_mutex)
+        self.m_flush_cv = threading.Condition(self.m_flush_mutex)
         self.m_last_flush = 0
         self.m_do_flush = False
         
         # Condition variable for client reconnect (uses user mutex)
-        self.m_reconnect_cv = Condition(self.m_user_mutex)
+        self.m_reconnect_cv = threading.Condition(self.m_user_mutex)
         self.m_reconnect_proto_rev = self.m_default_proto
         self.m_do_reconnect = True
     
@@ -236,7 +235,7 @@ class Dispatcher(object):
         self.m_reconnect_proto_rev = proto_rev
     
     def flush(self):
-        now = monotonic()
+        now = time.monotonic()
         with self.m_flush_mutex:
             # don't allow flushes more often than every 10 ms
             if (now - self.m_last_flush) < 0.010:
@@ -308,7 +307,7 @@ class Dispatcher(object):
         return not self.m_active or self.m_do_flush
     
     def _dispatchThreadMain(self):
-        timeout_time = monotonic()
+        timeout_time = time.monotonic()
     
         save_delta_time = 1.0
         next_save_time = timeout_time + save_delta_time
@@ -319,7 +318,7 @@ class Dispatcher(object):
         
         while self.m_active:
             # handle loop taking too long
-            start = monotonic()
+            start = time.monotonic()
             if start > timeout_time or timeout_time > start + self.m_update_rate:
                 timeout_time = start
     

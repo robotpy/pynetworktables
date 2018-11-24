@@ -11,7 +11,7 @@
 
 import pytest
 
-from ntcore.support.compat import Condition
+from threading import Condition
 
 from ntcore.constants import (
         NT_NOTIFY_LOCAL,

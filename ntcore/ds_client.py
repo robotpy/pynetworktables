@@ -9,7 +9,6 @@
 import json
 import threading
 
-from .support.compat import Condition
 from .support.safe_thread import SafeThread
 from .tcpsockets.tcp_connector import TcpConnector
 
@@ -27,7 +26,7 @@ class DsClient(object):
         self.m_owner = None  # type: SafeThread
 
         self.m_mutex = threading.Lock()
-        self.m_cond = Condition(self.m_mutex)
+        self.m_cond = threading.Condition(self.m_mutex)
 
         self.m_port = None  # type: int
         self.m_stream = None

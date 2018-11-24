@@ -4,6 +4,7 @@
 #
 
 from contextlib import contextmanager
+from threading import Condition
 
 log_datefmt = "%H:%M:%S"
 log_format = "%(asctime)s:%(msecs)03d %(levelname)-8s: %(name)-8s: %(message)s"
@@ -18,7 +19,6 @@ import pytest
 
 from networktables import NetworkTables
 from networktables.instance import NetworkTablesInstance
-from ntcore.support.compat import Condition
 
 #
 # Fixtures for a usable in-memory version of networktables
