@@ -9,7 +9,6 @@ from io import BytesIO
 
 import pytest
 
-from ntcore.support.compat import PY2
 from ntcore.message import Message, MessageType
 from ntcore.value import Value
 from ntcore.tcpsockets.tcp_stream import TCPStream, StreamEOF
@@ -220,9 +219,6 @@ def test_decode_invalid_string(proto_rev):
     fp = BytesIO(prefix + b'\x00\xa7>\x03eWithJoystickCommandV2')
     rstream = ReadStream(fp)
     
-    if PY2:
-        s = "INVALID UTF-8: '\\x00\\xa7>\\x03eWithJoystickCommandV2'"
-    else:
-        s = "INVALID UTF-8: b'\\x00\\xa7>\\x03eWithJoystickCommandV2'"
+    s = "INVALID UTF-8: b'\\x00\\xa7>\\x03eWithJoystickCommandV2'"
     
     assert codec.read_string(rstream) == s

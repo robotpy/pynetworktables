@@ -9,6 +9,7 @@
 import ast
 import base64
 import re
+from configparser import RawConfigParser
 
 from .constants import (
     NT_BOOLEAN,
@@ -19,8 +20,6 @@ from .constants import (
     NT_DOUBLE_ARRAY,
     NT_STRING_ARRAY,
 )
-
-from .support.compat import RawConfigParser, PY2
 
 import logging
 logger = logging.getLogger('nt')
@@ -59,13 +58,8 @@ _table[ord('\n')] = '\\n'
 _table[ord('\t')] = '\\t'
 _table[ord('\r')] = '\\r'
 
-if PY2:
-    _table = dict(map(lambda v: (v[0], unicode(v[1])), _table.items()))
-    def _escape_string(s):
-        return unicode(s).translate(_table)
-else:
-    def _escape_string(s):
-        return s.translate(_table)
+def _escape_string(s):
+    return s.translate(_table)
 
 
 def save_entries(fp, entries):
@@ -109,7 +103,4 @@ def save_entries(fp, entries):
         
         parser.set(PERSISTENT_SECTION, name, vrepr)
     
-    if PY2:
-        parser.write(fp)
-    else:
-        parser.write(fp, space_around_delimiters=False)
+    parser.write(fp, space_around_delimiters=False)

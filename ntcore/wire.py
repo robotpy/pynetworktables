@@ -19,7 +19,6 @@
 
 import logging
 import struct
-from .support.compat import range
 
 from .constants import (
     NT_BOOLEAN,

@@ -9,6 +9,7 @@
 import contextlib
 import os
 import threading
+from time import monotonic
 
 from .message import Message
 from .network_connection import NetworkConnection
@@ -17,7 +18,6 @@ from .storage_save import save_entries
 from .structs import EntryInfo, ConnectionInfo
 from .value import Value
 
-from .support.compat import monotonic, file_replace
 from .support.lists import ensure_id_exists
 
 from .constants import (
@@ -1226,16 +1226,16 @@ class Storage(object):
                 return 'Error writing file: %s' % e
             
             try:
-                file_replace(filename, bak)
+                os.replace(filename, bak)
             except OSError:
                 pass # ignored
                 
             try:
-                file_replace(tmp, filename)
+                os.replace(tmp, filename)
             except OSError as e:
                 try:
                     # try to restore backup
-                    file_replace(bak, filename)
+                    os.replace(bak, filename)
                 except OSError:
                     pass
                 

@@ -4,10 +4,9 @@ import ast
 import binascii
 import base64
 import re
+from configparser import RawConfigParser, NoSectionError
 
 from .value import Value
-
-from .support.compat import RawConfigParser, NoSectionError, PY2
 
 import logging
 logger = logging.getLogger('nt')
@@ -99,8 +98,6 @@ def load_entries(fp, filename, prefix):
             
             if mm:
                 value = Value.makeString(_unescape_string(mm.group(1)))
-            elif PY2 and v == '':
-                value = Value.makeString('')
             else:
                 logger.warning("Unrecognized string value %r for %s", v, m.group(1))
             continue
@@ -108,10 +105,7 @@ def load_entries(fp, filename, prefix):
         m = _key_raw.match(k)
         if m:
             try:
-                if PY2:
-                    v = base64.b64decode(v)
-                else:
-                    v = base64.b64decode(v, validate=True)
+                v = base64.b64decode(v, validate=True)
                 value = Value.makeRaw(v)
             except binascii.Error:
                 logger.warning("Unrecognized raw value %r for %s", v, m.group(1))

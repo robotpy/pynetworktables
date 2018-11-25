@@ -4,15 +4,7 @@ from __future__ import print_function
 from os.path import dirname, exists, join
 import sys, subprocess
 
-import setuptools
 from setuptools import find_packages, setup
-
-try:
-    # Does setuptools support Python version environment markers in extras_require?
-    # Not using environment markers in install_requires for compatibility.
-    is_modern_setuptools = int(setuptools.__version__.split('.', 1)[0]) >= 18
-except Exception:
-    is_modern_setuptools = False
 
 setup_dir = dirname(__file__)
 git_dir = join(setup_dir, '.git')
@@ -45,13 +37,6 @@ with open(version_file, 'r') as fp:
 with open(join(setup_dir, 'README.rst'), 'r') as readme_file:
     long_description = readme_file.read()
 
-install_requires = []
-extras = {}
-if is_modern_setuptools:
-    extras[':python_version<"3"'] = ['monotonic']
-elif sys.version_info[0] <= 2:
-    install_requires.append('monotonic')
-
 setup(
     name='pynetworktables',
     version=__version__,
@@ -62,9 +47,7 @@ setup(
     url='https://github.com/robotpy/pynetworktables',
     keywords='frc first robotics wpilib networktables',
     packages=find_packages(exclude='tests'),
-    install_requires=install_requires,
-    extras_require=extras,
-    python_requires='!=3.0.*, !=3.1.*, !=3.2.*',
+    python_requires='>=3.5',
     license="BSD-3-Clause",
     classifiers=[
         "Development Status :: 5 - Production/Stable",

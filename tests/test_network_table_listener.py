@@ -3,14 +3,11 @@
 # These tests are leftover from the original pynetworktables tests
 #
 
+from unittest.mock import call, Mock
 import pytest
 
 from networktables import NetworkTables
 
-try:
-    from unittest.mock import call, Mock
-except ImportError:
-    from mock import call, Mock
 
 @pytest.fixture(scope='function')
 def table1(nt):

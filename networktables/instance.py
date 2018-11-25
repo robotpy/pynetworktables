@@ -5,7 +5,6 @@ from weakref import WeakSet
 
 from ntcore import constants
 from ntcore.api import NtCoreApi
-from ntcore.support.compat import basestring
 
 from .entry import NetworkTableEntry
 
@@ -496,7 +495,7 @@ class NetworkTablesInstance:
                 item if isinstance(item, tuple) else (item, constants.NT_DEFAULT_PORT)
                 for item in server_or_servers
             ]
-        elif isinstance(server_or_servers, basestring):
+        elif isinstance(server_or_servers, str):
             server_or_servers = [(server_or_servers, constants.NT_DEFAULT_PORT)]
         
         self._api.setServer(server_or_servers)

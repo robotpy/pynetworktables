@@ -9,20 +9,8 @@
 # These tests are adapted from ntcore's test suite
 #
 
-from collections import namedtuple
-
-try:
-    from StringIO import cStringIO as StringIO
-except ImportError:
-    try:
-        from StringIO import StringIO
-    except ImportError:
-        from io import StringIO
-
-try:
-    from unittest.mock import call, Mock, ANY
-except ImportError:
-    from mock import call, Mock, ANY
+from io import StringIO
+from unittest.mock import call, Mock, ANY
 
 import pytest
 
@@ -45,8 +33,6 @@ from ntcore.constants import (
     NT_NOTIFY_UPDATE,
     NT_NOTIFY_FLAGS
 )
-
-from ntcore.support.compat import PY2
 
 from ntcore.dispatcher import Dispatcher
 from ntcore.entry_notifier import EntryNotifier
@@ -715,12 +701,6 @@ def test_SavePersistentEmpty(storage_persistent):
     fp.seek(0)
     assert "[NetworkTables Storage 3.0]\n\n" == fp.read()
 
-def py2(l):
-    # Python 2's configparser can't write without spaces
-    if PY2:
-        l = l.replace(' = ', '=')
-    return l
-        
 
 def test_savePersistent(storage_persistent):
     storage = storage_persistent
@@ -734,54 +714,54 @@ def test_savePersistent(storage_persistent):
     fp.seek(0)
     
     line = fp.readline()[:-1]
-    assert "[NetworkTables Storage 3.0]" == py2(line)
+    assert "[NetworkTables Storage 3.0]" == line
     line = fp.readline()[:-1]
-    assert "boolean \"\\x00\\x03\\x05\\n\"=true" == py2(line)
+    assert "boolean \"\\x00\\x03\\x05\\n\"=true" == line
     line = fp.readline()[:-1]
-    assert "boolean \"=\"=true" == py2(line)
+    assert "boolean \"=\"=true" == line
     line = fp.readline()[:-1]
-    assert "boolean \"CaseSensitive/KeyName\"=true" == py2(line)
+    assert "boolean \"CaseSensitive/KeyName\"=true" == line
     line = fp.readline()[:-1]
-    assert "boolean \"boolean/false\"=false" == py2(line)
+    assert "boolean \"boolean/false\"=false" == line
     line = fp.readline()[:-1]
-    assert "boolean \"boolean/true\"=true" == py2(line)
+    assert "boolean \"boolean/true\"=true" == line
     line = fp.readline()[:-1]
-    assert "array boolean \"booleanarr/empty\"=" == py2(line)
+    assert "array boolean \"booleanarr/empty\"=" == line
     line = fp.readline()[:-1]
-    assert "array boolean \"booleanarr/one\"=true" == py2(line)
+    assert "array boolean \"booleanarr/one\"=true" == line
     line = fp.readline()[:-1]
-    assert "array boolean \"booleanarr/two\"=true,false" == py2(line)
+    assert "array boolean \"booleanarr/two\"=true,false" == line
     line = fp.readline()[:-1]
     # this differs from ntcore
-    assert "double \"double/big\"=130000000.0" == py2(line)
+    assert "double \"double/big\"=130000000.0" == line
     line = fp.readline()[:-1]
-    assert "double \"double/neg\"=-1.5" == py2(line)
+    assert "double \"double/neg\"=-1.5" == line
     line = fp.readline()[:-1]
-    assert "double \"double/zero\"=0.0" == py2(line)
+    assert "double \"double/zero\"=0.0" == line
     line = fp.readline()[:-1]
-    assert "array double \"doublearr/empty\"=" == py2(line)
+    assert "array double \"doublearr/empty\"=" == line
     line = fp.readline()[:-1]
-    assert "array double \"doublearr/one\"=0.5" == py2(line)
+    assert "array double \"doublearr/one\"=0.5" == line
     line = fp.readline()[:-1]
-    assert "array double \"doublearr/two\"=0.5,-0.25" == py2(line)
+    assert "array double \"doublearr/two\"=0.5,-0.25" == line
     line = fp.readline()[:-1]
-    assert "raw \"raw/empty\"=" == py2(line)
+    assert "raw \"raw/empty\"=" == line
     line = fp.readline()[:-1]
-    assert "raw \"raw/normal\"=aGVsbG8=" == py2(line)
+    assert "raw \"raw/normal\"=aGVsbG8=" == line
     line = fp.readline()[:-1]
-    assert "raw \"raw/special\"=AAMFCg==" == py2(line)
+    assert "raw \"raw/special\"=AAMFCg==" == line
     line = fp.readline()[:-1]
-    assert "string \"string/empty\"=\"\"" == py2(line)
+    assert "string \"string/empty\"=\"\"" == line
     line = fp.readline()[:-1]
-    assert "string \"string/normal\"=\"hello\"" == py2(line)
+    assert "string \"string/normal\"=\"hello\"" == line
     line = fp.readline()[:-1]
-    assert "string \"string/special\"=\"\\x00\\x03\\x05\\n\"" == py2(line)
+    assert "string \"string/special\"=\"\\x00\\x03\\x05\\n\"" == line
     line = fp.readline()[:-1]
-    assert "array string \"stringarr/empty\"=" == py2(line)
+    assert "array string \"stringarr/empty\"=" == line
     line = fp.readline()[:-1]
-    assert "array string \"stringarr/one\"=\"hello\"" == py2(line)
+    assert "array string \"stringarr/one\"=\"hello\"" == line
     line = fp.readline()[:-1]
-    assert "array string \"stringarr/two\"=\"hello\",\"world\\n\"" == py2(line)
+    assert "array string \"stringarr/two\"=\"hello\",\"world\\n\"" == line
     line = fp.readline()[:-1]
     assert "" == line
 
