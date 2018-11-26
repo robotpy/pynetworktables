@@ -181,6 +181,17 @@ class NetworkTableEntry(object):
             return defaultValue
         return value[1]
     
+    @classmethod
+    def isValidDataType(cls, data):
+        if isinstance(data, (bytes, bytearray)):
+            return True
+        if isinstance(data, (list, tuple)):
+            if len(data) == 0:
+                raise ValueError("If you use a list here, cannot be empty")
+            data = data[0]
+
+        return isinstance(data, (int, float, str, bool))
+
     def setDefaultValue(self, defaultValue):
         """Sets the entry's value if it does not exist.
         
