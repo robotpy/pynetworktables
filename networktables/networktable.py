@@ -1,4 +1,3 @@
-
 __all__ = ["NetworkTable"]
 
 from ntcore.constants import (
@@ -9,15 +8,13 @@ from ntcore.constants import (
     NT_BOOLEAN_ARRAY,
     NT_DOUBLE_ARRAY,
     NT_STRING_ARRAY,
-    
     NT_PERSISTENT,
-    
     NT_NOTIFY_IMMEDIATE,
     NT_NOTIFY_LOCAL,
     NT_NOTIFY_NEW,
     NT_NOTIFY_DELETE,
     NT_NOTIFY_UPDATE,
-    NT_NOTIFY_FLAGS
+    NT_NOTIFY_FLAGS,
 )
 
 _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
@@ -25,11 +22,12 @@ _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
 from ntcore.value import Value
 
 import logging
-logger = logging.getLogger('nt')
+
+logger = logging.getLogger("nt")
 
 
 class NetworkTable:
-    '''
+    """
         This is a NetworkTable object, it allows you to interact with
         NetworkTables in a table-based manner. You should not directly
         create a NetworkTable object, but instead use
@@ -47,28 +45,28 @@ class NetworkTable:
         .. seealso::
            - The examples in the documentation.
            - :class:`.NetworkTablesInstance`
-    '''
-    
-    PATH_SEPARATOR = '/'
-    
+    """
+
+    PATH_SEPARATOR = "/"
+
     def __init__(self, path, api, inst):
-        
+
         #: Path of table without trailing slash
         self.path = path
         self._path = path + self.PATH_SEPARATOR
         self._pathsz = len(self._path)
-            
+
         self._api = api
         self._inst = inst
-        
+
         self._listeners = {}
 
     def __str__(self):
         return "NetworkTable: %s" % self._path
-    
+
     def __repr__(self):
         return "<NetworkTable path=%s>" % self._path
-    
+
     def getEntry(self, key):
         """Gets the entry for a subkey. This is the preferred API to use
         to access NetworkTable keys.
@@ -79,9 +77,10 @@ class NetworkTable:
         """
         return self._inst.getEntry(self._path + key)
 
-    def addEntryListener(self, listener, immediateNotify=False, key=None,
-                               localNotify=False):
-        '''Adds a listener that will be notified when any key in this
+    def addEntryListener(
+        self, listener, immediateNotify=False, key=None, localNotify=False
+    ):
+        """Adds a listener that will be notified when any key in this
         NetworkTable is changed, or when a specified key changes.
         
         The listener is called from the NetworkTables I/O thread, and should
@@ -101,18 +100,17 @@ class NetworkTable:
         .. versionchanged:: 2017.0.0
            Added localNotify parameter (defaults to False, which is different from NT2)
         
-        '''
+        """
         flags = NT_NOTIFY_NEW | NT_NOTIFY_UPDATE
         if immediateNotify:
             flags |= NT_NOTIFY_IMMEDIATE
         if localNotify:
             flags |= NT_NOTIFY_LOCAL
-            
+
         self.addEntryListenerEx(listener, flags, key=key)
-        
-    def addEntryListenerEx(self, listener, flags, key=None,
-                           paramIsNew=True):
-        '''Adds a listener that will be notified when any key in this
+
+    def addEntryListenerEx(self, listener, flags, key=None, paramIsNew=True):
+        """Adds a listener that will be notified when any key in this
         NetworkTable is changed, or when a specified key changes.
         
         The listener is called from the NetworkTables I/O thread, and should
@@ -133,44 +131,51 @@ class NetworkTable:
                      listener, but it is not recommended
         
         .. versionadded:: 2017.0.0
-        '''
-        
-        #if key is None:
-            # Any key in this table (but not subtables)
-        
+        """
+
+        # if key is None:
+        # Any key in this table (but not subtables)
+
         if key is None:
-            
+
             # Any key in this table (but not subtables)
             _pathsz = self._pathsz
             if paramIsNew:
+
                 def callback(item):
                     key_, value_, flags_, _ = item
                     key_ = key_[_pathsz:]
-                    if '/' not in key_:
+                    if "/" not in key_:
                         listener(self, key_, value_.value, (flags_ & _is_new) != 0)
+
             else:
+
                 def callback(item):
                     key_, value_, flags_, _ = item
                     key_ = key_[_pathsz:]
-                    if '/' not in key_:
+                    if "/" not in key_:
                         listener(self, key_, value_.value, flags_)
-                        
+
             uid = self._api.addEntryListener(self._path, callback, flags)
-    
+
         # Hack: Internal flag used by addGlobalListener*
-        elif key == 0xdeadbeef:
+        elif key == 0xDEADBEEF:
             if paramIsNew:
+
                 def callback(item):
                     key_, value_, flags_, _ = item
                     listener(key_, value_.value, (flags_ & _is_new) != 0)
+
             else:
                 callback = listener
-            
-            uid = self._api.addEntryListener('/', callback, flags)
+
+            uid = self._api.addEntryListener("/", callback, flags)
         else:
             entry_id = self._api.getEntryId(self._path + key)
-            uid = self._api.addEntryListenerByIdEx(self, key, entry_id, listener, flags, paramIsNew)
-            
+            uid = self._api.addEntryListenerByIdEx(
+                self, key, entry_id, listener, flags, paramIsNew
+            )
+
         self._listeners.setdefault(listener, []).append(uid)
 
     # deprecated aliases
@@ -178,7 +183,7 @@ class NetworkTable:
     addTableListenerEx = addEntryListenerEx
 
     def addSubTableListener(self, listener, localNotify=False):
-        '''Adds a listener that will be notified when any key in a subtable of
+        """Adds a listener that will be notified when any key in a subtable of
         this NetworkTable is changed.
         
         The listener is called from the NetworkTables I/O thread, and should
@@ -196,36 +201,37 @@ class NetworkTable:
                      
         .. versionchanged:: 2017.0.0
            Added localNotify parameter
-        '''
+        """
         notified_tables = {}
-        
+
         def _callback(item):
             key, value_, _1, _2 = item
-            key = key[self._pathsz:]
-            if '/' in key:
-                skey = key[:key.index('/')]
-                
+            key = key[self._pathsz :]
+            if "/" in key:
+                skey = key[: key.index("/")]
+
                 o = object()
                 if notified_tables.setdefault(skey, o) is o:
                     try:
                         listener(self, skey, self.getSubTable(skey), True)
                     except Exception:
-                        logger.warning("Unhandled exception in %s", listener, exc_info=True)
-        
+                        logger.warning(
+                            "Unhandled exception in %s", listener, exc_info=True
+                        )
+
         flags = NT_NOTIFY_NEW | NT_NOTIFY_IMMEDIATE
         if localNotify:
             flags |= NT_NOTIFY_LOCAL
-        
+
         uid = self._api.addEntryListener(self._path, _callback, flags)
         self._listeners.setdefault(listener, []).append(uid)
-        
 
     def removeEntryListener(self, listener):
-        '''Removes a table listener
+        """Removes a table listener
         
         :param listener: callable that was passed to :meth:`.addTableListener`
                          or :meth:`.addSubTableListener`
-        '''
+        """
         uids = self._listeners.pop(listener, [])
         for uid in uids:
             self._api.removeEntryListener(uid)
@@ -245,7 +251,6 @@ class NetworkTable:
         """
         path = self._path + key
         return self._inst.getTable(path)
-        
 
     def containsKey(self, key):
         """Determines whether the given key is in this table.
@@ -275,7 +280,7 @@ class NetworkTable:
         """
         path = self._path + key + self.PATH_SEPARATOR
         return len(self._api.getEntryInfo(path, 0)) > 0
-    
+
     def getKeys(self, types=0):
         """
         :param types: bitmask of types; 0 is treated as a "don't care".
@@ -288,14 +293,14 @@ class NetworkTable:
         """
         keys = []
         for entry in self._api.getEntryInfo(self._path, types):
-            relative_key = entry.name[len(self._path):]
+            relative_key = entry.name[len(self._path) :]
             if self.PATH_SEPARATOR in relative_key:
                 continue
-            
+
             keys.append(relative_key)
-        
+
         return keys
-        
+
     def getSubTables(self):
         """:returns: subtables currently in the table
         :rtype: list
@@ -304,15 +309,15 @@ class NetworkTable:
         """
         keys = set()
         for entry in self._api.getEntryInfo(self._path, 0):
-            relative_key = entry.name[len(self._path):]
+            relative_key = entry.name[len(self._path) :]
             subst = relative_key.split(self.PATH_SEPARATOR)
             if len(subst) == 1:
                 continue
-            
+
             keys.add(subst[0])
-        
+
         return list(keys)
-    
+
     def setPersistent(self, key):
         """Makes a key's value persistent through program restarts.
         
@@ -322,7 +327,7 @@ class NetworkTable:
         .. versionadded:: 2017.0.0
         """
         self.setFlags(key, NT_PERSISTENT)
-        
+
     def clearPersistent(self, key):
         """Stop making a key's value persistent through program restarts.
         
@@ -332,7 +337,7 @@ class NetworkTable:
         .. versionadded:: 2017.0.0
         """
         self.clearFlags(key, NT_PERSISTENT)
-    
+
     def isPersistent(self, key):
         """Returns whether the value is persistent through program restarts.
         
@@ -342,7 +347,7 @@ class NetworkTable:
         .. versionadded:: 2017.0.0
         """
         return self.getFlags(key) & NT_PERSISTENT != 0
-        
+
     def delete(self, key):
         """Deletes the specified key in this table.
         
@@ -353,7 +358,7 @@ class NetworkTable:
         """
         path = self._path + key
         self._api.deleteEntry(path)
-    
+
     def setFlags(self, key, flags):
         """Sets entry flags on the specified key in this table.
         
@@ -366,7 +371,7 @@ class NetworkTable:
         """
         path = self._path + key
         self._api.setEntryFlags(path, self._api.getEntryFlags(path) | flags)
-        
+
     def clearFlags(self, key, flags):
         """Clears entry flags on the specified key in this table.
         
@@ -379,7 +384,7 @@ class NetworkTable:
         """
         path = self._path + key
         self._api.setEntryFlags(path, self._api.getEntryFlags(path) & ~flags)
-        
+
     def getFlags(self, key):
         """Returns the entry flags for the specified key.
         
@@ -559,7 +564,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setEntryValue(path, Value.makeBooleanArray(value))
-    
+
     def setDefaultBooleanArray(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
@@ -575,8 +580,10 @@ class NetworkTable:
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
-        return self._api.setDefaultEntryValue(path, Value.makeBooleanArray(defaultValue))
-        
+        return self._api.setDefaultEntryValue(
+            path, Value.makeBooleanArray(defaultValue)
+        )
+
     def getBooleanArray(self, key, defaultValue):
         """Returns the boolean array the key maps to. If the key does not exist or is
         of different type, it will return the default value.
@@ -597,7 +604,7 @@ class NetworkTable:
             return defaultValue
 
         return value.value
-    
+
     def putNumberArray(self, key, value):
         """Put a number array in the table
         
@@ -613,7 +620,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setEntryValue(path, Value.makeDoubleArray(value))
-    
+
     def setDefaultNumberArray(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
@@ -630,7 +637,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setDefaultEntryValue(path, Value.makeDoubleArray(defaultValue))
-    
+
     def getNumberArray(self, key, defaultValue):
         """Returns the number array the key maps to. If the key does not exist or is
         of different type, it will return the default value.
@@ -651,7 +658,7 @@ class NetworkTable:
             return defaultValue
 
         return value.value
-        
+
     def putStringArray(self, key, value):
         """Put a string array in the table
         
@@ -667,7 +674,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setEntryValue(path, Value.makeStringArray(value))
-    
+
     def setDefaultStringArray(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
@@ -684,7 +691,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setDefaultEntryValue(path, Value.makeStringArray(defaultValue))
-    
+
     def getStringArray(self, key, defaultValue):
         """Returns the string array the key maps to. If the key does not exist or is
         of different type, it will return the default value.
@@ -705,7 +712,7 @@ class NetworkTable:
             return defaultValue
 
         return value.value
-        
+
     def putRaw(self, key, value):
         """Put a raw value (byte array) in the table
         
@@ -721,7 +728,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setEntryValue(path, Value.makeRaw(value))
-        
+
     def setDefaultRaw(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
@@ -738,7 +745,7 @@ class NetworkTable:
         """
         path = self._path + key
         return self._api.setDefaultEntryValue(path, Value.makeRaw(defaultValue))
-    
+
     def getRaw(self, key, defaultValue):
         """Returns the raw value (byte array) the key maps to. If the key does not
         exist or is of different type, it will return the default value.
@@ -760,7 +767,7 @@ class NetworkTable:
             return defaultValue
 
         return value.value
-    
+
     def putValue(self, key, value):
         """Put a value in the table, trying to autodetect the NT type of
         the value. Refer to this table to determine the type mapping:
@@ -830,9 +837,9 @@ class NetworkTable:
             return defaultValue
 
         return value.value
-    
+
     def getAutoUpdateValue(self, key, defaultValue, writeDefault=True):
-        '''Returns an object that will be automatically updated when the
+        """Returns an object that will be automatically updated when the
         value is updated by networktables.
         
         :param key: the key name
@@ -857,6 +864,7 @@ class NetworkTable:
         .. versionchanged:: 2018.0.0
            This now returns the same as :meth:`.NetworkTable.getEntry`
         
-        '''
-        return self._inst.getGlobalAutoUpdateValue(self._path + key, defaultValue, writeDefault)
-
+        """
+        return self._inst.getGlobalAutoUpdateValue(
+            self._path + key, defaultValue, writeDefault
+        )

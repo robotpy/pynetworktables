@@ -14,10 +14,10 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with open(sys.argv[1]) as fp:
         data = json.load(fp)
-    
+
     if len(data) == 0:
         print("No data received")
         exit(0)
@@ -26,15 +26,15 @@ if __name__ == '__main__':
     offset = data[0][0]
     for d in data:
         d[0] -= offset
-    
+
     print("Received", len(data), "rows of data, total time was %.3f seconds" % d[0])
-    
+
     # Transform the data into a numpy array to make it easier to use
     data = np.array(data)
-    
+
     # This allows you to use data[N] to refer to each column of data individually
     data = data.transpose()
-    
+
     # This silly plot graphs
     # - x: data[0]: this is time
     # - y: data[1]: column1
@@ -43,5 +43,5 @@ if __name__ == '__main__':
     # - y2: data[1] - data[2]: subtracts columns from each other (something numpy allows)
     plt.plot(data[0], data[1], data[0], data[1] - data[2])
     plt.title("Encoder error")
-    
+
     plt.show()

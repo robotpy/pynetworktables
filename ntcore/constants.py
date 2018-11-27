@@ -1,5 +1,5 @@
 # novalidate
-
+# fmt: off
 
 # data types
 NT_UNASSIGNED =     b'\x00'
