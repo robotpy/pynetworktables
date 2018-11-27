@@ -31,9 +31,8 @@ _RpcCall = namedtuple('RpcCall', [
 
 class RpcServerThread(CallbackThread):
     
-    def __init__(self, inst):
+    def __init__(self):
         CallbackThread.__init__(self, 'rpc-server')
-        self.m_inst = inst
         self.m_response_map = {}
     
     def matches(self, listener, data):
@@ -83,4 +82,4 @@ class RpcServer(CallbackManager):
             return True
     
     def start(self):
-        CallbackManager.start(self.m_inst)
+        CallbackManager.start(self)
