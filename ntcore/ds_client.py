@@ -1,4 +1,4 @@
-# validated: 2018-09-09 DV 2287281066f6 cpp/DsClient.cpp cpp/DsClient.h
+# validated: 2018-11-27 DS 18c8cce6a78d cpp/DsClient.cpp cpp/DsClient.h
 #----------------------------------------------------------------------------
 # Copyright (c) FIRST 2017. All Rights Reserved.
 # Open Source Software - may be modified and shared by FRC teams. The code

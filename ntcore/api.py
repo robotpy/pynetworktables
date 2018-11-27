@@ -1,4 +1,4 @@
-# validated: 2017-10-03 DS 1f18cc54167b cpp/ntcore_cpp.cpp
+# validated: 2018-11-27 DS 8eafe7f32561 cpp/ntcore_cpp.cpp
 
 from .connection_notifier import ConnectionNotifier
 from .dispatcher import Dispatcher

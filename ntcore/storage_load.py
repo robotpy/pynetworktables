@@ -1,4 +1,4 @@
-# validated: 2017-10-08 DS 8a37b81f4e10 cpp/Storage_load.cpp
+# validated: 2018-11-27 DS a2ecb1027a62 cpp/Storage_load.cpp
 
 import ast
 import binascii

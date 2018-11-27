@@ -1,4 +1,4 @@
-# validated: 2017-10-01 DS 5ab20bb27c97 cpp/RpcServer.cpp cpp/RpcServer.h cpp/IRpcServer.h
+# validated: 2018-11-27 DS ac751d32247e cpp/RpcServer.cpp cpp/RpcServer.h cpp/IRpcServer.h
 '''----------------------------------------------------------------------------'''
 ''' Copyright (c) FIRST 2017. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''
@@ -77,8 +77,10 @@ class RpcServer(CallbackManager):
         response = thr.m_response_map.pop((local_id, call_uid), None)
         if response is None:
             logger.warning("Posting RPC response to nonexistent call (or duplicate response)")
+            return False
         else:
             response(Message.rpcResponse(local_id, call_uid, result))
+            return True
     
     def start(self):
         CallbackManager.start(self.m_inst)

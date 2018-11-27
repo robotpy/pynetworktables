@@ -1,4 +1,4 @@
-# validated: 2017-10-01 DS e68a71022c96 cpp/ConnectionNotifier.cpp cpp/ConnectionNotifier.h cpp/IConnectionNotifier.h
+# validated: 2018-11-27 DS ac751d32247e cpp/ConnectionNotifier.cpp cpp/ConnectionNotifier.h cpp/IConnectionNotifier.h
 '''----------------------------------------------------------------------------'''
 ''' Copyright (c) FIRST 2017. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''

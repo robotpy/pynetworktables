@@ -1,5 +1,5 @@
 [git-source-track]
-upstream_commit = 025af24523ae12c4502fc67abd02398b49f9fe84
+upstream_commit = acb786a7916621478166be85c32c20d9241c6c1c
 validation_root = ntcore
 exclude_commits_file = .gittrackexclude
 upstream_root = ../allwpilib/ntcore/src/main/native

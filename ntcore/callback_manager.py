@@ -1,4 +1,4 @@
-# validated: 2017-09-28 DS 5ab20bb27c97 cpp/CallbackManager.h
+# validated: 2018-11-27 DS 18c8cce6a78d cpp/CallbackManager.h
 '''----------------------------------------------------------------------------'''
 ''' Copyright (c) FIRST 2017. All Rights Reserved.                             '''
 ''' Open Source Software - may be modified and shared by FRC teams. The code   '''
