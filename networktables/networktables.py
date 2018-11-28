@@ -1,4 +1,3 @@
-
 __all__ = ["NetworkTables"]
 
 from .instance import NetworkTablesInstance

@@ -1,12 +1,8 @@
-
 from .networktables import NetworkTables
 
 from ntcore.value import Value
 
-__all__ = [
-    'ntproperty',
-    'ChooserControl'
-]
+__all__ = ["ntproperty", "ChooserControl"]
 
 
 class _NtProperty:
@@ -18,27 +14,28 @@ class _NtProperty:
         # never overwrite persistent values with defaults
         if persistent:
             self.writeDefault = False
-        
+
         self.reset()
-    
+
     def reset(self):
         self.ntvalue = NetworkTables.getGlobalAutoUpdateValue(
-            self.key, self.defaultValue, self.writeDefault)
+            self.key, self.defaultValue, self.writeDefault
+        )
         if self.persistent:
             self.ntvalue.setPersistent()
-        
+
         # this is an optimization, but presumes the value type never changes
         self.mkv = Value.getFactoryByType(self.ntvalue._value[0])
-    
+
     def get(self, _):
         return self.ntvalue.value
-    
+
     def set(self, _, value):
         NetworkTables._api.setEntryValueById(self.ntvalue._local_id, self.mkv(value))
 
 
 def ntproperty(key, defaultValue, writeDefault=True, doc=None, persistent=False):
-    '''
+    """
         A property that you can add to your classes to access NetworkTables
         variables like a normal variable.
         
@@ -89,78 +86,80 @@ def ntproperty(key, defaultValue, writeDefault=True, doc=None, persistent=False)
 
         .. versionchanged:: 2018.0.0
             The *persistent* parameter.
-    '''
+    """
     ntprop = _NtProperty(key, defaultValue, writeDefault, persistent)
     NetworkTables._ntproperties.add(ntprop)
-    
+
     return property(fget=ntprop.get, fset=ntprop.set, doc=doc)
 
 
-
 class ChooserControl(object):
-    '''
+    """
         Interacts with a :class:`wpilib.sendablechooser.SendableChooser`
         object over NetworkTables.
-    '''
-    
+    """
+
     def __init__(self, key, on_choices=None, on_selected=None):
-        '''
+        """
             :param key: NetworkTables key
             :type  key: str
             :param on_choices: A function that will be called when the
                                choices change. Signature: fn(value)
             :param on_selection: A function that will be called when the
                                  selection changes. Signature: fn(value)
-        '''
-        
-        self.subtable = NetworkTables.getTable('SmartDashboard').getSubTable(key)
+        """
+
+        self.subtable = NetworkTables.getTable("SmartDashboard").getSubTable(key)
 
         self.on_choices = on_choices
         self.on_selected = on_selected
-        
+
         if on_choices or on_selected:
             self.subtable.addTableListener(self._on_change, True)
 
     def close(self):
-        '''Stops listening for changes to the ``SendableChooser``'''
+        """Stops listening for changes to the ``SendableChooser``"""
         if self.on_choices or self.on_selected:
             self.subtable.removeTableListener(self._on_change)
-    
+
     def getChoices(self):
-        '''
+        """
             Returns the current choices. If the chooser doesn't exist, this
             will return an empty tuple.
         
             :rtype: tuple
-        '''
-        return self.subtable.getStringArray('options', ())
-    
+        """
+        return self.subtable.getStringArray("options", ())
+
     def getSelected(self):
-        '''
+        """
             Returns the current selection or None
         
             :rtype: str
-        '''
-        selected = self.subtable.getString('selected', None)
+        """
+        selected = self.subtable.getString("selected", None)
         if selected is None:
-            selected = self.subtable.getString('default', None)
+            selected = self.subtable.getString("default", None)
         return selected
-    
+
     def setSelected(self, selection):
-        '''
+        """
             Sets the active selection on the chooser
             
             :param selection: Active selection name
-        '''
-        self.subtable.putString('selected', selection)
-    
+        """
+        self.subtable.putString("selected", selection)
+
     def _on_change(self, table, key, value, isNew):
-        if key == 'options':
+        if key == "options":
             if self.on_choices is not None:
                 self.on_choices(value)
-        elif key == 'selected':
+        elif key == "selected":
             if self.on_selected is not None:
                 self.on_selected(value)
-        elif key == 'default':
-            if self.on_selected is not None and self.subtable.getString('selected', None) is None:
+        elif key == "default":
+            if (
+                self.on_selected is not None
+                and self.subtable.getString("selected", None) is None
+            ):
                 self.on_selected(value)

@@ -1,10 +1,10 @@
 # validated: 2018-11-27 DS 18c8cce6a78d cpp/DsClient.cpp cpp/DsClient.h
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 # Copyright (c) FIRST 2017. All Rights Reserved.
 # Open Source Software - may be modified and shared by FRC teams. The code
 # must be accompanied by the FIRST BSD license file in the root directory of
 # the project.
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 import json
 import threading
@@ -13,11 +13,11 @@ from .support.safe_thread import SafeThread
 from .tcpsockets.tcp_connector import TcpConnector
 
 import logging
-logger = logging.getLogger('nt')
+
+logger = logging.getLogger("nt")
 
 
 class DsClient(object):
-    
     def __init__(self, dispatcher, verbose=False):
         self.m_dispatcher = dispatcher
         self.verbose = verbose
@@ -36,7 +36,7 @@ class DsClient(object):
             self.m_port = port
             if not self.m_active:
                 self.m_active = True
-                self.m_owner = SafeThread(target=self._thread_main, name='nt-dsclient')
+                self.m_owner = SafeThread(target=self._thread_main, name="nt-dsclient")
 
     def stop(self):
         with self.m_mutex:
@@ -59,7 +59,7 @@ class DsClient(object):
             if not self.m_active:
                 break
 
-            self.m_stream = connector.connect(('127.0.0.1', 1742))
+            self.m_stream = connector.connect(("127.0.0.1", 1742))
             if not self.m_active:
                 break
             if not self.m_stream:
@@ -81,7 +81,7 @@ class DsClient(object):
                 except (json.JSONDecodeError, UnicodeDecodeError):
                     continue
                 try:
-                    ip = int(obj['robotIP'])
+                    ip = int(obj["robotIP"])
                 except (KeyError, ValueError):
                     continue
 
@@ -97,10 +97,14 @@ class DsClient(object):
                 oldip = ip
 
                 # Convert number into dotted quad
-                ip_str = '%d.%d.%d.%d' % ((ip >> 24) & 0xff, (ip >> 16) & 0xff,
-                                          (ip >> 8) & 0xff, ip & 0xff)
+                ip_str = "%d.%d.%d.%d" % (
+                    (ip >> 24) & 0xFF,
+                    (ip >> 16) & 0xFF,
+                    (ip >> 8) & 0xFF,
+                    ip & 0xFF,
+                )
                 if self.verbose:
-                    logger.info('client: DS overriding server IP to %s', ip_str)
+                    logger.info("client: DS overriding server IP to %s", ip_str)
                 self.m_dispatcher.setServerOverride(ip_str, port)
 
             # We disconnected from the DS, clear the server override

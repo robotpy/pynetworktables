@@ -1,4 +1,3 @@
-
 # This is imported first to avoid circular dependency problems
 from .version import __version__
 

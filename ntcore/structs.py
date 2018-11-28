@@ -1,4 +1,5 @@
 # novalidate
+# fmt: off
 
 from collections import namedtuple
 

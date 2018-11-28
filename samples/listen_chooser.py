@@ -17,6 +17,7 @@ from networktables.util import ChooserControl
 
 # To see messages from networktables, you must setup logging
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 if len(sys.argv) != 2:
@@ -29,17 +30,14 @@ NetworkTables.initialize(server=ip)
 
 
 def on_choices(value):
-    print('OnChoices', value)
+    print("OnChoices", value)
+
 
 def on_selected(value):
-    print('OnSelected', value)
+    print("OnSelected", value)
 
 
-cc = ChooserControl('Autonomous Mode',
-                    on_choices,
-                    on_selected)
+cc = ChooserControl("Autonomous Mode", on_choices, on_selected)
 
 while True:
     time.sleep(1)
-
- 
