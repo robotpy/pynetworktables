@@ -868,3 +868,19 @@ class NetworkTable:
         return self._inst.getGlobalAutoUpdateValue(
             self._path + key, defaultValue, writeDefault
         )
+
+    def getValueType(self, key):
+        """Gets the value type associated with a key.
+        
+        :param key: the key of the value type to look up
+        :type key: str
+        
+        :returns: the value type associated with the given key
+        :rtype: bytes
+
+        """
+        path = self._path + key
+        value = self._api.getEntryValue(path)
+        if not value:
+            return None
+        return value.type
