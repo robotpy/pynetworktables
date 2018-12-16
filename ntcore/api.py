@@ -69,9 +69,6 @@ class NtCoreApi(object):
     def getEntryValue(self, name):
         return self.storage.getEntryValue(name)
 
-    def getEntryValueById(self, local_id):
-        return self.storage.getEntryValueById(local_id)
-
     def setDefaultEntryValue(self, name, value):
         return self.storage.setDefaultEntryValue(name, value)
 
@@ -100,13 +97,13 @@ class NtCoreApi(object):
         return self.storage.getEntryFlags(name)
 
     def getEntryFlagsById(self, local_id):
-        return self.storage.getEntryFlags(local_id)
+        return self.storage.getEntryFlagsById(local_id)
 
     def deleteEntry(self, name):
         self.storage.deleteEntry(name)
 
     def deleteEntryById(self, local_id):
-        self.storage.deleteEntry(local_id)
+        self.storage.deleteEntryById(local_id)
 
     def deleteAllEntries(self):
         self.storage.deleteAllEntries()
@@ -188,7 +185,7 @@ class NtCoreApi(object):
         return self.conn_notifier.poll(poller_uid, timeout=timeout)
 
     def cancelPollConnectionListener(self, poller_uid):
-        self.conn_notifier.cancelPoll()
+        self.conn_notifier.cancelPoll(poller_uid)
 
     def removeConnectionListener(self, listener_uid):
         self.conn_notifier.remove(listener_uid)
