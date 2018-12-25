@@ -20,55 +20,26 @@ def size_uleb128(value):
     return count
 
 
-# You can do bitwise operations on bytes, not so with strings (py2)
-if sys.version_info[0] == 2:
-
-    def encode_uleb128(value):
-        out = bytearray()
-        while True:
-            byte = value & 0x7F
-            value >>= 7
-            if value != 0:
-                byte = byte | 0x80
-            out.append(byte)
-            if value == 0:
-                break
-        return bytes(out)
-
-    def read_uleb128(rstream):
-        result = 0
-        shift = 0
-        while True:
-            x = rstream.read(1)
-            b = ord(x)
-            result |= (b & 0x7F) << shift
-            shift += 7
-            if (b & 0x80) == 0:
-                break
-        return result
+def encode_uleb128(value):
+    out = bytearray()
+    while True:
+        byte = value & 0x7F
+        value >>= 7
+        if value != 0:
+            byte = byte | 0x80
+        out.append(byte)
+        if value == 0:
+            break
+    return out
 
 
-else:
-
-    def encode_uleb128(value):
-        out = bytearray()
-        while True:
-            byte = value & 0x7F
-            value >>= 7
-            if value != 0:
-                byte = byte | 0x80
-            out.append(byte)
-            if value == 0:
-                break
-        return out
-
-    def read_uleb128(rstream):
-        result = 0
-        shift = 0
-        while True:
-            b = rstream.read(1)[0]
-            result |= (b & 0x7F) << shift
-            shift += 7
-            if (b & 0x80) == 0:
-                break
-        return result
+def read_uleb128(rstream):
+    result = 0
+    shift = 0
+    while True:
+        b = rstream.read(1)[0]
+        result |= (b & 0x7F) << shift
+        shift += 7
+        if (b & 0x80) == 0:
+            break
+    return result
