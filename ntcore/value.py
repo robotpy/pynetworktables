@@ -23,62 +23,57 @@ from .constants import (
     NT_RPC,
 )
 
-ValueType = namedtuple("Value", ["type", "value"])
 
+class Value(namedtuple("Value", ["type", "value"])):
+    __slots__ = ()
 
-# optimization
-_TRUE_VALUE = ValueType(NT_BOOLEAN, True)
-_FALSE_VALUE = ValueType(NT_BOOLEAN, False)
-
-
-class Value(object):
-    @staticmethod
-    def makeBoolean(value):
+    @classmethod
+    def makeBoolean(cls, value):
         if value:
-            return _TRUE_VALUE
+            return cls._TRUE_VALUE
         else:
-            return _FALSE_VALUE
+            return cls._FALSE_VALUE
 
-    @staticmethod
-    def makeDouble(value):
-        return ValueType(NT_DOUBLE, float(value))
+    @classmethod
+    def makeDouble(cls, value):
+        return cls(NT_DOUBLE, float(value))
 
-    @staticmethod
-    def makeString(value):
-        return ValueType(NT_STRING, str(value))
+    @classmethod
+    def makeString(cls, value):
+        return cls(NT_STRING, str(value))
 
-    @staticmethod
-    def makeRaw(value):
-        return ValueType(NT_RAW, bytes(value))
+    @classmethod
+    def makeRaw(cls, value):
+        return cls(NT_RAW, bytes(value))
 
     # TODO: array stuff a good idea?
 
-    @staticmethod
-    def makeBooleanArray(value):
-        return ValueType(NT_BOOLEAN_ARRAY, tuple(bool(v) for v in value))
+    @classmethod
+    def makeBooleanArray(cls, value):
+        return cls(NT_BOOLEAN_ARRAY, tuple(bool(v) for v in value))
 
-    @staticmethod
-    def makeDoubleArray(value):
-        return ValueType(NT_DOUBLE_ARRAY, tuple(float(v) for v in value))
+    @classmethod
+    def makeDoubleArray(cls, value):
+        return cls(NT_DOUBLE_ARRAY, tuple(float(v) for v in value))
 
-    @staticmethod
-    def makeStringArray(value):
-        return ValueType(NT_STRING_ARRAY, tuple(str(v) for v in value))
+    @classmethod
+    def makeStringArray(cls, value):
+        return cls(NT_STRING_ARRAY, tuple(str(v) for v in value))
 
-    @staticmethod
-    def makeRpc(value):
-        return ValueType(NT_RPC, str(value))
+    @classmethod
+    def makeRpc(cls, value):
+        return cls(NT_RPC, str(value))
 
-    @staticmethod
-    def getFactory(value):
+    @classmethod
+    def getFactory(cls, value):
         if isinstance(value, bool):
-            return Value.makeBoolean
+            return cls.makeBoolean
         elif isinstance(value, (int, float)):
-            return Value.makeDouble
+            return cls.makeDouble
         elif isinstance(value, str):
-            return Value.makeString
+            return cls.makeString
         elif isinstance(value, (bytes, bytearray)):
-            return Value.makeRaw
+            return cls.makeRaw
 
         # Do best effort for arrays, but can't catch all cases
         # .. if you run into an error here, use a less generic type
@@ -88,11 +83,11 @@ class Value(object):
 
             first = value[0]
             if isinstance(first, bool):
-                return Value.makeBooleanArray
+                return cls.makeBooleanArray
             elif isinstance(first, (int, float)):
-                return Value.makeDoubleArray
+                return cls.makeDoubleArray
             elif isinstance(first, str):
-                return Value.makeStringArray
+                return cls.makeStringArray
             else:
                 raise ValueError("Can only use lists of bool/int/float/strings")
 
@@ -105,10 +100,14 @@ class Value(object):
 
     @classmethod
     def getFactoryByType(cls, type_id):
-        return _make_map[type_id]
+        return cls._make_map[type_id]
 
 
-_make_map = {
+# optimization
+Value._TRUE_VALUE = Value(NT_BOOLEAN, True)
+Value._FALSE_VALUE = Value(NT_BOOLEAN, False)
+
+Value._make_map = {
     NT_BOOLEAN: Value.makeBoolean,
     NT_DOUBLE: Value.makeDouble,
     NT_STRING: Value.makeString,
