@@ -1,10 +1,10 @@
 # validated: 2018-11-27 DS ac751d32247e cpp/RpcServer.cpp cpp/RpcServer.h cpp/IRpcServer.h
-"""----------------------------------------------------------------------------"""
-""" Copyright (c) FIRST 2017. All Rights Reserved.                             """
-""" Open Source Software - may be modified and shared by FRC teams. The code   """
-""" must be accompanied by the FIRST BSD license file in the root directory of """
-""" the project.                                                               """
-"""----------------------------------------------------------------------------"""
+# ----------------------------------------------------------------------------
+# Copyright (c) FIRST 2017. All Rights Reserved.
+# Open Source Software - may be modified and shared by FRC teams. The code
+# must be accompanied by the FIRST BSD license file in the root directory of
+# the project.
+# ----------------------------------------------------------------------------
 
 from collections import namedtuple
 
