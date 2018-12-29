@@ -1,10 +1,10 @@
 # validated: 2017-10-01 DS e68a71022c96 cpp/Dispatcher.cpp cpp/Dispatcher.h cpp/IDispatcher.h
-"""----------------------------------------------------------------------------"""
-""" Copyright (c) FIRST 2017. All Rights Reserved.                             """
-""" Open Source Software - may be modified and shared by FRC teams. The code   """
-""" must be accompanied by the FIRST BSD license file in the root directory of """
-""" the project.                                                               """
-"""----------------------------------------------------------------------------"""
+# ----------------------------------------------------------------------------
+# Copyright (c) FIRST 2017. All Rights Reserved.
+# Open Source Software - may be modified and shared by FRC teams. The code
+# must be accompanied by the FIRST BSD license file in the root directory of
+# the project.
+# ----------------------------------------------------------------------------
 
 import threading
 import time
