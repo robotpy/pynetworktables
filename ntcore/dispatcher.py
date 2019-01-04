@@ -1,4 +1,4 @@
-# validated: 2017-10-01 DS e68a71022c96 cpp/Dispatcher.cpp cpp/Dispatcher.h cpp/IDispatcher.h
+# validated: 2019-01-04 DS ceed1d74dc30 cpp/Dispatcher.cpp cpp/Dispatcher.h cpp/IDispatcher.h
 # ----------------------------------------------------------------------------
 # Copyright (c) FIRST 2017. All Rights Reserved.
 # Open Source Software - may be modified and shared by FRC teams. The code
@@ -132,7 +132,7 @@ class Dispatcher(object):
 
         logger.info("NetworkTables initialized in server mode")
 
-        acceptor = TcpAcceptor(port, listen_address)
+        acceptor = TcpAcceptor(port, listen_address.strip())
 
         self.m_networkMode = NT_NET_MODE_SERVER | NT_NET_MODE_STARTING
         self.m_persist_filename = persist_filename
@@ -294,13 +294,20 @@ class Dispatcher(object):
                         self.m_notifier.notifyConnection(True, conn.info(), uid)
         return uid
 
+    def _strip_connectors(self, connector):
+        if isinstance(connector, tuple):
+            server, port = connector
+            return (server.strip(), port)
+        else:
+            return [(server.strip(), port) for server, port in connector]
+
     def _setConnector(self, connector):
         with self.m_user_mutex:
-            self.m_client_connector = connector
+            self.m_client_connector = self._strip_connectors(connector)
 
     def _setConnectorOverride(self, connector):
         with self.m_user_mutex:
-            self.m_client_connector_override = connector
+            self.m_client_connector_override = self._strip_connectors(connector)
 
     def _clearConnectorOverride(self):
         with self.m_user_mutex:
