@@ -20,20 +20,24 @@ jobs:
     script:
     - black --check --diff .
 
+  - stage: deploy
+    if: tag IS present
+    python: "3.6"
+    install: skip
+    script: skip
+    deploy:
+    - provider: pypi
+      user: $PYPI_USERNAME
+      password: $PYPI_PASSWORD
+      distributions: sdist bdist_wheel
+
 # command to install dependencies
 install:
   - "pip install -r testing-requirements.txt"
 # command to run tests
 script:
   - tests/run_tests.sh
-deploy:
-- provider: pypi
-  user: $PYPI_USERNAME
-  password: $PYPI_PASSWORD
-  distributions: sdist bdist_wheel
-  on:
-    tags: true
-    python: "3.6"
+
 notifications:
   webhooks:
     urls:
