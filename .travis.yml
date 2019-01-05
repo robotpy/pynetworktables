@@ -30,6 +30,8 @@ jobs:
       user: $PYPI_USERNAME
       password: $PYPI_PASSWORD
       distributions: sdist bdist_wheel
+      on:
+        tags: true
 
 # command to install dependencies
 install:
