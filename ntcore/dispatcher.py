@@ -326,9 +326,14 @@ class Dispatcher(object):
         is_server = self.m_networkMode & NT_NET_MODE_SERVER
         verbose = self.m_verbose
 
+        # python micro-optimizations because this is a loop
+        monotonic = time.monotonic
+        kActive = NetworkConnection.State.kActive
+        kDead = NetworkConnection.State.kDead
+
         while self.m_active:
             # handle loop taking too long
-            start = time.monotonic()
+            start = monotonic()
             if start > timeout_time or timeout_time > start + self.m_update_rate:
                 timeout_time = start
 
@@ -368,11 +373,11 @@ class Dispatcher(object):
                     # post outgoing messages if connection is active
                     # only send keep-alives on client
                     state = conn.state()
-                    if state == NetworkConnection.State.kActive:
+                    if state == kActive:
                         conn.postOutgoing(not is_server)
 
                     # if client, if connection died
-                    if not is_server and state == NetworkConnection.State.kDead:
+                    if not is_server and state == kDead:
                         reconnect = True
 
                 # reconnect if we disconnected (and a reconnect is not in progress)
