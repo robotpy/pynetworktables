@@ -130,6 +130,7 @@ def storage_persistent(storage_empty, dispatcher, entry_notifier):
     storage.setEntryTypeValue("string/empty", Value.makeString(""))
     storage.setEntryTypeValue("string/normal", Value.makeString("hello"))
     storage.setEntryTypeValue("string/special", Value.makeString("\0\3\5\n"))
+    storage.setEntryTypeValue("string/quoted", Value.makeString('"a"'))
     storage.setEntryTypeValue("raw/empty", Value.makeRaw(b""))
     storage.setEntryTypeValue("raw/normal", Value.makeRaw(b"hello"))
     storage.setEntryTypeValue("raw/special", Value.makeRaw(b"\0\3\5\n"))
@@ -807,6 +808,8 @@ def test_savePersistent(storage_persistent):
     line = fp.readline()[:-1]
     assert 'string "string/normal"="hello"' == line
     line = fp.readline()[:-1]
+    assert 'string "string/quoted"="\\"a\\""' == line
+    line = fp.readline()[:-1]
     assert 'string "string/special"="\\x00\\x03\\x05\\n"' == line
     line = fp.readline()[:-1]
     assert 'array string "stringarr/empty"=' == line
@@ -1003,6 +1006,7 @@ def test_loadPersistent(storage_empty, dispatcher, entry_notifier):
     inp += 'string "string/empty"=""\n'
     inp += 'string "string/normal"="hello"\n'
     inp += 'string "string/special"="\\x00\\x03\\x05\\n"\n'
+    inp += 'string "string/quoted"="\\"a\\""\n'
     inp += 'array string "stringarr/empty"=\n'
     inp += 'array string "stringarr/one"="hello"\n'
     inp += 'array string "stringarr/two"="hello","world\\n"\n'
@@ -1010,10 +1014,10 @@ def test_loadPersistent(storage_empty, dispatcher, entry_notifier):
     fp = StringIO(inp)
     assert storage.loadPersistent(fp=fp) is None
 
-    dispatcher._queueOutgoing.assert_has_calls([call(ANY, None, None)] * 22)
+    dispatcher._queueOutgoing.assert_has_calls([call(ANY, None, None)] * 23)
 
     entry_notifier.notifyEntry.assert_has_calls(
-        [call(ANY, ANY, ANY, NT_NOTIFY_NEW | NT_NOTIFY_LOCAL)] * 22
+        [call(ANY, ANY, ANY, NT_NOTIFY_NEW | NT_NOTIFY_LOCAL)] * 23
     )
 
     assert Value.makeBoolean(True) == storage.getEntryValue("boolean/true")
@@ -1024,6 +1028,7 @@ def test_loadPersistent(storage_empty, dispatcher, entry_notifier):
     assert Value.makeString("") == storage.getEntryValue("string/empty")
     assert Value.makeString("hello") == storage.getEntryValue("string/normal")
     assert Value.makeString("\0\3\5\n") == storage.getEntryValue("string/special")
+    assert Value.makeString('"a"') == storage.getEntryValue("string/quoted")
     assert Value.makeRaw(b"") == storage.getEntryValue("raw/empty")
     assert Value.makeRaw(b"hello") == storage.getEntryValue("raw/normal")
     assert Value.makeRaw(b"\0\3\5\n") == storage.getEntryValue("raw/special")
