@@ -21,7 +21,7 @@ from .constants import (
     NT_RAW2VTYPE,
 )
 
-_empty_msgtypes = [kKeepAlive, kServerHelloDone, kClientHelloDone]
+_empty_msgtypes = (kKeepAlive, kServerHelloDone, kClientHelloDone)
 
 
 MessageType = namedtuple(
@@ -96,6 +96,18 @@ class Message(object):
         if msgtype in _empty_msgtypes:
             pass
 
+        # python optimization: entry updates tend to occur more than
+        # anything else, so check this first
+        elif msgtype == kEntryUpdate:
+            if codec.proto_rev >= 0x0300:
+                msg_id, seq_num_uid = rstream.readStruct(codec.entryUpdate)
+                value_type = NT_RAW2VTYPE.get(rstream.read(1))
+            else:
+                msg_id, seq_num_uid = rstream.readStruct(codec.entryUpdate)
+                value_type = get_entry_type(msg_id)
+
+            value = codec.read_value(value_type, rstream)
+
         elif msgtype == kClientHello:
             msg_id, = rstream.readStruct(codec.clientHello)
             if msg_id >= 0x0300:
@@ -116,16 +128,6 @@ class Message(object):
             else:
                 msg_id, seq_num_uid = rstream.readStruct(codec.entryAssign)
                 flags = 0
-
-            value = codec.read_value(value_type, rstream)
-
-        elif msgtype == kEntryUpdate:
-            if codec.proto_rev >= 0x0300:
-                msg_id, seq_num_uid = rstream.readStruct(codec.entryUpdate)
-                value_type = NT_RAW2VTYPE.get(rstream.read(1))
-            else:
-                msg_id, seq_num_uid = rstream.readStruct(codec.entryUpdate)
-                value_type = get_entry_type(msg_id)
 
             value = codec.read_value(value_type, rstream)
 
