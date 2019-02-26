@@ -63,9 +63,14 @@ class WireCodec(object):
     entryUpdate = _entryUpdate
 
     def __init__(self, proto_rev):
+        self.proto_rev = None
         self.set_proto_rev(proto_rev)
 
     def set_proto_rev(self, proto_rev):
+        # python-specific optimization
+        if self.proto_rev == proto_rev:
+            return
+
         self.proto_rev = proto_rev
         if proto_rev == 0x0200:
             self.read_arraylen = self.read_arraylen_v2_v3

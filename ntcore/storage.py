@@ -47,7 +47,7 @@ logger = logging.getLogger("nt")
 class _Entry(object):
     __slots__ = [
         "name",
-        "_value",
+        "value",
         "flags",
         "id",
         "local_id",
@@ -65,7 +65,7 @@ class _Entry(object):
         self.name = name
 
         # The current value and flags.
-        self._value = None
+        self.value = None
         self.flags = 0
 
         # Unique ID for self entry as used in network messages.  The value is
@@ -91,16 +91,20 @@ class _Entry(object):
         self.rpc_call_uid = 0
 
         # python-specific: User-visible entry for optimized value retrieval
+        # -> user_entry._value must always be set when self.value is set
         self.user_entry = user_entry
 
-    @property
-    def value(self):
-        return self._value
+    # micro-optimizations: value is called all the time, so use its attributes
+    # instead
 
-    @value.setter
-    def value(self, value):
-        self._value = value
-        self.user_entry._value = value
+    # @property
+    # def value(self):
+    #     return self._value
+
+    # @value.setter
+    # def value(self, value):
+    #     self._value = value
+    #     self.user_entry._value = value
 
     def isPersistent(self):
         return (self.flags & NT_PERSISTENT) != 0
@@ -292,7 +296,7 @@ class Storage(object):
                 if entry.value is None:
                     # didn't exist at all (rather than just being a response to a
                     # id assignment request)
-                    entry.value = msg.value
+                    entry.value = entry.user_entry._value = msg.value
                     entry.flags = msg.flags
                     entry.seq_num = msg.seq_num_uid
 
@@ -345,7 +349,7 @@ class Storage(object):
             self.m_persistent_dirty = True
 
         # update local
-        entry.value = msg.value
+        entry.value = entry.user_entry._value = msg.value
         entry.seq_num = seq_num
 
         # notify
@@ -375,7 +379,7 @@ class Storage(object):
             return
 
         # update local
-        entry.value = msg.value
+        entry.value = entry.user_entry._value = msg.value
         entry.seq_num = seq_num
 
         # update persistent dirty flag if it's a persistent value
@@ -524,7 +528,7 @@ class Storage(object):
                 entry.id = msg_id
 
                 if entry.value is None:
-                    entry.value = msg.value
+                    entry.value = entry.user_entry._value = msg.value
                     entry.flags = msg.flags
 
                     # notify
@@ -547,7 +551,7 @@ class Storage(object):
                             )
                         )
                     else:
-                        entry.value = msg.value
+                        entry.value = entry.user_entry._value = msg.value
                         notify_flags = NT_NOTIFY_UPDATE
                         # don't update flags from a <3.0 remote (not part of message)
                         if conn.get_proto_rev() >= 0x0300:
@@ -666,7 +670,7 @@ class Storage(object):
             return True
 
         old_value = entry.value
-        entry.value = value
+        entry.value = entry.user_entry._value = value
 
         # if we're the server, assign an id if it doesn't have one
         if self.m_server and entry.id == 0xFFFF:
@@ -824,7 +828,7 @@ class Storage(object):
 
         # empty the value and reset id and local_write flag
         old_value = entry.value
-        entry.value = None
+        entry.value = entry.user_entry._value = None
         entry.id = 0xFFFF
         entry.local_write = False
 
@@ -879,7 +883,7 @@ class Storage(object):
 
                 entry.id = 0xFFFF
                 entry.local_write = False
-                entry.value = None
+                entry.value = entry.user_entry._value = None
 
                 deleted = True
 
@@ -1093,7 +1097,7 @@ class Storage(object):
 
             old_value = entry.value
             value = Value.makeRpc(defn)
-            entry.value = value
+            entry.value = entry.user_entry._value = value
 
             # set up the RPC info
             entry.rpc_uid = rpc_uid
@@ -1237,7 +1241,7 @@ class Storage(object):
             for name, value in entries:
                 entry = self._getOrNew(name)
                 old_value = entry.value
-                entry.value = value
+                entry.value = entry.user_entry._value = value
                 was_persist = entry.isPersistent()
                 if not was_persist and persistent:
                     entry.flags |= NT_PERSISTENT

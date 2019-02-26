@@ -66,7 +66,7 @@ class NetworkConnection(object):
 
         self.m_active = False
         self.m_proto_rev = 0x0300
-        self.m_state = self.State.kCreated
+        self.state = self.State.kCreated
         self.m_state_mutex = threading.Lock()
         self.m_last_update = 0
 
@@ -175,7 +175,7 @@ class NetworkConnection(object):
         )
 
     def is_connected(self):
-        return self.m_state == self.State.kActive
+        return self.state == self.State.kActive
 
     def last_update(self):
         return self.m_last_update
@@ -191,11 +191,11 @@ class NetworkConnection(object):
             State = self.State
 
             # Don't update state any more once we've died
-            if self.m_state == State.kDead:
+            if self.state == State.kDead:
                 return
 
             # One-shot notify state changes
-            if self.m_state != State.kActive and state == State.kActive:
+            if self.state != State.kActive and state == State.kActive:
                 info = self.info()
                 self.m_notifier.notifyConnection(True, info)
                 logger.info(
@@ -204,7 +204,7 @@ class NetworkConnection(object):
                     info.remote_port,
                     info.remote_id,
                 )
-            elif self.m_state != State.kDead and state == State.kDead:
+            elif self.state != State.kDead and state == State.kDead:
                 info = self.info()
                 self.m_notifier.notifyConnection(False, info)
                 logger.info(
@@ -216,13 +216,14 @@ class NetworkConnection(object):
 
             if self.m_verbose:
                 logger.debug(
-                    "%s: %s -> %s", self, _state_map[self.m_state], _state_map[state]
+                    "%s: %s -> %s", self, _state_map[self.state], _state_map[state]
                 )
 
-            self.m_state = state
+            self.state = state
 
-    def state(self):
-        return self.m_state
+    # python optimization: don't use getter here
+    # def state(self):
+    #     return self.m_state
 
     def remote_id(self):
         with self.m_remote_id_mutex:
@@ -486,18 +487,21 @@ class NetworkConnection(object):
 
     def postOutgoing(self, keep_alive):
         with self.m_pending_mutex:
-            now = monotonic()
+            # optimization: don't call monotonic unless needed
+            # now = monotonic()
             if not self.m_pending_outgoing:
                 if not keep_alive:
                     return
 
                 # send keep-alives once a second (if no other messages have been sent)
+                now = monotonic()
                 if (now - self.m_last_post) < 1.0:
                     return
 
                 self.m_outgoing.put((Message.keepAlive(),))
 
             else:
+                now = monotonic()
                 self.m_outgoing.put(self.m_pending_outgoing)
 
                 self.m_pending_outgoing = []

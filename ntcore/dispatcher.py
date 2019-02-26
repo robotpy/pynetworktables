@@ -256,7 +256,7 @@ class Dispatcher(object):
 
         with self.m_user_mutex:
             for conn in self.m_connections:
-                if conn.state() != NetworkConnection.State.kActive:
+                if conn.state != NetworkConnection.State.kActive:
                     continue
 
                 conns.append(conn.info())
@@ -326,9 +326,14 @@ class Dispatcher(object):
         is_server = self.m_networkMode & NT_NET_MODE_SERVER
         verbose = self.m_verbose
 
+        # python micro-optimizations because this is a loop
+        monotonic = time.monotonic
+        kActive = NetworkConnection.State.kActive
+        kDead = NetworkConnection.State.kDead
+
         while self.m_active:
             # handle loop taking too long
-            start = time.monotonic()
+            start = monotonic()
             if start > timeout_time or timeout_time > start + self.m_update_rate:
                 timeout_time = start
 
@@ -367,12 +372,12 @@ class Dispatcher(object):
                 for conn in self.m_connections:
                     # post outgoing messages if connection is active
                     # only send keep-alives on client
-                    state = conn.state()
-                    if state == NetworkConnection.State.kActive:
+                    state = conn.state
+                    if state == kActive:
                         conn.postOutgoing(not is_server)
 
                     # if client, if connection died
-                    if not is_server and state == NetworkConnection.State.kDead:
+                    if not is_server and state == kDead:
                         reconnect = True
 
                 # reconnect if we disconnected (and a reconnect is not in progress)
@@ -389,7 +394,7 @@ class Dispatcher(object):
                 if only and conn != only:
                     continue
 
-                state = conn.state()
+                state = conn.state
                 if (
                     state != NetworkConnection.State.kSynchronized
                     and state != NetworkConnection.State.kActive
@@ -440,7 +445,7 @@ class Dispatcher(object):
                     # reuse dead connection slots
                     for i in range(len(self.m_connections)):
                         c = self.m_connections[i]
-                        if c.state() == NetworkConnection.State.kDead:
+                        if c.state == NetworkConnection.State.kDead:
                             self.m_connections[i] = conn
                             break
                     else:
