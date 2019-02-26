@@ -487,18 +487,21 @@ class NetworkConnection(object):
 
     def postOutgoing(self, keep_alive):
         with self.m_pending_mutex:
-            now = monotonic()
+            # optimization: don't call monotonic unless needed
+            # now = monotonic()
             if not self.m_pending_outgoing:
                 if not keep_alive:
                     return
 
                 # send keep-alives once a second (if no other messages have been sent)
+                now = monotonic()
                 if (now - self.m_last_post) < 1.0:
                     return
 
                 self.m_outgoing.put((Message.keepAlive(),))
 
             else:
+                now = monotonic()
                 self.m_outgoing.put(self.m_pending_outgoing)
 
                 self.m_pending_outgoing = []
