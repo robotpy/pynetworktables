@@ -6,7 +6,6 @@
 # the project.
 # ----------------------------------------------------------------------------
 
-import contextlib
 import os
 import threading
 from time import monotonic
@@ -183,6 +182,10 @@ class Storage(object):
         self.m_dispatcher = None
         self.m_server = True
 
+        # python-specific
+        self.m_dispatcher_queue_outgoing = lambda *a: None
+        self._enter_outgoing = None
+
         # Differs from ntcore because python doesn't have switch statements...
         self._process_fns = {
             kEntryAssign: self._processIncomingEntryAssign,
@@ -202,10 +205,12 @@ class Storage(object):
     def setDispatcher(self, dispatcher, server):
         with self.m_mutex:
             self.m_dispatcher = dispatcher
+            self.m_dispatcher_queue_outgoing = dispatcher._queueOutgoing
             self.m_server = server
 
     def clearDispatcher(self):
         self.m_dispatcher = None
+        self.m_dispatcher_queue_outgoing = None
 
     def getMessageEntryType(self, msg_id):
         with self.m_mutex:
@@ -218,36 +223,33 @@ class Storage(object):
 
             return entry.value.type
 
-    @contextlib.contextmanager
-    def _lockAndGetSendQueue(self):
-        """
-            Python specific function
-            
-            This exists because our lock object isn't like the C++ lock
-        """
-        with self.m_mutex:
-            dispatcher = self.m_dispatcher
-            if not dispatcher:
-                yield None
-                return
+    #
+    # Python specific functions to save us code
+    # .. originally used a contextmanager, but that caused
+    #    a lot of overhead
+    #
 
-            queue_outgoing = dispatcher._queueOutgoing
-            outgoing = []
-            yield outgoing
+    def __enter__(self):
+        self.m_mutex.acquire()
 
-        # This has to happen outside the lock
-        for o in outgoing:
-            try:
+        outgoing = []
+        self._enter_outgoing = outgoing
+        return outgoing
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.m_mutex.release()
+        if exc_type is None:
+            queue_outgoing = self.m_dispatcher_queue_outgoing
+            # This has to happen outside the lock
+            for o in self._enter_outgoing:
                 queue_outgoing(*o)
-            except TypeError:
-                raise
 
     def processIncoming(self, msg, conn):
         # Note: c++ version takes a third param (weak_conn), but it's
         #       not needed here as conn == weak_conn
         fn = self._process_fns.get(msg.type)
         if fn:
-            with self._lockAndGetSendQueue() as outgoing:
+            with self as outgoing:
                 fn(msg, conn, outgoing)
 
     def _processIncomingEntryAssign(self, msg, conn, outgoing):
@@ -496,7 +498,7 @@ class Storage(object):
                 )
 
     def applyInitialAssignments(self, conn, msgs, new_server, out_msgs):
-        with self._lockAndGetSendQueue() as update_msgs:
+        with self as update_msgs:
             if self.m_server:
                 return  # should not do this on server
 
@@ -607,7 +609,7 @@ class Storage(object):
         if value is None:
             return False  # can't compare to a null value
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             entry = self._getOrNew(name)
 
             # We return early if value already exists; if types match return true
@@ -621,7 +623,7 @@ class Storage(object):
         if value is None:
             return False  # can't compare to a null value
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -640,7 +642,7 @@ class Storage(object):
         if value is None:
             return True
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             entry = self._getOrNew(name)
             if entry.value is not None and entry.value.type != value.type:
                 return False  # error on type mismatch
@@ -652,7 +654,7 @@ class Storage(object):
         if value is None:
             return True
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -724,7 +726,7 @@ class Storage(object):
         if value is None:
             return
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             entry = self._getOrNew(name)
             self._setEntryValueImpl(entry, value, outgoing, True)
 
@@ -732,7 +734,7 @@ class Storage(object):
         if value is None:
             return
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -743,14 +745,14 @@ class Storage(object):
         if not name:
             return
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             entry = self.m_entries.get(name)
             if entry is None:
                 return
             self._setEntryFlagsImpl(entry, flags, outgoing, True)
 
     def setEntryFlagsById(self, local_id, flags):
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -803,7 +805,7 @@ class Storage(object):
         if not name:
             return
 
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_entries[name]
             except KeyError:
@@ -812,7 +814,7 @@ class Storage(object):
                 self._deleteEntryImpl(entry, outgoing, True)
 
     def deleteEntryById(self, local_id):
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -890,7 +892,7 @@ class Storage(object):
         return deleted
 
     def deleteAllEntries(self):
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             deleted = self._deleteAllEntriesImpl(True)
 
             # generate message
@@ -1089,7 +1091,7 @@ class Storage(object):
         return entries
 
     def createRpc(self, local_id, defn, rpc_uid):
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -1124,7 +1126,7 @@ class Storage(object):
                 outgoing.append((msg, None, None))
 
     def callRpc(self, local_id, params):
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             try:
                 entry = self.m_localmap[local_id]
             except IndexError:
@@ -1237,7 +1239,7 @@ class Storage(object):
         # entries is a list of (str, Value) tuples
 
         # copy values into storage as quickly as possible so lock isn't held
-        with self._lockAndGetSendQueue() as outgoing:
+        with self as outgoing:
             for name, value in entries:
                 entry = self._getOrNew(name)
                 old_value = entry.value
