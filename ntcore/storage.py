@@ -48,6 +48,7 @@ class _Entry(object):
         "name",
         "value",
         "flags",
+        "isPersistent",
         "id",
         "local_id",
         "seq_num",
@@ -93,6 +94,9 @@ class _Entry(object):
         # -> user_entry._value must always be set when self.value is set
         self.user_entry = user_entry
 
+        # python-specific: this is checked often, so don't recompute it
+        self.isPersistent = False
+
     # micro-optimizations: value is called all the time, so use its attributes
     # instead
 
@@ -104,9 +108,6 @@ class _Entry(object):
     # def value(self, value):
     #     self._value = value
     #     self.user_entry._value = value
-
-    def isPersistent(self):
-        return (self.flags & NT_PERSISTENT) != 0
 
     def increment_seqnum(self):
         self.seq_num += 1
@@ -270,6 +271,7 @@ class Storage(object):
                     return
 
                 entry.flags = msg.flags
+                entry.isPersistent = (msg.flags & NT_PERSISTENT) != 0
                 entry.seq_num = msg.seq_num_uid
                 self._setEntryValueImpl(entry, msg.value, outgoing, False)
                 return
@@ -300,6 +302,7 @@ class Storage(object):
                     # id assignment request)
                     entry.value = entry.user_entry._value = msg.value
                     entry.flags = msg.flags
+                    entry.isPersistent = (msg.flags & NT_PERSISTENT) != 0
                     entry.seq_num = msg.seq_num_uid
 
                     # notify
@@ -337,17 +340,23 @@ class Storage(object):
         # don't update flags from a <3.0 remote (not part of message)
         # don't update flags if self is a server response to a client id request
         if not may_need_update and conn.get_proto_rev() >= 0x0300:
+            # python-specific: move this check
             # update persistent dirty flag if persistent flag changed
-            if (entry.flags & NT_PERSISTENT) != (msg.flags & NT_PERSISTENT):
-                self.m_persistent_dirty = True
+            # if (entry.flags & NT_PERSISTENT) != (msg.flags & NT_PERSISTENT):
+            #     self.m_persistent_dirty = True
 
             if entry.flags != msg.flags:
                 notify_flags |= NT_NOTIFY_FLAGS
 
+                # (moved here) update persistent dirty flag if persistent flag changed
+                if (entry.flags & NT_PERSISTENT) != (msg.flags & NT_PERSISTENT):
+                    self.m_persistent_dirty = True
+
             entry.flags = msg.flags
+            entry.isPersistent = (msg.flags & NT_PERSISTENT) != 0
 
         # update persistent dirty flag if the value changed and it's persistent
-        if entry.isPersistent() and entry.value != msg.value:
+        if entry.isPersistent and entry.value != msg.value:
             self.m_persistent_dirty = True
 
         # update local
@@ -385,7 +394,7 @@ class Storage(object):
         entry.seq_num = seq_num
 
         # update persistent dirty flag if it's a persistent value
-        if entry.isPersistent():
+        if entry.isPersistent:
             self.m_persistent_dirty = True
 
         # notify
@@ -532,6 +541,7 @@ class Storage(object):
                 if entry.value is None:
                     entry.value = entry.user_entry._value = msg.value
                     entry.flags = msg.flags
+                    entry.isPersistent = (msg.flags & NT_PERSISTENT) != 0
 
                     # notify
                     self.m_notifier.notifyEntry(
@@ -541,7 +551,7 @@ class Storage(object):
                     # if we have written the value locally and the value is not persistent,
                     # then we don't update the local value and instead send it back to the
                     # server as an update message
-                    if entry.local_write and not entry.isPersistent():
+                    if entry.local_write and not entry.isPersistent:
                         entry.increment_seqnum()
                         update_msgs.append(
                             (
@@ -561,6 +571,7 @@ class Storage(object):
                                 notify_flags |= NT_NOTIFY_FLAGS
 
                             entry.flags = msg.flags
+                            entry.isPersistent = (msg.flags & NT_PERSISTENT) != 0
 
                         # notify
                         self.m_notifier.notifyEntry(
@@ -680,7 +691,7 @@ class Storage(object):
             self.m_idmap.append(entry)
 
         # update persistent dirty flag if value changed and it's persistent
-        if entry.isPersistent() and (old_value is None or old_value != value):
+        if entry.isPersistent and (old_value is None or old_value != value):
             self.m_persistent_dirty = True
 
         # notify
@@ -768,6 +779,7 @@ class Storage(object):
             self.m_persistent_dirty = True
 
         entry.flags = flags
+        entry.isPersistent = (flags & NT_PERSISTENT) != 0
 
         # notify
         self.m_notifier.notifyEntry(
@@ -840,11 +852,12 @@ class Storage(object):
             entry.rpc_uid = None
 
         # update persistent dirty flag if it's a persistent value
-        if entry.isPersistent():
+        if entry.isPersistent:
             self.m_persistent_dirty = True
 
         # reset flags
         entry.flags = 0
+        entry.isPersistent = False
 
         if old_value is None:
             return  # was not previously assigned
@@ -863,7 +876,7 @@ class Storage(object):
             outgoing.append((Message.entryDelete(entry_id), None, None))
 
     def _defaultShouldDelete(self, entry):
-        return not entry.isPersistent()
+        return not entry.isPersistent
 
     def _deleteAllEntriesImpl(self, local, should_delete=None):
         if should_delete is None:
@@ -1069,7 +1082,7 @@ class Storage(object):
             entries = [
                 (entry.name, entry.value)
                 for entry in self.m_entries.values()
-                if entry.value is not None and entry.isPersistent()
+                if entry.value is not None and entry.isPersistent
             ]
 
         # sort in name order
@@ -1244,9 +1257,10 @@ class Storage(object):
                 entry = self._getOrNew(name)
                 old_value = entry.value
                 entry.value = entry.user_entry._value = value
-                was_persist = entry.isPersistent()
+                was_persist = entry.isPersistent
                 if not was_persist and persistent:
                     entry.flags |= NT_PERSISTENT
+                    entry.isPersistent = True
 
                 # if we're the server, an id if it doesn't have one
                 if self.m_server and entry.id == 0xFFFF:
