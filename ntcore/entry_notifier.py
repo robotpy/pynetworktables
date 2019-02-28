@@ -46,6 +46,16 @@ class EntryNotifierThread(CallbackThread):
         if not data.value:
             return False
 
+        # must match local id or prefix
+        # -> python-specific: match this first, since it's the most likely thing
+        #    to not match
+        if listener.local_id is not None:
+            if listener.local_id != data.local_id:
+                return False
+        else:
+            if not data.name.startswith(listener.prefix):
+                return False
+
         # Flags must be within requested flag set for this listener.
         # Because assign messages can result in both a value and flags update,
         # we handle that case specially.
@@ -60,14 +70,6 @@ class EntryNotifierThread(CallbackThread):
 
         if (flags & ~listen_flags) != 0:
             return False
-
-        # must match local id or prefix
-        if listener.local_id is not None:
-            if listener.local_id != data.local_id:
-                return False
-        else:
-            if not data.name.startswith(listener.prefix):
-                return False
 
         return True
 

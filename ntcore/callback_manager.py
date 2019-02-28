@@ -8,7 +8,13 @@
 
 from collections import deque, namedtuple
 from threading import Condition
-from queue import Queue
+import time
+
+try:
+    # Python 3.7 only, should be more efficient
+    from queue import SimpleQueue as Queue, Empty
+except ImportError:
+    from queue import Queue, Empty
 
 from .support.safe_thread import SafeThread
 from .support.uidvector import UidVector
@@ -82,23 +88,29 @@ class CallbackThread(object):
                 poller.poll_cond.notify()
 
     def main(self):
-        while self.m_active:
-            item = self.m_queue.get()
-            if not self.m_active:
+        # micro-optimization: lift these out of the loop
+        doCallback = self.doCallback
+        matches = self.matches
+        queue_get = self.m_queue.get
+        setListener = self.setListener
+        listeners_get = self.m_listeners.get
+        listeners_items = self.m_listeners.items
+
+        while True:
+            item = queue_get()
+            if not item:
                 logger.debug("%s thread no longer active", self.name)
                 break
 
-            if not item:
-                continue
-
             listener_uid, item = item
             if listener_uid is not None:
-                listener = self.m_listeners.get(listener_uid)
-                if listener and self.matches(listener, item):
-                    self.setListener(item, listener_uid)
-                    if listener.callback:
+                listener = listeners_get(listener_uid)
+                if listener and matches(listener, item):
+                    setListener(item, listener_uid)
+                    cb = listener.callback
+                    if cb:
                         try:
-                            self.doCallback(listener.callback, item)
+                            doCallback(cb, item)
                         except Exception:
                             logger.warning(
                                 "Unhandled exception processing %s callback",
@@ -109,12 +121,13 @@ class CallbackThread(object):
                         self.sendPoller(listener.poller_uid, listener_uid, item)
             else:
                 # Use copy because iterator might get invalidated
-                for listener_uid, listener in list(self.m_listeners.items()):
-                    if self.matches(listener, item):
-                        self.setListener(item, listener_uid)
-                        if listener.callback:
+                for listener_uid, listener in list(listeners_items()):
+                    if matches(listener, item):
+                        setListener(item, listener_uid)
+                        cb = listener.callback
+                        if cb:
                             try:
-                                self.doCallback(listener.callback, item)
+                                doCallback(cb, item)
                             except Exception:
                                 logger.warning(
                                     "Unhandled exception processing %s callback",
@@ -178,17 +191,21 @@ class CallbackManager(object):
         if not thr:
             return True
 
+        # This function is intended for unit testing purposes only, so it's
+        # not as efficient as it could be
         q = thr.m_queue
 
-        def _poll_fn():
-            if q._qsize() == 0:
-                return True
-            if not thr.m_active:
-                return True
-            return False
+        if timeout is None:
+            while not q.empty() and thr.m_active:
+                time.sleep(0.005)
+        else:
+            wait_until = time.monotonic() + timeout
+            while not q.empty() and thr.m_active:
+                time.sleep(0.005)
+                if time.monotonic() > wait_until:
+                    return q.empty()
 
-        with q.not_full:
-            return q.not_full.wait_for(_poll_fn, timeout)
+        return True
 
     def poll(self, poller_uid, timeout=None):
         # returns infos, timed_out

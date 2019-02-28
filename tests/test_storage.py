@@ -681,7 +681,9 @@ def test_deleteAllEntries(storage_populated, dispatcher, entry_notifier):
 def test_DeleteAllEntriesPersistent(storage_populated, dispatcher, entry_notifier):
     storage = storage_populated
 
-    storage.m_entries.get("foo2").flags = NT_PERSISTENT
+    entry = storage.m_entries.get("foo2")
+    entry.flags = NT_PERSISTENT
+    entry.isPersistent = True
     storage.deleteAllEntries()
     assert len(storage.getEntries("", 0)) == 1
     assert "foo2" in storage.m_entries
@@ -760,6 +762,7 @@ def test_savePersistent(storage_persistent):
 
     for e in storage.m_entries.values():
         e.flags = NT_PERSISTENT
+        e.isPersistent = True
 
     fp = StringIO()
     storage.savePersistent(fp=fp, periodic=False)
@@ -871,6 +874,7 @@ def test_LoadPersistentAssign(storage_empty, dispatcher, entry_notifier, is_serv
     entry = storage.m_entries.get("foo")
     assert Value.makeBoolean(True) == entry.value
     assert NT_PERSISTENT == entry.flags
+    assert entry.isPersistent
 
     dispatcher._queueOutgoing.assert_has_calls(
         [
@@ -900,6 +904,7 @@ def test_LoadPersistentUpdateFlags(
     entry = storage.m_entries.get("foo2")
     assert Value.makeDouble(0.0) == entry.value
     assert NT_PERSISTENT == entry.flags
+    assert entry.isPersistent
 
     if is_server:
         dispatcher._queueOutgoing.assert_has_calls(
@@ -918,7 +923,9 @@ def test_LoadPersistentUpdateValue(
 ):
     storage = storage_populated
 
-    storage.m_entries.get("foo2").flags = NT_PERSISTENT
+    entry = storage.m_entries.get("foo2")
+    entry.flags = NT_PERSISTENT
+    entry.isPersistent = True
 
     fp = StringIO('[NetworkTables Storage 3.0]\ndouble "foo2"=1.0\n')
     assert storage.loadPersistent(fp=fp) is None
@@ -926,6 +933,7 @@ def test_LoadPersistentUpdateValue(
     entry = storage.m_entries.get("foo2")
     assert Value.makeDouble(1.0) == entry.value
     assert NT_PERSISTENT == entry.flags
+    assert entry.isPersistent
 
     # client shouldn't send an update as id not assigned yet
     if is_server:
@@ -955,6 +963,7 @@ def test_LoadPersistentUpdateValueFlags(
     entry = storage.m_entries.get("foo2")
     assert Value.makeDouble(1.0) == entry.value
     assert NT_PERSISTENT == entry.flags
+    assert entry.isPersistent
 
     # client shouldn't send an update as id not assigned yet
     if is_server:
