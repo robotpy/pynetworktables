@@ -89,7 +89,12 @@ class CallbackThread(object):
 
     def main(self):
         # micro-optimization: lift these out of the loop
+        doCallback = self.doCallback
+        matches = self.matches
         queue_get = self.m_queue.get
+        setListener = self.setListener
+        listeners_get = self.m_listeners.get
+        listeners_items = self.m_listeners.items
 
         while True:
             item = queue_get()
@@ -99,12 +104,13 @@ class CallbackThread(object):
 
             listener_uid, item = item
             if listener_uid is not None:
-                listener = self.m_listeners.get(listener_uid)
-                if listener and self.matches(listener, item):
-                    self.setListener(item, listener_uid)
-                    if listener.callback:
+                listener = listeners_get(listener_uid)
+                if listener and matches(listener, item):
+                    setListener(item, listener_uid)
+                    cb = listener.callback
+                    if cb:
                         try:
-                            self.doCallback(listener.callback, item)
+                            doCallback(cb, item)
                         except Exception:
                             logger.warning(
                                 "Unhandled exception processing %s callback",
@@ -115,12 +121,13 @@ class CallbackThread(object):
                         self.sendPoller(listener.poller_uid, listener_uid, item)
             else:
                 # Use copy because iterator might get invalidated
-                for listener_uid, listener in list(self.m_listeners.items()):
-                    if self.matches(listener, item):
-                        self.setListener(item, listener_uid)
-                        if listener.callback:
+                for listener_uid, listener in list(listeners_items()):
+                    if matches(listener, item):
+                        setListener(item, listener_uid)
+                        cb = listener.callback
+                        if cb:
                             try:
-                                self.doCallback(listener.callback, item)
+                                doCallback(cb, item)
                             except Exception:
                                 logger.warning(
                                     "Unhandled exception processing %s callback",
