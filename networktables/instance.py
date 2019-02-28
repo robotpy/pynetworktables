@@ -355,6 +355,8 @@ class NetworkTablesInstance:
         for deterministic testing.  This blocks until either the entry listener
         queue is empty (e.g. there are no more events that need to be passed along
         to callbacks or poll queues) or the timeout expires.
+
+        .. warning:: This function is not efficient, so only use it for testing!
         
         :param timeout: timeout, in seconds.  Set to 0 for non-blocking behavior,
                         or None to block indefinitely

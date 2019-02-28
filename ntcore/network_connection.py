@@ -7,8 +7,14 @@
 # ----------------------------------------------------------------------------
 
 import threading
-from queue import Queue, Empty
 from time import monotonic
+
+try:
+    # Python 3.7 only, should be more efficient
+    from queue import SimpleQueue as Queue, Empty
+except ImportError:
+    from queue import Queue, Empty
+
 
 from .constants import (
     kEntryAssign,

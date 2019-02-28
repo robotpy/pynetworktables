@@ -8,7 +8,13 @@
 
 from collections import deque, namedtuple
 from threading import Condition
-from queue import Queue
+import time
+
+try:
+    # Python 3.7 only, should be more efficient
+    from queue import SimpleQueue as Queue, Empty
+except ImportError:
+    from queue import Queue, Empty
 
 from .support.safe_thread import SafeThread
 from .support.uidvector import UidVector
@@ -82,14 +88,14 @@ class CallbackThread(object):
                 poller.poll_cond.notify()
 
     def main(self):
-        while self.m_active:
-            item = self.m_queue.get()
-            if not self.m_active:
+        # micro-optimization: lift these out of the loop
+        queue_get = self.m_queue.get
+
+        while True:
+            item = queue_get()
+            if not item:
                 logger.debug("%s thread no longer active", self.name)
                 break
-
-            if not item:
-                continue
 
             listener_uid, item = item
             if listener_uid is not None:
@@ -178,17 +184,21 @@ class CallbackManager(object):
         if not thr:
             return True
 
+        # This function is intended for unit testing purposes only, so it's
+        # not as efficient as it could be
         q = thr.m_queue
 
-        def _poll_fn():
-            if q._qsize() == 0:
-                return True
-            if not thr.m_active:
-                return True
-            return False
+        if timeout is None:
+            while not q.empty() and thr.m_active:
+                time.sleep(0.005)
+        else:
+            wait_until = time.monotonic() + timeout
+            while not q.empty() and thr.m_active:
+                time.sleep(0.005)
+                if time.monotonic() > wait_until:
+                    return q.empty()
 
-        with q.not_full:
-            return q.not_full.wait_for(_poll_fn, timeout)
+        return True
 
     def poll(self, poller_uid, timeout=None):
         # returns infos, timed_out
