@@ -339,20 +339,20 @@ class NetworkConnection(object):
 
                 if verbose:
                     logger.debug("write thread woke up")
+                    if msgs:
+                        logger.debug(
+                            "%s sending %s messages", self.m_stream.sock_type, len(msgs)
+                        )
 
                 if not msgs:
                     continue
 
                 encoder.set_proto_rev(self.m_proto_rev)
 
+                # python-optimization: checking verbose causes extra overhead
                 if verbose:
-                    logger.debug(
-                        "%s sending %s messages", self.m_stream.sock_type, len(msgs)
-                    )
-
-                for msg in msgs:
-                    if msg:
-                        if verbose:
+                    for msg in msgs:
+                        if msg:
                             logger.debug(
                                 "%s sending type=%s with str=%s id=%s seq_num=%s value=%s",
                                 self.m_stream.sock_type,
@@ -362,8 +362,11 @@ class NetworkConnection(object):
                                 msg.seq_num_uid,
                                 msg.value,
                             )
-
-                        Message.write(msg, out, encoder)
+                            Message.write(msg, out, encoder)
+                else:
+                    for msg in msgs:
+                        if msg:
+                            Message.write(msg, out, encoder)
 
                 if not self.m_stream:
                     break
