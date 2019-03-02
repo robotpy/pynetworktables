@@ -30,6 +30,8 @@ class NtCoreApi(object):
         self.dispatcher = Dispatcher(self.storage, self.conn_notifier, verbose=verbose)
         self.ds_client = DsClient(self.dispatcher, verbose=verbose)
 
+        self._init_table_functions()
+
     def stop(self):
         self.ds_client.stop()
         self.dispatcher.stop()
@@ -48,71 +50,31 @@ class NtCoreApi(object):
         self.storage = None
 
     #
-    # Table functions
+    # Table functions (inline because they're called often)
     #
 
-    def getEntry(self, name):
-        return self.storage.getEntry(name)
-
-    def getEntryId(self, name):
-        return self.storage.getEntryId(name)
-
-    def getEntries(self, prefix, types):
-        return self.storage.getEntries(prefix, types)
-
-    def getEntryNameById(self, local_id):
-        return self.storage.getEntryNameById(local_id)
-
-    def getEntryTypeById(self, local_id):
-        return self.storage.getEntryTypeById(local_id)
-
-    def getEntryValue(self, name):
-        return self.storage.getEntryValue(name)
-
-    def setDefaultEntryValue(self, name, value):
-        return self.storage.setDefaultEntryValue(name, value)
-
-    def setDefaultEntryValueById(self, local_id, value):
-        return self.storage.setDefaultEntryValueById(local_id, value)
-
-    def setEntryValue(self, name, value):
-        return self.storage.setEntryValue(name, value)
-
-    def setEntryValueById(self, local_id, value):
-        return self.storage.setEntryValueById(local_id, value)
-
-    def setEntryTypeValue(self, name, value):
-        self.storage.setEntryTypeValue(name, value)
-
-    def setEntryTypeValueById(self, local_id, value):
-        self.storage.setEntryTypeValueById(local_id, value)
-
-    def setEntryFlags(self, name, flags):
-        self.storage.setEntryFlags(name, flags)
-
-    def setEntryFlagsById(self, local_id, flags):
-        self.storage.setEntryFlagsById(local_id, flags)
-
-    def getEntryFlags(self, name):
-        return self.storage.getEntryFlags(name)
-
-    def getEntryFlagsById(self, local_id):
-        return self.storage.getEntryFlagsById(local_id)
-
-    def deleteEntry(self, name):
-        self.storage.deleteEntry(name)
-
-    def deleteEntryById(self, local_id):
-        self.storage.deleteEntryById(local_id)
-
-    def deleteAllEntries(self):
-        self.storage.deleteAllEntries()
-
-    def getEntryInfo(self, prefix, types):
-        return self.storage.getEntryInfo(prefix, types)
-
-    def getEntryInfoById(self, local_id):
-        return self.storage.getEntryInfoById(local_id)
+    def _init_table_functions(self):
+        self.getEntry = self.storage.getEntry
+        self.getEntryId = self.storage.getEntryId
+        self.getEntries = self.storage.getEntries
+        self.getEntryNameById = self.storage.getEntryNameById
+        self.getEntryTypeById = self.storage.getEntryTypeById
+        self.getEntryValue = self.storage.getEntryValue
+        self.setDefaultEntryValue = self.storage.setDefaultEntryValue
+        self.setDefaultEntryValueById = self.storage.setDefaultEntryValueById
+        self.setEntryValue = self.storage.setEntryValue
+        self.setEntryValueById = self.storage.setEntryValueById
+        self.setEntryTypeValue = self.storage.setEntryTypeValue
+        self.setEntryTypeValueById = self.storage.setEntryTypeValueById
+        self.setEntryFlags = self.storage.setEntryFlags
+        self.setEntryFlagsById = self.storage.setEntryFlagsById
+        self.getEntryFlags = self.storage.getEntryFlags
+        self.getEntryFlagsById = self.storage.getEntryFlagsById
+        self.deleteEntry = self.storage.deleteEntry
+        self.deleteEntryById = self.storage.deleteEntryById
+        self.deleteAllEntries = self.storage.deleteAllEntries
+        self.getEntryInfo = self.storage.getEntryInfo
+        self.getEntryInfoById = self.storage.getEntryInfoById
 
     #
     # Entry notification
