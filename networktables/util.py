@@ -9,7 +9,14 @@ NetworkTables = NetworkTablesInstance.getDefault()
 
 
 class _NtProperty:
-    def __init__(self, key: str, defaultValue, writeDefault: bool, persistent: bool):
+    def __init__(
+        self,
+        key: str,
+        defaultValue,
+        writeDefault: bool,
+        persistent: bool,
+        inst: NetworkTablesInstance,
+    ) -> None:
         self.key = key
         self.defaultValue = defaultValue
         self.writeDefault = writeDefault
@@ -43,6 +50,8 @@ def ntproperty(
     writeDefault: bool = True,
     doc: str = None,
     persistent: bool = False,
+    *,
+    inst: NetworkTablesInstance = NetworkTables
 ) -> property:
     """
         A property that you can add to your classes to access NetworkTables
@@ -56,6 +65,7 @@ def ntproperty(
         :param doc: If given, will be the docstring of the property.
         :param persistent: If True, persist set values across restarts.
                            *writeDefault* is ignored if this is True.
+        :param inst: The NetworkTables instance to use.
 
         Example usage::
         
@@ -92,8 +102,8 @@ def ntproperty(
         .. versionchanged:: 2018.0.0
             The *persistent* parameter.
     """
-    ntprop = _NtProperty(key, defaultValue, writeDefault, persistent)
-    NetworkTables._ntproperties.add(ntprop)
+    ntprop = _NtProperty(key, defaultValue, writeDefault, persistent, inst)
+    inst._ntproperties.add(ntprop)
 
     return property(fget=ntprop.get, fset=ntprop.set, doc=doc)
 
@@ -109,6 +119,8 @@ class ChooserControl(object):
         key: str,
         on_choices: Optional[Callable[[Sequence[str]], None]] = None,
         on_selected: Optional[Callable[[str], None]] = None,
+        *,
+        inst: NetworkTablesInstance = NetworkTables
     ) -> None:
         """
             :param key: NetworkTables key
@@ -116,8 +128,9 @@ class ChooserControl(object):
                                choices change.
             :param on_selection: A function that will be called when the
                                  selection changes.
+            :param inst: The NetworkTables instance to use.
         """
-        self.subtable = NetworkTables.getTable("SmartDashboard").getSubTable(key)
+        self.subtable = inst.getTable("SmartDashboard").getSubTable(key)
 
         self.on_choices = on_choices
         self.on_selected = on_selected
