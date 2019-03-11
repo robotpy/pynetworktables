@@ -26,6 +26,11 @@ from networktables.instance import NetworkTablesInstance
 
 
 @pytest.fixture(scope="function", params=[True, False])
+def verbose_logging(request):
+    return request.param
+
+
+@pytest.fixture(scope="function", params=[True, False])
 def nt(request):
     """Starts/stops global networktables instance for testing"""
     NetworkTables.startTestMode(server=request.param)
@@ -67,6 +72,7 @@ class NtTestBase(NetworkTablesInstance):
     """
 
     _wait_lock = None
+    _testing_verbose_logging = True
 
     def shutdown(self):
         logger.info("shutting down %s", self.__class__.__name__)
@@ -83,7 +89,8 @@ class NtTestBase(NetworkTablesInstance):
         self._api.dispatcher.setDefaultProtoRev(proto_rev)
         self.proto_rev = proto_rev
 
-        self.enableVerboseLogging()
+        if self._testing_verbose_logging:
+            self.enableVerboseLogging()
         # self._wait_init()
 
     def _init_server(self, proto_rev, server_port=0):
@@ -147,10 +154,11 @@ class NtTestBase(NetworkTablesInstance):
 
 
 @pytest.fixture(params=[0x0200, 0x0300])
-def nt_server(request):
+def nt_server(request, verbose_logging):
     class NtServer(NtTestBase):
 
         _test_saved_port = None
+        _testing_verbose_logging = verbose_logging
 
         def start_test(self):
             logger.info("NtServer::start_test")
@@ -160,7 +168,8 @@ def nt_server(request):
                 self.port = self._test_saved_port
                 self._api.dispatcher.setDefaultProtoRev(request.param)
 
-            self.enableVerboseLogging()
+            if verbose_logging:
+                self.enableVerboseLogging()
 
             self.startServer(listenAddress="127.0.0.1", port=self.port)
 
@@ -175,10 +184,14 @@ def nt_server(request):
 
 
 @pytest.fixture(params=[0x0200, 0x0300])
-def nt_client(request, nt_server):
+def nt_client(request, nt_server, verbose_logging):
     class NtClient(NtTestBase):
+
+        _testing_verbose_logging = verbose_logging
+
         def start_test(self):
-            self.enableVerboseLogging()
+            if verbose_logging:
+                self.enableVerboseLogging()
             self.setNetworkIdentity("C1")
             self._api.dispatcher.setDefaultProtoRev(request.param)
             self.startClient(("127.0.0.1", nt_server.port))
@@ -190,10 +203,14 @@ def nt_client(request, nt_server):
 
 
 @pytest.fixture(params=[0x0300])  # don't bother with other proto versions
-def nt_client2(request, nt_server):
+def nt_client2(request, nt_server, verbose_logging):
     class NtClient(NtTestBase):
+
+        _testing_verbose_logging = verbose_logging
+
         def start_test(self):
-            self.enableVerboseLogging()
+            if verbose_logging:
+                self.enableVerboseLogging()
             self._api.dispatcher.setDefaultProtoRev(request.param)
             self.setNetworkIdentity("C2")
             self.startClient(("127.0.0.1", nt_server.port))
