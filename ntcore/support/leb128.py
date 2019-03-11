@@ -7,8 +7,6 @@
 
 """
 
-import sys
-
 
 def size_uleb128(value):
     count = 0
@@ -22,12 +20,13 @@ def size_uleb128(value):
 
 def encode_uleb128(value):
     out = bytearray()
+    out_append = out.append
     while True:
         byte = value & 0x7F
         value >>= 7
         if value != 0:
             byte = byte | 0x80
-        out.append(byte)
+        out_append(byte)
         if value == 0:
             break
     return out
@@ -36,8 +35,9 @@ def encode_uleb128(value):
 def read_uleb128(rstream):
     result = 0
     shift = 0
+    rstream_read = rstream.read
     while True:
-        b = rstream.read(1)[0]
+        b = rstream_read(1)[0]
         result |= (b & 0x7F) << shift
         shift += 7
         if (b & 0x80) == 0:
