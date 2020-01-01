@@ -109,15 +109,15 @@ class Message(object):
             value = codec.read_value(value_type, rstream)
 
         elif msgtype == kClientHello:
-            msg_id, = rstream.readStruct(codec.clientHello)
+            (msg_id,) = rstream.readStruct(codec.clientHello)
             if msg_id >= 0x0300:
                 msg_str = codec.read_string_v3(rstream)
 
         elif msgtype == kProtoUnsup:
-            msg_id, = rstream.readStruct(codec.protoUnsup)
+            (msg_id,) = rstream.readStruct(codec.protoUnsup)
 
         elif msgtype == kServerHello:
-            flags, = rstream.readStruct(codec.serverHello)
+            (flags,) = rstream.readStruct(codec.serverHello)
             msg_str = codec.read_string(rstream)
 
         elif msgtype == kEntryAssign:
@@ -135,10 +135,10 @@ class Message(object):
             msg_id, flags = rstream.readStruct(codec.flagsUpdate)
 
         elif msgtype == kEntryDelete:
-            msg_id, = rstream.readStruct(codec.entryDelete)
+            (msg_id,) = rstream.readStruct(codec.entryDelete)
 
         elif msgtype == kClearEntries:
-            msg_id, = rstream.readStruct(codec.clearEntries)
+            (msg_id,) = rstream.readStruct(codec.clearEntries)
             if msg_id != kClearAllMagic:
                 raise ValueError("Bad magic")
 
