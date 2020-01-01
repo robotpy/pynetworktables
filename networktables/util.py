@@ -24,11 +24,11 @@ class _NtProperty:
         # never overwrite persistent values with defaults
         if persistent:
             self.writeDefault = False
-
+        self.inst = inst
         self.reset()
 
     def reset(self):
-        self.ntvalue = NetworkTables.getGlobalAutoUpdateValue(
+        self.ntvalue = self.inst.getGlobalAutoUpdateValue(
             self.key, self.defaultValue, self.writeDefault
         )
         if self.persistent:
@@ -41,7 +41,7 @@ class _NtProperty:
         return self.ntvalue.value
 
     def set(self, _, value):
-        NetworkTables._api.setEntryValueById(self.ntvalue._local_id, self.mkv(value))
+        self.inst._api.setEntryValueById(self.ntvalue._local_id, self.mkv(value))
 
 
 def ntproperty(
