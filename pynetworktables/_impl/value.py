@@ -1,11 +1,11 @@
 # validated: 2018-11-27 DS 175c6c1f0130 cpp/Value.cpp include/networktables/NetworkTableValue.h
 """
     Internal storage for ntcore values
-    
+
     Uses namedtuple for efficiency, and because Value objects are supposed
     to be immutable. Will have to measure that and see if there's a performance
     penalty for this in python.
-    
+
     Original ntcore stores the last change time, but it doesn't seem to
     be used anywhere, so we don't store that to make equality comparison
     more efficient.

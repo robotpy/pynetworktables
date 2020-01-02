@@ -1,6 +1,6 @@
 __all__ = ["NetworkTable"]
 
-from ntcore.constants import (
+from ._impl.constants import (
     NT_BOOLEAN,
     NT_DOUBLE,
     NT_STRING,
@@ -17,13 +17,12 @@ from ntcore.constants import (
     NT_NOTIFY_FLAGS,
 )
 
-_is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
-
-from ntcore.value import Value
+from ._impl.value import Value
 
 import logging
 
 logger = logging.getLogger("nt")
+_is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
 
 
 class NetworkTable:

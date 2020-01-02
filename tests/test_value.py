@@ -9,7 +9,7 @@
 # These tests are adapted from ntcore's test suite
 #
 
-from ntcore.constants import (
+from pynetworktables._impl.constants import (
     NT_BOOLEAN,
     NT_DOUBLE,
     NT_STRING,
@@ -18,7 +18,7 @@ from ntcore.constants import (
     NT_DOUBLE_ARRAY,
     NT_STRING_ARRAY,
 )
-from ntcore.value import Value
+from pynetworktables._impl.value import Value
 
 
 def test_Boolean():

@@ -3,8 +3,8 @@
 
 from weakref import WeakSet
 
-from ntcore import constants
-from ntcore.api import NtCoreApi
+from ._impl import constants
+from ._impl.api import NtCoreApi
 
 from .entry import NetworkTableEntry
 

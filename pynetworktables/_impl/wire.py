@@ -1,20 +1,20 @@
 # validated: 2017-09-28 DS 5ab20bb27c97 cpp/WireDecoder.cpp cpp/WireDecoder.h cpp/WireEncoder.cpp cpp/WireEncoder.h
 """
     This encompasses the WireEncoder and WireDecoder stuff in ntcore
-    
+
     Reading:
-    
+
     Writing:
-    
+
         Each message type will have a write function, which takes
         a single list argument. Bytes will be added to that list.
-    
+
         The write routines assume that the messages are a tuple
         that have the following format:
-        
+
             # This doesn't make sense
             type, str, value, id, flags, seqnum
-    
+
 """
 
 import logging

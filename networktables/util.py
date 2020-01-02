@@ -1,6 +1,6 @@
 from typing import Callable, Optional, Sequence
 
-from ntcore.value import Value
+from pynetworktables._impl.value import Value
 
 from . import NetworkTablesInstance
 

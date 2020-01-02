@@ -1,4 +1,4 @@
-from ntcore.constants import (
+from ._impl.constants import (
     NT_BOOLEAN,
     NT_DOUBLE,
     NT_STRING,
@@ -9,7 +9,7 @@ from ntcore.constants import (
     NT_PERSISTENT,
 )
 
-from ntcore.value import Value
+from ._impl.value import Value
 
 __all__ = ["NetworkTableEntry"]
 

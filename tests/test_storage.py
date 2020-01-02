@@ -14,7 +14,7 @@ from unittest.mock import call, Mock, ANY
 
 import pytest
 
-from ntcore.constants import (
+from pynetworktables._impl.constants import (
     kEntryAssign,
     kEntryUpdate,
     kFlagsUpdate,
@@ -31,13 +31,13 @@ from ntcore.constants import (
     NT_NOTIFY_FLAGS,
 )
 
-from ntcore.dispatcher import Dispatcher
-from ntcore.entry_notifier import EntryNotifier
-from ntcore.message import Message
-from ntcore.network_connection import NetworkConnection
-from ntcore.rpc_server import RpcServer
-from ntcore.storage import Storage
-from ntcore.value import Value
+from pynetworktables._impl.dispatcher import Dispatcher
+from pynetworktables._impl.entry_notifier import EntryNotifier
+from pynetworktables._impl.message import Message
+from pynetworktables._impl.network_connection import NetworkConnection
+from pynetworktables._impl.rpc_server import RpcServer
+from pynetworktables._impl.storage import Storage
+from pynetworktables._impl.value import Value
 
 
 @pytest.fixture
