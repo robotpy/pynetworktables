@@ -32,16 +32,16 @@ class NetworkTable:
         NetworkTables in a table-based manner. You should not directly
         create a NetworkTable object, but instead use
         :meth:`.NetworkTables.getTable` to retrieve a NetworkTable instance.
-        
+
         For example, to interact with the SmartDashboard::
 
             from networktables import NetworkTables
             sd = NetworkTables.getTable('SmartDashboard')
-            
+
             someNumberEntry = sd.getEntry('someNumber')
             someNumberEntry.putNumber(1234)
             ...
-            
+
         .. seealso::
            - The examples in the documentation.
            - :class:`.NetworkTablesInstance`
@@ -70,9 +70,9 @@ class NetworkTable:
     def getEntry(self, key):
         """Gets the entry for a subkey. This is the preferred API to use
         to access NetworkTable keys.
-        
+
         :rtype: :class:`.NetworkTableEntry`
-        
+
         .. versionadded:: 2018.0.0
         """
         return self._inst.getEntry(self._path + key)
@@ -82,10 +82,10 @@ class NetworkTable:
     ):
         """Adds a listener that will be notified when any key in this
         NetworkTable is changed, or when a specified key changes.
-        
+
         The listener is called from the NetworkTables I/O thread, and should
         return as quickly as possible.
-        
+
         :param listener: A callable with signature `callable(source, key, value, isNew)`
         :param immediateNotify: If True, the listener will be called immediately with the current values of the table
         :type immediateNotify: bool
@@ -93,13 +93,13 @@ class NetworkTable:
         :type key: str
         :param localNotify: True if you wish to be notified of changes made locally (default is False)
         :type localNotify: bool
-        
+
         .. warning:: You may call the NetworkTables API from within the
                      listener, but it is not recommended
-                     
+
         .. versionchanged:: 2017.0.0
            Added localNotify parameter (defaults to False, which is different from NT2)
-        
+
         """
         flags = NT_NOTIFY_NEW | NT_NOTIFY_UPDATE
         if immediateNotify:
@@ -112,10 +112,10 @@ class NetworkTable:
     def addEntryListenerEx(self, listener, flags, key=None, paramIsNew=True):
         """Adds a listener that will be notified when any key in this
         NetworkTable is changed, or when a specified key changes.
-        
+
         The listener is called from the NetworkTables I/O thread, and should
         return as quickly as possible.
-        
+
         :param listener: A callable with signature `callable(source, key, value, param)`
         :param flags: Bitmask of flags that indicate the types of notifications you wish to receive
         :type flags: :class:`.NotifyFlags`
@@ -126,10 +126,10 @@ class NetworkTable:
                            table. Otherwise, the parameter is an integer of the raw
                            `NT_NOTIFY_*` flags
         :type paramIsNew: bool
-        
+
         .. warning:: You may call the NetworkTables API from within the
                      listener, but it is not recommended
-        
+
         .. versionadded:: 2017.0.0
         """
 
@@ -185,20 +185,20 @@ class NetworkTable:
     def addSubTableListener(self, listener, localNotify=False):
         """Adds a listener that will be notified when any key in a subtable of
         this NetworkTable is changed.
-        
+
         The listener is called from the NetworkTables I/O thread, and should
         return as quickly as possible.
-        
+
         :param listener: Callable to call when previously unseen table appears.
                          Function signature is `callable(source, key, subtable, True)`
         :param localNotify: True if you wish to be notified when local changes
                             result in a new table
         :type localNotify: bool
-        
+
         .. warning:: You may call the NetworkTables API from within the
                      listener, but it is not recommended as we are not
                      currently sure if deadlocks will occur
-                     
+
         .. versionchanged:: 2017.0.0
            Added localNotify parameter
         """
@@ -228,7 +228,7 @@ class NetworkTable:
 
     def removeEntryListener(self, listener):
         """Removes a table listener
-        
+
         :param listener: callable that was passed to :meth:`.addTableListener`
                          or :meth:`.addSubTableListener`
         """
@@ -245,7 +245,7 @@ class NetworkTable:
 
         :param key: the key name
         :type key: str
-        
+
         :returns: the networktable to be returned
         :rtype: :class:`.NetworkTable`
         """
@@ -254,10 +254,10 @@ class NetworkTable:
 
     def containsKey(self, key):
         """Determines whether the given key is in this table.
-        
+
         :param key: the key to search for
         :type key: str
-        
+
         :returns: True if the table as a value assigned to the given key
         :rtype: bool
         """
@@ -270,10 +270,10 @@ class NetworkTable:
     def containsSubTable(self, key):
         """Determines whether there exists a non-empty subtable for this key
         in this table.
-        
+
         :param key: the key to search for (must not end with path separator)
         :type key: str
-        
+
         :returns: True if there is a subtable with the key which contains at least
                   one key/subtable of its own
         :rtype: bool
@@ -285,10 +285,10 @@ class NetworkTable:
         """
         :param types: bitmask of types; 0 is treated as a "don't care".
         :type types: :class:`.EntryTypes`
-        
+
         :returns: keys currently in the table
         :rtype: list
-        
+
         .. versionadded:: 2017.0.0
         """
         keys = []
@@ -304,7 +304,7 @@ class NetworkTable:
     def getSubTables(self):
         """:returns: subtables currently in the table
         :rtype: list
-        
+
         .. versionadded:: 2017.0.0
         """
         keys = set()
@@ -320,40 +320,40 @@ class NetworkTable:
 
     def setPersistent(self, key):
         """Makes a key's value persistent through program restarts.
-        
+
         :param key: the key to make persistent
         :type key: str
-        
+
         .. versionadded:: 2017.0.0
         """
         self.setFlags(key, NT_PERSISTENT)
 
     def clearPersistent(self, key):
         """Stop making a key's value persistent through program restarts.
-        
+
         :param key: the key name
         :type key: str
-        
+
         .. versionadded:: 2017.0.0
         """
         self.clearFlags(key, NT_PERSISTENT)
 
     def isPersistent(self, key):
         """Returns whether the value is persistent through program restarts.
-        
+
         :param key: the key name
         :type key: str
-        
+
         .. versionadded:: 2017.0.0
         """
         return self.getFlags(key) & NT_PERSISTENT != 0
 
     def delete(self, key):
         """Deletes the specified key in this table.
-        
+
         :param key: the key name
         :type key: str
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -361,12 +361,12 @@ class NetworkTable:
 
     def setFlags(self, key, flags):
         """Sets entry flags on the specified key in this table.
-        
+
         :param key: the key name
         :type key: str
         :param flags: the flags to set (bitmask)
         :type flags: :class:`.EntryFlags`
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -374,12 +374,12 @@ class NetworkTable:
 
     def clearFlags(self, key, flags):
         """Clears entry flags on the specified key in this table.
-        
+
         :param key: the key name
         :type key: str
         :param flags: the flags to clear (bitmask)
         :type flags: :class:`.EntryFlags`
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -387,12 +387,12 @@ class NetworkTable:
 
     def getFlags(self, key):
         """Returns the entry flags for the specified key.
-        
+
         :param key: the key name
         :type key: str
         :returns: the flags, or 0 if the key is not defined
         :rtype: :class:`.EntryFlags`
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -400,12 +400,12 @@ class NetworkTable:
 
     def putNumber(self, key, value):
         """Put a number in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: int, float
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
         """
@@ -415,15 +415,15 @@ class NetworkTable:
     def setDefaultNumber(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: int, float
-        
+
         :returns: False if the table key exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -431,12 +431,12 @@ class NetworkTable:
 
     def getNumber(self, key, defaultValue):
         """Gets the number associated with the given name.
-        
+
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
         :type defaultValue: int, float
-        
+
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
         :rtype: int, float
@@ -450,12 +450,12 @@ class NetworkTable:
 
     def putString(self, key, value):
         """Put a string in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: str
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
         """
@@ -465,15 +465,15 @@ class NetworkTable:
     def setDefaultString(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: str
-        
+
         :returns: False if the table key exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -482,12 +482,12 @@ class NetworkTable:
     def getString(self, key, defaultValue):
         """Gets the string associated with the given name. If the key does not
         exist or is of different type, it will return the default value.
-        
+
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
         :type defaultValue: str
-        
+
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
         :rtype: str
@@ -501,12 +501,12 @@ class NetworkTable:
 
     def putBoolean(self, key, value):
         """Put a boolean in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: bool
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
         """
@@ -516,14 +516,14 @@ class NetworkTable:
     def setDefaultBoolean(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: bool
-        
+
         :returns: False if the table key exists with a different type
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -538,7 +538,7 @@ class NetworkTable:
         :param defaultValue: the default value if the key is None.  If not
                              specified, raises KeyError if the key is None.
         :type defaultValue: bool
-        
+
         :returns: the key
         :rtype: bool
         """
@@ -551,15 +551,15 @@ class NetworkTable:
 
     def putBooleanArray(self, key, value):
         """Put a boolean array in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: iterable(bool)
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -568,15 +568,15 @@ class NetworkTable:
     def setDefaultBooleanArray(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: iterable(bool)
-        
+
         :returns: False if the table key exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -587,15 +587,15 @@ class NetworkTable:
     def getBooleanArray(self, key, defaultValue):
         """Returns the boolean array the key maps to. If the key does not exist or is
         of different type, it will return the default value.
-        
+
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
-        
+
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
         :rtype: tuple(bool)
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -607,15 +607,15 @@ class NetworkTable:
 
     def putNumberArray(self, key, value):
         """Put a number array in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: iterable(float)
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -624,15 +624,15 @@ class NetworkTable:
     def setDefaultNumberArray(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: iterable(int or float)
-        
+
         :returns: False if the table key exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -641,15 +641,15 @@ class NetworkTable:
     def getNumberArray(self, key, defaultValue):
         """Returns the number array the key maps to. If the key does not exist or is
         of different type, it will return the default value.
-        
+
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
-        
+
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
         :rtype: tuple(int or float)
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -661,15 +661,15 @@ class NetworkTable:
 
     def putStringArray(self, key, value):
         """Put a string array in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: iterable(str)
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -678,15 +678,15 @@ class NetworkTable:
     def setDefaultStringArray(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: iterable(str)
-        
+
         :returns: False if the table key exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -695,15 +695,15 @@ class NetworkTable:
     def getStringArray(self, key, defaultValue):
         """Returns the string array the key maps to. If the key does not exist or is
         of different type, it will return the default value.
-        
+
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
-        
+
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
         :rtype: tuple(str)
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -715,15 +715,15 @@ class NetworkTable:
 
     def putRaw(self, key, value):
         """Put a raw value (byte array) in the table
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: bytes
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -732,15 +732,15 @@ class NetworkTable:
     def setDefaultRaw(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: bytes
-        
+
         :returns: False if the table key exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -749,16 +749,16 @@ class NetworkTable:
     def getRaw(self, key, defaultValue):
         """Returns the raw value (byte array) the key maps to. If the key does not
         exist or is of different type, it will return the default value.
-        
+
         :param key: the key to look up
         :type key: str
         :param defaultValue: the value to be returned if no value is found
         :type defaultValue: bytes
-        
+
         :returns: the value associated with the given key or the given default value
                   if there is no value associated with the key
         :rtype: bytes
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -771,7 +771,7 @@ class NetworkTable:
     def putValue(self, key, value):
         """Put a value in the table, trying to autodetect the NT type of
         the value. Refer to this table to determine the type mapping:
-        
+
         ======= ============================ =================================
         PyType  NT Type                       Notes
         ======= ============================ =================================
@@ -783,15 +783,15 @@ class NetworkTable:
         list    Error                        Use `putXXXArray` methods instead
         tuple   Error                        Use `putXXXArray` methods instead
         ======= ============================ =================================
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param value: the value that will be assigned
         :type value: bool, int, float, str, bytes
-        
+
         :returns: False if the table key already exists with a different type
         :rtype: bool
-        
+
         .. versionadded:: 2017.0.0
         """
         value = Value.getFactory(value)(value)
@@ -801,16 +801,16 @@ class NetworkTable:
     def setDefaultValue(self, key, defaultValue):
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
-        
+
         :param key: the key to be assigned to
         :type key: str
         :param defaultValue: the default value to set if key doesn't exist.
         :type defaultValue: bool, int, float, str, bytes
-        
+
         :returns: False if the table key exists with a different type
-        
+
         .. versionadded:: 2017.0.0
-        
+
         .. seealso:: :meth:`.putValue`
         """
         defaultValue = Value.getFactory(defaultValue)(defaultValue)
@@ -820,15 +820,15 @@ class NetworkTable:
     def getValue(self, key, defaultValue):
         """Gets the value associated with a key. This supports all
         NetworkTables types (unlike :meth:`putValue`).
-        
+
         :param key: the key of the value to look up
         :type key: str
         :param defaultValue: The default value to return if the key doesn't exist
         :type defaultValue: any
-        
+
         :returns: the value associated with the given key
         :rtype: bool, int, float, str, bytes, tuple
-        
+
         .. versionadded:: 2017.0.0
         """
         path = self._path + key
@@ -841,7 +841,7 @@ class NetworkTable:
     def getAutoUpdateValue(self, key, defaultValue, writeDefault=True):
         """Returns an object that will be automatically updated when the
         value is updated by networktables.
-        
+
         :param key: the key name
         :type  key: str
         :param defaultValue: Default value to use if not in the table
@@ -849,21 +849,21 @@ class NetworkTable:
         :param writeDefault: If True, put the default value to the table,
                              overwriting existing values
         :type  writeDefault: bool
-        
+
         :rtype: :class:`.NetworkTableEntry`
-        
+
         .. note:: If you modify the returned value, the value will NOT
                   be written back to NetworkTables (though now there are functions
                   you can use to write values). See :func:`.ntproperty` if
                   you're looking for that sort of thing.
-        
+
         .. seealso:: :func:`.ntproperty` is a better alternative to use
-        
+
         .. versionadded:: 2015.1.3
-        
+
         .. versionchanged:: 2018.0.0
            This now returns the same as :meth:`.NetworkTable.getEntry`
-        
+
         """
         return self._inst.getGlobalAutoUpdateValue(
             self._path + key, defaultValue, writeDefault

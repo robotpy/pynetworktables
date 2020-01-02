@@ -1,5 +1,5 @@
 import pytest
-from networktables.entry import NetworkTableEntry
+from pynetworktables.entry import NetworkTableEntry
 
 
 @pytest.mark.parametrize(
