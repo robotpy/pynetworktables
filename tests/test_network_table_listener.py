@@ -5,7 +5,7 @@
 from unittest.mock import call, Mock
 import pytest
 
-from networktables import NetworkTables
+from pynetworktables import NetworkTables
 
 
 @pytest.fixture(scope="function")

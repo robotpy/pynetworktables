@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 
 setup_dir = dirname(__file__)
 git_dir = join(setup_dir, ".git")
-version_file = join(setup_dir, "ntcore", "version.py")
+version_file = join(setup_dir, "pynetworktables", "_impl", "version.py")
 
 # Automatically generate a version.py based on the git version
 if exists(git_dir):

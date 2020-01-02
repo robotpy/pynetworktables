@@ -1,4 +1,4 @@
-from ntcore.constants import (
+from ._impl.constants import (
     NT_BOOLEAN,
     NT_DOUBLE,
     NT_STRING,
@@ -9,7 +9,7 @@ from ntcore.constants import (
     NT_PERSISTENT,
 )
 
-from ntcore.value import Value
+from ._impl.value import Value
 
 __all__ = ["NetworkTableEntry"]
 
@@ -20,10 +20,10 @@ class NetworkTableEntry(object):
         come in. Do not create this object directly, use
         :func:`.NetworkTablesInstance.getEntry` or :meth:`.NetworkTable.getEntry`
         to obtain an instance of this class.
-        
+
         Using NetworkTableEntry objects to access/change NT values is more
         efficient than the getX/putX methods of :class:`.NetworkTable`.
-    
+
         .. versionadded:: 2018.0.0
     """
 
@@ -50,21 +50,21 @@ class NetworkTableEntry(object):
 
     def getType(self):
         """Gets the type of the entry
-        
+
         :rtype: :class:`.NetworkTablesInstance.EntryTypes`
         """
         return self.__api.getEntryTypeById(self._local_id)
 
     def getFlags(self):
         """Returns the flags.
-        
+
         :returns: the flags (bitmask)
         """
         return self.__api.getEntryFlagsById(self._local_id)
 
     def getInfo(self):
         """Gets combined information about the entry.
-        
+
         :returns: Entry information
         :rtype: tuple of (name, type, flags)
         """
@@ -90,7 +90,7 @@ class NetworkTableEntry(object):
     def getBoolean(self, defaultValue):
         """Gets the entry's value as a boolean. If the entry does not exist or is of
         different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: bool
@@ -103,7 +103,7 @@ class NetworkTableEntry(object):
     def getDouble(self, defaultValue):
         """Gets the entry's value as a double. If the entry does not exist or is of
         different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: float
@@ -118,7 +118,7 @@ class NetworkTableEntry(object):
     def getString(self, defaultValue):
         """Gets the entry's value as a string. If the entry does not exist or is of
         different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: str
@@ -131,7 +131,7 @@ class NetworkTableEntry(object):
     def getRaw(self, defaultValue):
         """Gets the entry's value as a raw value (byte array). If the entry does not
         exist or is of different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: bytes
@@ -144,7 +144,7 @@ class NetworkTableEntry(object):
     def getBooleanArray(self, defaultValue):
         """Gets the entry's value as a boolean array. If the entry does not
         exist or is of different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: list(bool)
@@ -157,7 +157,7 @@ class NetworkTableEntry(object):
     def getDoubleArray(self, defaultValue):
         """Gets the entry's value as a double array. If the entry does not
         exist or is of different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: list(float)
@@ -170,7 +170,7 @@ class NetworkTableEntry(object):
     def getStringArray(self, defaultValue):
         """Gets the entry's value as a string array. If the entry does not
         exist or is of different type, it will return the default value.
-        
+
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
         :rtype: list(float)
@@ -193,10 +193,10 @@ class NetworkTableEntry(object):
 
     def setDefaultValue(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
-        
+
         .. warning:: Do not set an empty list, it will fail
         """
         value = Value.getFactory(defaultValue)(defaultValue)
@@ -204,7 +204,7 @@ class NetworkTableEntry(object):
 
     def setDefaultBoolean(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -213,7 +213,7 @@ class NetworkTableEntry(object):
 
     def setDefaultDouble(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -224,7 +224,7 @@ class NetworkTableEntry(object):
 
     def setDefaultString(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -233,7 +233,7 @@ class NetworkTableEntry(object):
 
     def setDefaultRaw(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -242,7 +242,7 @@ class NetworkTableEntry(object):
 
     def setDefaultBooleanArray(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -251,7 +251,7 @@ class NetworkTableEntry(object):
 
     def setDefaultDoubleArray(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -262,7 +262,7 @@ class NetworkTableEntry(object):
 
     def setDefaultStringArray(self, defaultValue):
         """Sets the entry's value if it does not exist.
-        
+
         :param defaultValue: the default value to set
         :returns: False if the entry exists with a different type
         """
@@ -271,10 +271,10 @@ class NetworkTableEntry(object):
 
     def setValue(self, value):
         """Sets the entry's value
-        
+
         :param value: the value that will be assigned
         :returns: False if the table key already exists with a different type
-        
+
         .. warning:: Empty lists will fail
         """
         value = Value.getFactory(value)(value)
@@ -282,7 +282,7 @@ class NetworkTableEntry(object):
 
     def setBoolean(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -291,7 +291,7 @@ class NetworkTableEntry(object):
 
     def setDouble(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -302,7 +302,7 @@ class NetworkTableEntry(object):
 
     def setString(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -311,7 +311,7 @@ class NetworkTableEntry(object):
 
     def setRaw(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -320,7 +320,7 @@ class NetworkTableEntry(object):
 
     def setBooleanArray(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -329,7 +329,7 @@ class NetworkTableEntry(object):
 
     def setDoubleArray(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -340,7 +340,7 @@ class NetworkTableEntry(object):
 
     def setStringArray(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         :returns: False if the entry exists with a different type
         """
@@ -349,9 +349,9 @@ class NetworkTableEntry(object):
 
     def forceSetValue(self, value):
         """Sets the entry's value
-        
+
         :param value: the value that will be assigned
-        
+
         .. warning:: Empty lists will fail
         """
         value = Value.getFactory(value)(value)
@@ -359,7 +359,7 @@ class NetworkTableEntry(object):
 
     def forceSetBoolean(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeBoolean(value)
@@ -367,7 +367,7 @@ class NetworkTableEntry(object):
 
     def forceSetDouble(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeDouble(value)
@@ -377,7 +377,7 @@ class NetworkTableEntry(object):
 
     def forceSetString(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeString(value)
@@ -385,7 +385,7 @@ class NetworkTableEntry(object):
 
     def forceSetRaw(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeRaw(value)
@@ -393,7 +393,7 @@ class NetworkTableEntry(object):
 
     def forceSetBooleanArray(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeBooleanArray(value)
@@ -401,7 +401,7 @@ class NetworkTableEntry(object):
 
     def forceSetDoubleArray(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeDoubleArray(value)
@@ -411,7 +411,7 @@ class NetworkTableEntry(object):
 
     def forceSetStringArray(self, value):
         """Sets the entry's value.
-        
+
         :param value: the value to set
         """
         value = Value.makeStringArray(value)
@@ -419,7 +419,7 @@ class NetworkTableEntry(object):
 
     def setFlags(self, flags):
         """Sets flags.
-        
+
         :param flags: the flags to set (bitmask)
         """
         flags = self.getFlags() | flags
@@ -427,7 +427,7 @@ class NetworkTableEntry(object):
 
     def clearFlags(self, flags):
         """Clears flags
-        
+
         :param flags: the flags to clear (bitmask)
         """
         flags = self.getFlags() & ~flags
@@ -443,7 +443,7 @@ class NetworkTableEntry(object):
 
     def isPersistent(self):
         """Returns whether the value is persistent through program restarts.
-        
+
         :returns: True if the value is persistent.
         """
         return (self.getFlags() & NT_PERSISTENT) != 0
@@ -458,7 +458,7 @@ class NetworkTableEntry(object):
 
     def addListener(self, listener, flags, paramIsNew=True):
         """Add a listener for changes to the entry
-        
+
         :param listener: the listener to add
         :type listener: `callable(entry, key, value, param)`
         :param flags: bitmask specifying desired notifications
@@ -468,7 +468,7 @@ class NetworkTableEntry(object):
                            table. Otherwise, the parameter is an integer of the raw
                            `NT_NOTIFY_*` flags
         :type paramIsNew: bool
-        
+
         :returns: listener handle
         """
         return self.__api.addEntryListenerByIdEx(
@@ -477,7 +477,7 @@ class NetworkTableEntry(object):
 
     def removeListener(self, listener_id):
         """Remove a listener from receiving entry events
-        
+
         :param listener: the callable that was passed to addListener
         """
         self.__api.removeEntryListener(listener_id)

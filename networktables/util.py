@@ -1,7 +1,8 @@
 from typing import Callable, Optional, Sequence
 
-from ntcore.value import Value
-from .instance import NetworkTablesInstance
+from pynetworktables._impl.value import Value
+
+from . import NetworkTablesInstance
 
 __all__ = ["ntproperty", "ChooserControl"]
 

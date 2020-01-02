@@ -19,12 +19,12 @@ NetworkTables API
 NetworkTable Objects
 --------------------
 
-.. autoclass:: networktables.networktable.NetworkTable
+.. autoclass:: networktables.NetworkTable
     :members:
     :undoc-members:
     :exclude-members: addTableListener, addTableListenerEx, removeTableListener
 
-.. autoclass:: networktables.entry.NetworkTableEntry
+.. autoclass:: networktables.NetworkTableEntry
     :members:
     :undoc-members:
 

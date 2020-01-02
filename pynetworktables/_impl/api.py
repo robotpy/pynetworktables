@@ -7,7 +7,7 @@ from .entry_notifier import EntryNotifier
 from .rpc_server import RpcServer
 from .storage import Storage
 
-from ntcore.constants import NT_NOTIFY_IMMEDIATE, NT_NOTIFY_NEW
+from .constants import NT_NOTIFY_IMMEDIATE, NT_NOTIFY_NEW
 
 _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
 
@@ -15,7 +15,7 @@ _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
 class NtCoreApi(object):
     """
         Internal NetworkTables API wrapper
-        
+
         In theory you could create multiple instances of this
         and talk to multiple NT servers or create multiple
         NT servers... though, I don't really know why one

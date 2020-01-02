@@ -13,9 +13,9 @@ import pytest
 
 from threading import Condition
 
-from ntcore.constants import NT_NOTIFY_LOCAL, NT_NOTIFY_NEW
+from pynetworktables._impl.constants import NT_NOTIFY_LOCAL, NT_NOTIFY_NEW
 
-from ntcore.value import Value
+from pynetworktables._impl.value import Value
 
 
 class SC(object):

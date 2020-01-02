@@ -3,7 +3,11 @@ from io import BytesIO
 
 import pytest
 
-from ntcore.support.leb128 import size_uleb128, encode_uleb128, read_uleb128
+from pynetworktables._impl.support.leb128 import (
+    size_uleb128,
+    encode_uleb128,
+    read_uleb128,
+)
 
 
 def test_size():
