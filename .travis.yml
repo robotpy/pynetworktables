@@ -12,7 +12,7 @@ matrix:
 
 jobs:
   include:
-  - stage: format-check
+  - name: format-check
     python:
     - "3.6"
     install:
