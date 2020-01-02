@@ -7,6 +7,7 @@ from ._impl import constants
 from ._impl.api import NtCoreApi
 
 from .entry import NetworkTableEntry
+from .table import NetworkTable
 
 import logging
 
@@ -245,8 +246,6 @@ class NetworkTablesInstance:
 
         table = self._tables.get(path)
         if table is None:
-            from .networktable import NetworkTable
-
             table = NetworkTable(path, self._api, self)
             table = self._tables.setdefault(path, table)
         return table
