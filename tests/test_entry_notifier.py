@@ -11,7 +11,7 @@
 
 import pytest
 
-from pynetworktables._impl.constants import (
+from _pynetworktables._impl.constants import (
     NT_NOTIFY_IMMEDIATE,
     NT_NOTIFY_LOCAL,
     NT_NOTIFY_NEW,
@@ -20,8 +20,8 @@ from pynetworktables._impl.constants import (
     NT_NOTIFY_FLAGS,
 )
 
-from pynetworktables._impl.entry_notifier import EntryNotifier
-from pynetworktables._impl.value import Value
+from _pynetworktables._impl.entry_notifier import EntryNotifier
+from _pynetworktables._impl.value import Value
 
 
 @pytest.fixture

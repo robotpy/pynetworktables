@@ -29,7 +29,7 @@ sd = NetworkTables.getTable("SmartDashboard")
 
 i = 0
 while True:
-    print("robotTime:", sd.getNumber("robotTime", "N/A"))
+    print("robotTime:", sd.getNumber("robotTime", -1))
 
     sd.putNumber("dsTime", i)
     time.sleep(1)

@@ -1,8 +1,8 @@
 from typing import Callable, Optional, Sequence
 
-from pynetworktables._impl.value import Value
+# from pynetworktables._impl.value import Value
 
-from . import NetworkTablesInstance
+from . import NetworkTablesInstance, Value
 
 __all__ = ["ntproperty", "ChooserControl"]
 
@@ -26,6 +26,11 @@ class _NtProperty:
         if persistent:
             self.writeDefault = False
         self.inst = inst
+        if hasattr(self.inst, '_api'):
+            self.set = self._set_pynetworktables
+        else:
+            self.set = self._set_pyntcore
+
         self.reset()
 
     def reset(self):
@@ -36,14 +41,17 @@ class _NtProperty:
             self.ntvalue.setPersistent()
 
         # this is an optimization, but presumes the value type never changes
-        self.mkv = Value.getFactoryByType(self.ntvalue._value[0])
+        print(self.ntvalue.getType())
+        self.mkv = Value.getFactoryByType(self.ntvalue.getType())
 
     def get(self, _):
         return self.ntvalue.value
 
-    def set(self, _, value):
+    def _set_pynetworktables(self, _, value):
         self.inst._api.setEntryValueById(self.ntvalue._local_id, self.mkv(value))
 
+    def _set_pyntcore(self, _, value):
+        self.ntvalue.setValue(self.mkv(value))
 
 def ntproperty(
     key: str,
@@ -104,7 +112,10 @@ def ntproperty(
             The *persistent* parameter.
     """
     ntprop = _NtProperty(key, defaultValue, writeDefault, persistent, inst)
-    inst._ntproperties.add(ntprop)
+    try:
+        inst._ntproperties.add(ntprop)
+    except AttributeError:
+        pass # pyntcore compat
 
     return property(fget=ntprop.get, fset=ntprop.set, doc=doc)
 

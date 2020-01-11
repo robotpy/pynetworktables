@@ -1,4 +1,4 @@
-from pynetworktables._impl.storage import _Entry
+from _pynetworktables._impl.storage import _Entry
 
 
 def test_sequence_numbers():

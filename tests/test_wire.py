@@ -8,10 +8,10 @@ from io import BytesIO
 
 import pytest
 
-from pynetworktables._impl.message import Message, MessageType
-from pynetworktables._impl.value import Value
-from pynetworktables._impl.tcpsockets.tcp_stream import TCPStream, StreamEOF
-from pynetworktables._impl.wire import WireCodec
+from _pynetworktables._impl.message import Message, MessageType
+from _pynetworktables._impl.value import Value
+from _pynetworktables._impl.tcpsockets.tcp_stream import TCPStream, StreamEOF
+from _pynetworktables._impl.wire import WireCodec
 
 
 class ReadStream(TCPStream):

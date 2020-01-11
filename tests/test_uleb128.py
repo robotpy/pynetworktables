@@ -3,7 +3,7 @@ from io import BytesIO
 
 import pytest
 
-from pynetworktables._impl.support.leb128 import (
+from _pynetworktables._impl.support.leb128 import (
     size_uleb128,
     encode_uleb128,
     read_uleb128,

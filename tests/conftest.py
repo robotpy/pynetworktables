@@ -17,7 +17,7 @@ logger = logging.getLogger("conftest")
 
 import pytest
 
-from pynetworktables import NetworkTables, NetworkTablesInstance
+from _pynetworktables import NetworkTables, NetworkTablesInstance
 
 #
 # Fixtures for a usable in-memory version of networktables
