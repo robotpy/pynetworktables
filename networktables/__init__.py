@@ -6,6 +6,7 @@ try:
         NetworkTable,
         NetworkTableEntry,
         Value,
+        __version__,
     )
 
     nt_backend = "pyntcore"
@@ -16,6 +17,7 @@ except ImportError as e:
         NetworkTable,
         NetworkTableEntry,
         Value,
+        __version__,
     )
 
     nt_backend = "pynetworktables"
@@ -28,5 +30,3 @@ __all__ = (
     "NetworkTableEntry",
     "Value",
 )
-
-__all__ = ("NetworkTables", "NetworkTablesInstance")
