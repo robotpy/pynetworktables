@@ -26,7 +26,7 @@ class _NtProperty:
         if persistent:
             self.writeDefault = False
         self.inst = inst
-        if hasattr(self.inst, '_api'):
+        if hasattr(self.inst, "_api"):
             self.set = self._set_pynetworktables
         else:
             self.set = self._set_pyntcore
@@ -52,6 +52,7 @@ class _NtProperty:
 
     def _set_pyntcore(self, _, value):
         self.ntvalue.setValue(self.mkv(value))
+
 
 def ntproperty(
     key: str,
@@ -115,7 +116,7 @@ def ntproperty(
     try:
         inst._ntproperties.add(ntprop)
     except AttributeError:
-        pass # pyntcore compat
+        pass  # pyntcore compat
 
     return property(fget=ntprop.get, fset=ntprop.set, doc=doc)
 
