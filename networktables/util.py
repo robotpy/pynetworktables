@@ -41,7 +41,6 @@ class _NtProperty:
             self.ntvalue.setPersistent()
 
         # this is an optimization, but presumes the value type never changes
-        print(self.ntvalue.getType())
         self.mkv = Value.getFactoryByType(self.ntvalue.getType())
 
     def get(self, _):
