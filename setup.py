@@ -48,6 +48,7 @@ setup(
     url="https://github.com/robotpy/pynetworktables",
     keywords="frc first robotics wpilib networktables",
     packages=find_packages(exclude="tests"),
+    package_data={"networktables": ["py.typed"], "_pynetworktables": ["py.typed"]},
     python_requires=">=3.5",
     license="BSD-3-Clause",
     classifiers=[
