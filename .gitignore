@@ -4,7 +4,7 @@ dist
 docs/_build
 docs/_sidebar.rst.inc
 
-pynetworktables/_impl/version.py
+_pynetworktables/_impl/version.py
 
 *.egg-info
 *.py[cod]
