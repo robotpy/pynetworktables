@@ -1,6 +1,6 @@
 # todo: tracks NetworkTablesInstance.java
 
-
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
 from weakref import WeakSet
 
 from ._impl import constants
@@ -14,6 +14,8 @@ import logging
 logger = logging.getLogger("nt")
 
 __all__ = ["NetworkTablesInstance"]
+
+ServerPortPair = Tuple[str, int]
 
 
 class NetworkTablesInstance:
@@ -180,7 +182,7 @@ class NetworkTablesInstance:
     def __createEntry(self, key, local_id):
         return NetworkTableEntry(self._api, local_id, key)
 
-    def getEntry(self, name):
+    def getEntry(self, name: str) -> NetworkTableEntry:
         """Gets the entry for a key.
 
         :param name: Absolute path of key
@@ -191,7 +193,7 @@ class NetworkTablesInstance:
         assert name.startswith("/")
         return self._api.getEntry(name)
 
-    def getEntries(self, prefix, types=0):
+    def getEntries(self, prefix: str, types: int = 0) -> Sequence[NetworkTableEntry]:
         """Get entries starting with the given prefix.
         The results are optionally filtered by string prefix and entry type to
         only return a subset of all entries.
@@ -206,7 +208,7 @@ class NetworkTablesInstance:
         """
         return self._api.getEntries(prefix, types)
 
-    def getEntryInfo(self, prefix, types=0):
+    def getEntryInfo(self, prefix: str, types: int = 0) -> Sequence:
         """Get information about entries starting with the given prefix.
         The results are optionally filtered by string prefix and entry type to
         only return a subset of all entries.
@@ -220,14 +222,12 @@ class NetworkTablesInstance:
         """
         return self._api.getEntryInfo(prefix, types)
 
-    def getTable(self, key):
+    def getTable(self, key: str) -> NetworkTable:
         """Gets the table with the specified key.
 
         :param key: the key name
-        :type key: str
 
         :returns: the network table requested
-        :rtype: :class:`.NetworkTable`
 
         .. versionchanged:: 2018.0.0
            No longer automatically initializes network tables
@@ -250,7 +250,7 @@ class NetworkTablesInstance:
             table = self._tables.setdefault(path, table)
         return table
 
-    def deleteAllEntries(self):
+    def deleteAllEntries(self) -> None:
         """Deletes ALL keys in ALL subtables (except persistent values).
         Use with caution!
 
@@ -262,8 +262,12 @@ class NetworkTablesInstance:
     globalDeleteAll = deleteAllEntries
 
     def addEntryListener(
-        self, listener, immediateNotify=True, localNotify=True, paramIsNew=True
-    ):
+        self,
+        listener: Callable[[str, Any, int], None],
+        immediateNotify: bool = True,
+        localNotify: bool = True,
+        paramIsNew: bool = True,
+    ) -> None:
         """Adds a listener that will be notified when any key in any
         NetworkTable is changed. The keys that are received using this
         listener will be full NetworkTable keys. Most users will not
@@ -274,14 +278,11 @@ class NetworkTablesInstance:
 
         :param listener: A callable that has this signature: `callable(key, value, isNew)`
         :param immediateNotify: If True, the listener will be called immediately with the current values of the table
-        :type immediateNotify: bool
         :param localNotify: True if you wish to be notified of changes made locally (default is True)
-        :type localNotify: bool
         :param paramIsNew: If True, the listener third parameter is a boolean set to True
                            if the listener is being called because of a new value in the
                            table. Otherwise, the parameter is an integer of the raw
                            `NT_NOTIFY_*` flags
-        :type paramIsNew: bool
 
         .. versionadded:: 2015.2.0
 
@@ -303,7 +304,12 @@ class NetworkTablesInstance:
             localNotify=localNotify,
         )
 
-    def addEntryListenerEx(self, listener, flags, paramIsNew=True):
+    def addEntryListenerEx(
+        self,
+        listener: Callable[[str, Any, int], None],
+        flags: int,
+        paramIsNew: bool = True,
+    ) -> None:
         """Adds a listener that will be notified when any key in any
         NetworkTable is changed. The keys that are received using this
         listener will be full NetworkTable keys. Most users will not
@@ -319,7 +325,6 @@ class NetworkTablesInstance:
                            if the listener is being called because of a new value in the
                            table. Otherwise, the parameter is an integer of the raw
                            `NT_NOTIFY_*` flags
-        :type paramIsNew: bool
 
         .. versionadded:: 2017.0.0
 
@@ -336,7 +341,7 @@ class NetworkTablesInstance:
     addGlobalListener = addEntryListener
     addGlobalListenerEx = addEntryListenerEx
 
-    def removeEntryListener(self, listener):
+    def removeEntryListener(self, listener: Callable[[str, Any, int], None]) -> None:
         """Remove an entry listener.
 
         :param listener: Listener to remove
@@ -349,7 +354,7 @@ class NetworkTablesInstance:
     # Deprecated alias
     removeGlobalListener = removeEntryListener
 
-    def waitForEntryListenerQueue(self, timeout):
+    def waitForEntryListenerQueue(self, timeout: float) -> bool:
         """Wait for the entry listener queue to be empty.  This is primarily useful
         for deterministic testing.  This blocks until either the entry listener
         queue is empty (e.g. there are no more events that need to be passed along
@@ -363,7 +368,7 @@ class NetworkTablesInstance:
         """
         return self._api.waitForEntryListenerQueue(timeout)
 
-    def addConnectionListener(self, listener, immediateNotify=False):
+    def addConnectionListener(self, listener: Callable, immediateNotify: bool = False):
         """Adds a listener that will be notified when a new connection to a
         NetworkTables client/server is established.
 
@@ -375,7 +380,6 @@ class NetworkTablesInstance:
 
         :param immediateNotify: If True, the listener will be called immediately
                                 with any active connection information
-        :type immediateNotify: bool
 
         .. warning:: You may call the NetworkTables API from within the
                      listener, but it is not recommended.
@@ -388,7 +392,7 @@ class NetworkTablesInstance:
         listener_id = self._api.addConnectionListener(cb, immediateNotify)
         self._conn_listeners.setdefault(listener, []).append(listener_id)
 
-    def removeConnectionListener(self, listener):
+    def removeConnectionListener(self, listener: Callable):
         """Removes a connection listener
 
         :param listener: The function registered for connection notifications
@@ -396,7 +400,7 @@ class NetworkTablesInstance:
         for listener_id in self._conn_listeners.pop(listener, []):
             self._api.removeConnectionListener(listener_id)
 
-    def waitForConnectionListenerQueue(self, timeout):
+    def waitForConnectionListenerQueue(self, timeout: float) -> bool:
         """Wait for the connection listener queue to be empty.  This is primarily useful
         for deterministic testing.  This blocks until either the connection listener
         queue is empty (e.g. there are no more events that need to be passed along
@@ -414,13 +418,12 @@ class NetworkTablesInstance:
     # Client/Server functions
     #
 
-    def setNetworkIdentity(self, name):
+    def setNetworkIdentity(self, name: str) -> None:
         """Sets the network identity of this node. This is the name used in the
         initial connection handshake, and is provided in the connection info
         on the remote end.
 
         :param name: A string to communicate to other NetworkTables instances
-        :type name: str
 
         .. versionadded:: 2017.0.0
         """
@@ -433,15 +436,15 @@ class NetworkTablesInstance:
         """
         return self._api.getNetworkMode()
 
-    def isServer(self):
+    def isServer(self) -> bool:
         """:returns: True if configured in server mode"""
         return (self.getNetworkMode() & self.NetworkModes.SERVER) != 0
 
     def startServer(
         self,
-        persistFilename="networktables.ini",
-        listenAddress="",
-        port=constants.NT_DEFAULT_PORT,
+        persistFilename: str = "networktables.ini",
+        listenAddress: str = "",
+        port: int = constants.NT_DEFAULT_PORT,
     ):
         """Starts a server using the specified filename, listening address, and port.
 
@@ -454,14 +457,17 @@ class NetworkTablesInstance:
         """
         return self._api.startServer(persistFilename, listenAddress, port)
 
-    def stopServer(self):
+    def stopServer(self) -> None:
         """Stops the server if it is running.
 
         .. versionadded:: 2018.0.0
         """
         self._api.stopServer()
 
-    def startClient(self, server_or_servers):
+    def startClient(
+        self,
+        server_or_servers: Union[str, ServerPortPair, List[ServerPortPair], List[str]],
+    ):
         """Sets server addresses and port for client (without restarting client).
         The client will attempt to connect to each server in round robin fashion.
 
@@ -473,7 +479,7 @@ class NetworkTablesInstance:
         self.setServer(server_or_servers)
         return self._api.startClient()
 
-    def startClientTeam(self, team, port=constants.NT_DEFAULT_PORT):
+    def startClientTeam(self, team: int, port: int = constants.NT_DEFAULT_PORT):
         """Starts a client using commonly known robot addresses for the specified
         team.
 
@@ -485,14 +491,17 @@ class NetworkTablesInstance:
         self.setServerTeam(team, port)
         return self._api.startClient()
 
-    def stopClient(self):
+    def stopClient(self) -> None:
         """Stops the client if it is running.
 
         .. versionadded:: 2018.0.0
         """
         self._api.stopClient()
 
-    def setServer(self, server_or_servers):
+    def setServer(
+        self,
+        server_or_servers: Union[str, ServerPortPair, List[ServerPortPair], List[str]],
+    ) -> None:
         """Sets server addresses and port for client (without restarting client).
         The client will attempt to connect to each server in round robin fashion.
 
@@ -511,7 +520,7 @@ class NetworkTablesInstance:
 
         self._api.setServer(server_or_servers)
 
-    def setServerTeam(self, team, port=constants.NT_DEFAULT_PORT):
+    def setServerTeam(self, team: int, port: int = constants.NT_DEFAULT_PORT) -> None:
         """Sets server addresses and port for client based on the team number
         (without restarting client). The client will attempt to connect to each
         server in round robin fashion.
@@ -523,7 +532,7 @@ class NetworkTablesInstance:
         """
         self._api.setServerTeam(team, port)
 
-    def startDSClient(self, port=constants.NT_DEFAULT_PORT):
+    def startDSClient(self, port: int = constants.NT_DEFAULT_PORT) -> None:
         """Starts requesting server address from Driver Station.
         This connects to the Driver Station running on localhost to obtain the
         server IP address.
@@ -537,7 +546,7 @@ class NetworkTablesInstance:
 
     setDashboardMode = startDSClient
 
-    def setUpdateRate(self, interval):
+    def setUpdateRate(self, interval: float) -> None:
         """Sets the period of time between writes to the network.
 
         WPILib's networktables and SmartDashboard default to 100ms, we have
@@ -547,7 +556,6 @@ class NetworkTablesInstance:
 
         :param interval: Write flush period in seconds (default is 0.050,
                          or 50ms)
-        :type interval: float
 
         .. warning:: If you don't know what this setting affects, don't mess
                      with it!
@@ -556,7 +564,7 @@ class NetworkTablesInstance:
         """
         self._api.setUpdateRate(interval)
 
-    def flush(self):
+    def flush(self) -> None:
         """Flushes all updated values immediately to the network.
 
         .. note:: This is rate-limited to protect the network from flooding.
@@ -567,7 +575,7 @@ class NetworkTablesInstance:
         """
         self._api.flush()
 
-    def getConnections(self):
+    def getConnections(self) -> Sequence:
         """Gets information on the currently established network connections.
         If operating as a client, this will return either zero or one values.
 
@@ -578,31 +586,28 @@ class NetworkTablesInstance:
         """
         return self._api.getConnections()
 
-    def getRemoteAddress(self):
+    def getRemoteAddress(self) -> Optional[str]:
         """
             Only returns a valid address if connected to the server. If
             this is a server, returns None
 
             :returns: IP address of server or None
-            :rtype: str
 
             .. versionadded:: 2015.3.2
         """
         return self._api.getRemoteAddress()
 
-    def isConnected(self):
+    def isConnected(self) -> bool:
         """
             :returns: True if connected to at least one other NetworkTables
                       instance
-            :rtype: bool
         """
         return self._api.getIsConnected()
 
-    def savePersistent(self, filename):
+    def savePersistent(self, filename: str):
         """Saves persistent keys to a file. The server does this automatically.
 
         :param filename: Name of file to save keys to
-        :type filename: str
 
         :returns: None if success, or a string describing the error on failure
 
@@ -610,12 +615,11 @@ class NetworkTablesInstance:
         """
         return self._api.savePersistent(filename)
 
-    def loadPersistent(self, filename):
+    def loadPersistent(self, filename: str):
         """Loads persistent keys from a file. WPILib will do this automatically
         on a robot server.
 
         :param filename: Name of file to load keys from
-        :type filename: str
 
         :returns: None if success, or a string describing the error on failure
 
@@ -623,7 +627,7 @@ class NetworkTablesInstance:
         """
         return self._api.loadPersistent(filename)
 
-    def saveEntries(self, filename, prefix):
+    def saveEntries(self, filename: str, prefix: str):
         """Save table values to a file.  The file format used is identical to
         that used for SavePersistent.
 
@@ -636,7 +640,7 @@ class NetworkTablesInstance:
         """
         return self._api.saveEntries(filename, prefix)
 
-    def loadEntries(self, filename, prefix):
+    def loadEntries(self, filename: str, prefix: str):
         """Load table values from a file.  The file format used is identical to
         that used for SavePersistent / LoadPersistent.
 
@@ -674,7 +678,7 @@ class NetworkTablesInstance:
         else:
             return self.startServer()
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Stops all NetworkTables activities and unregisters all tables
         and callbacks. You can call :meth:`.initialize` again after
         calling this.
@@ -687,7 +691,7 @@ class NetworkTablesInstance:
 
         self._init()
 
-    def startTestMode(self, server=True):
+    def startTestMode(self, server: bool = True):
         """Setup network tables to run in unit test mode, and enables verbose
         logging.
 
@@ -698,7 +702,7 @@ class NetworkTablesInstance:
         self.enableVerboseLogging()
         return self._api.startTestMode(server)
 
-    def enableVerboseLogging(self):
+    def enableVerboseLogging(self) -> None:
         """Enable verbose logging that can be useful when trying to diagnose
         NetworkTables issues.
 
@@ -709,7 +713,7 @@ class NetworkTablesInstance:
         """
         self._api.setVerboseLogging(True)
 
-    def getGlobalTable(self):
+    def getGlobalTable(self) -> NetworkTable:
         """Returns an object that allows you to write values to absolute
         NetworkTable keys (which are paths with / separators).
 
@@ -720,20 +724,17 @@ class NetworkTablesInstance:
            Returns a NetworkTable instance
         .. versionchanged:: 2018.0.0
            No longer automatically initializes network tables
-
-        :rtype: :class:`.NetworkTable`
         """
         return self.getTable("/")
 
-    def getGlobalAutoUpdateValue(self, key, defaultValue, writeDefault):
+    def getGlobalAutoUpdateValue(
+        self, key: str, defaultValue, writeDefault: bool
+    ) -> NetworkTableEntry:
         """Global version of getAutoUpdateValue.
 
         :param key: the full NT path of the value (must start with /)
-        :type key: str
         :param defaultValue: The default value to return if the key doesn't exist
-        :type defaultValue: any
         :param writeDefault: If True, force the value to the specified default
-        :type writeDefault: bool
 
         :rtype: :class:`.NetworkTableEntry`
 
