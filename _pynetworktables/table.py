@@ -85,6 +85,7 @@ class NetworkTable:
 
         :returns: The path (e.g "", "/foo").
         """
+        return self._path
 
     def addEntryListener(
         self,
