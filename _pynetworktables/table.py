@@ -80,6 +80,12 @@ class NetworkTable:
         """
         return self._inst.getEntry(self._path + key)
 
+    def getPath(self) -> str:
+        """Gets the full path of this table.  Does not include the trailing "/".
+
+        :returns: The path (e.g "", "/foo").
+        """
+
     def addEntryListener(
         self,
         listener: Callable,
