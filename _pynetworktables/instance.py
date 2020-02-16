@@ -146,7 +146,7 @@ class NetworkTablesInstance:
     DEFAULT_PORT = constants.NT_DEFAULT_PORT
 
     @classmethod
-    def create(cls):
+    def create(cls) -> "NetworkTablesInstance":
         """Create an instance.
 
         :returns: Newly created instance
@@ -154,7 +154,7 @@ class NetworkTablesInstance:
         return cls()
 
     @classmethod
-    def getDefault(cls):
+    def getDefault(cls) -> "NetworkTablesInstance":
         """Get global default instance."""
         try:
             return cls._defaultInstance
