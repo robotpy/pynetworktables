@@ -95,14 +95,13 @@ def ntproperty(
                   Getting the value of this property should be reasonably
                   fast, but setting the value will have just as much overhead
                   as :meth:`.NetworkTable.putValue`
-                  
-        .. warning:: When using python 2.x, the property must be assigned to
-                     a new-style class or it won't work!
-                     
-                     Additionally, this function assumes that the value's type
-                     never changes. If it does, you'll get really strange
-                     errors... so don't do that.
-                  
+
+        .. warning::
+
+           This function assumes that the value's type
+           never changes. If it does, you'll get really strange
+           errors... so don't do that.
+
         .. versionadded:: 2015.3.0
 
         .. versionchanged:: 2017.0.6
@@ -122,7 +121,7 @@ def ntproperty(
 
 class ChooserControl(object):
     """
-        Interacts with a :class:`wpilib.sendablechooser.SendableChooser`
+        Interacts with a :class:`wpilib.SendableChooser`
         object over NetworkTables.
     """
 
