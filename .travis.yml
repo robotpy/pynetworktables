@@ -1,5 +1,4 @@
 language: python
-sudo: required
 dist: xenial
 
 python:
@@ -11,11 +10,9 @@ python:
 matrix:
   fast_finish: true
 
-jobs:
   include:
   - name: format-check
-    python:
-    - "3.6"
+    python: "3.6"
     install:
     - pip install black
     script:
