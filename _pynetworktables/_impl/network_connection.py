@@ -362,11 +362,11 @@ class NetworkConnection(object):
                                 msg.seq_num_uid,
                                 msg.value,
                             )
-                            Message.write(msg, out, encoder)
+                            msg.write(out, encoder)
                 else:
                     for msg in msgs:
                         if msg:
-                            Message.write(msg, out, encoder)
+                            msg.write(out, encoder)
 
                 if not self.m_stream:
                     break
