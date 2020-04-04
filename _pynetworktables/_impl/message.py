@@ -21,69 +21,68 @@ from .constants import (
     NT_RAW2VTYPE,
 )
 
-_empty_msgtypes = (kKeepAlive, kServerHelloDone, kClientHelloDone)
 
+class Message(
+    namedtuple("Message", ["type", "str", "value", "id", "flags", "seq_num_uid"])
+):
+    __slots__ = ()
 
-MessageType = namedtuple(
-    "MessageType", ["type", "str", "value", "id", "flags", "seq_num_uid"]
-)
+    _empty_msgtypes = (kKeepAlive, kServerHelloDone, kClientHelloDone)
 
+    @classmethod
+    def keepAlive(cls):
+        return cls(kKeepAlive, None, None, None, None, None)
 
-class Message(object):
-    @staticmethod
-    def keepAlive():
-        return MessageType(kKeepAlive, None, None, None, None, None)
+    @classmethod
+    def clientHello(cls, proto_rev, identity):
+        return cls(kClientHello, identity, None, proto_rev, None, None)
 
-    @staticmethod
-    def clientHello(proto_rev, identity):
-        return MessageType(kClientHello, identity, None, proto_rev, None, None)
+    @classmethod
+    def protoUnsup(cls, proto_rev):
+        return cls(kProtoUnsup, None, None, proto_rev, None, None)
 
-    @staticmethod
-    def protoUnsup(proto_rev):
-        return MessageType(kProtoUnsup, None, None, proto_rev, None, None)
+    @classmethod
+    def serverHelloDone(cls):
+        return cls(kServerHelloDone, None, None, None, None, None)
 
-    @staticmethod
-    def serverHelloDone():
-        return MessageType(kServerHelloDone, None, None, None, None, None)
+    @classmethod
+    def serverHello(cls, flags, identity):
+        return cls(kServerHello, identity, None, None, flags, None)
 
-    @staticmethod
-    def serverHello(flags, identity):
-        return MessageType(kServerHello, identity, None, None, flags, None)
+    @classmethod
+    def clientHelloDone(cls):
+        return cls(kClientHelloDone, None, None, None, None, None)
 
-    @staticmethod
-    def clientHelloDone():
-        return MessageType(kClientHelloDone, None, None, None, None, None)
+    @classmethod
+    def entryAssign(cls, name, msg_id, seq_num_uid, value, flags):
+        return cls(kEntryAssign, name, value, msg_id, flags, seq_num_uid)
 
-    @staticmethod
-    def entryAssign(name, msg_id, seq_num_uid, value, flags):
-        return MessageType(kEntryAssign, name, value, msg_id, flags, seq_num_uid)
+    @classmethod
+    def entryUpdate(cls, entry_id, seq_num_uid, value):
+        return cls(kEntryUpdate, None, value, entry_id, None, seq_num_uid)
 
-    @staticmethod
-    def entryUpdate(entry_id, seq_num_uid, value):
-        return MessageType(kEntryUpdate, None, value, entry_id, None, seq_num_uid)
+    @classmethod
+    def flagsUpdate(cls, msg_id, flags):
+        return cls(kFlagsUpdate, None, None, msg_id, flags, None)
 
-    @staticmethod
-    def flagsUpdate(msg_id, flags):
-        return MessageType(kFlagsUpdate, None, None, msg_id, flags, None)
+    @classmethod
+    def entryDelete(cls, entry_id):
+        return cls(kEntryDelete, None, None, entry_id, None, None)
 
-    @staticmethod
-    def entryDelete(entry_id):
-        return MessageType(kEntryDelete, None, None, entry_id, None, None)
+    @classmethod
+    def clearEntries(cls):
+        return cls(kClearEntries, None, None, kClearAllMagic, None, None)
 
-    @staticmethod
-    def clearEntries():
-        return MessageType(kClearEntries, None, None, kClearAllMagic, None, None)
+    @classmethod
+    def executeRpc(cls, rpc_id, call_uid, params):
+        return cls(kExecuteRpc, params, None, rpc_id, None, call_uid)
 
-    @staticmethod
-    def executeRpc(rpc_id, call_uid, params):
-        return MessageType(kExecuteRpc, params, None, rpc_id, None, call_uid)
+    @classmethod
+    def rpcResponse(cls, rpc_id, call_uid, result):
+        return cls(kRpcResponse, result, None, rpc_id, None, call_uid)
 
-    @staticmethod
-    def rpcResponse(rpc_id, call_uid, result):
-        return MessageType(kRpcResponse, result, None, rpc_id, None, call_uid)
-
-    @staticmethod
-    def read(rstream, codec, get_entry_type):
+    @classmethod
+    def read(cls, rstream, codec, get_entry_type) -> "Message":
         msgtype = rstream.read(1)
 
         msg_str = None
@@ -93,7 +92,7 @@ class Message(object):
         seq_num_uid = None
 
         # switch type
-        if msgtype in _empty_msgtypes:
+        if msgtype in cls._empty_msgtypes:
             pass
 
         # python optimization: entry updates tend to occur more than
@@ -153,78 +152,77 @@ class Message(object):
         else:
             raise ValueError("Unrecognized message type %s" % msgtype)
 
-        return MessageType(msgtype, msg_str, value, msg_id, flags, seq_num_uid)
+        return cls(msgtype, msg_str, value, msg_id, flags, seq_num_uid)
 
-    @staticmethod
-    def write(msg, out, codec):
-        msgtype = msg.type
+    def write(self, out, codec):
+        msgtype = self.type
 
         # switch type
-        if msgtype in _empty_msgtypes:
+        if msgtype in self._empty_msgtypes:
             out.append(msgtype)
 
         elif msgtype == kClientHello:
-            proto_rev = msg.id
+            proto_rev = self.id
             out += (msgtype, codec.clientHello.pack(proto_rev))
 
             if proto_rev >= 0x0300:
-                codec.write_string_v3(msg.str, out)
+                codec.write_string_v3(self.str, out)
 
         elif msgtype == kProtoUnsup:
-            out += (msgtype, codec.protoUnsup.pack(msg.id))
+            out += (msgtype, codec.protoUnsup.pack(self.id))
 
         elif msgtype == kServerHello:
             if codec.proto_rev >= 0x0300:
-                out += (msgtype, codec.serverHello.pack(msg.flags))
-                codec.write_string(msg.str, out)
+                out += (msgtype, codec.serverHello.pack(self.flags))
+                codec.write_string(self.str, out)
 
         elif msgtype == kEntryAssign:
             out.append(msgtype)
-            codec.write_string(msg.str, out)
+            codec.write_string(self.str, out)
 
-            value = msg.value
+            value = self.value
             if codec.proto_rev >= 0x0300:
-                sb = codec.entryAssign.pack(msg.id, msg.seq_num_uid, msg.flags)
+                sb = codec.entryAssign.pack(self.id, self.seq_num_uid, self.flags)
             else:
-                sb = codec.entryAssign.pack(msg.id, msg.seq_num_uid)
+                sb = codec.entryAssign.pack(self.id, self.seq_num_uid)
             out += (NT_VTYPE2RAW[value.type], sb)
 
             codec.write_value(value, out)
 
         elif msgtype == kEntryUpdate:
-            value = msg.value
+            value = self.value
             if codec.proto_rev >= 0x0300:
                 out += (
                     msgtype,
-                    codec.entryUpdate.pack(msg.id, msg.seq_num_uid),
+                    codec.entryUpdate.pack(self.id, self.seq_num_uid),
                     NT_VTYPE2RAW[value.type],
                 )
             else:
-                out += (msgtype, codec.entryUpdate.pack(msg.id, msg.seq_num_uid))
+                out += (msgtype, codec.entryUpdate.pack(self.id, self.seq_num_uid))
 
             codec.write_value(value, out)
 
         elif msgtype == kFlagsUpdate:
             if codec.proto_rev >= 0x0300:
-                out += (msgtype, codec.flagsUpdate.pack(msg.id, msg.flags))
+                out += (msgtype, codec.flagsUpdate.pack(self.id, self.flags))
 
         elif msgtype == kEntryDelete:
             if codec.proto_rev >= 0x0300:
-                out += (msgtype, codec.entryDelete.pack(msg.id))
+                out += (msgtype, codec.entryDelete.pack(self.id))
 
         elif msgtype == kClearEntries:
             if codec.proto_rev >= 0x0300:
-                out += (msgtype, codec.clearEntries.pack(msg.id))
+                out += (msgtype, codec.clearEntries.pack(self.id))
 
         elif msgtype == kExecuteRpc:
             if codec.proto_rev >= 0x0300:
-                out += (msgtype, codec.executeRpc.pack(msg.id, msg.seq_num_uid))
-                codec.write_string(msg.str, out)
+                out += (msgtype, codec.executeRpc.pack(self.id, self.seq_num_uid))
+                codec.write_string(self.str, out)
 
         elif msgtype == kRpcResponse:
             if codec.proto_rev >= 0x0300:
-                out += (msgtype, codec.rpcResponse.pack(msg.id, msg.seq_num_uid))
-                codec.write_string(msg.str, out)
+                out += (msgtype, codec.rpcResponse.pack(self.id, self.seq_num_uid))
+                codec.write_string(self.str, out)
 
         else:
-            raise ValueError("Internal error: bad value type %s" % msg.type)
+            raise ValueError("Internal error: bad value type %s" % self.type)

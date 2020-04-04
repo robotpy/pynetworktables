@@ -8,7 +8,7 @@ from io import BytesIO
 
 import pytest
 
-from _pynetworktables._impl.message import Message, MessageType
+from _pynetworktables._impl.message import Message
 from _pynetworktables._impl.value import Value
 from _pynetworktables._impl.tcpsockets.tcp_stream import TCPStream, StreamEOF
 from _pynetworktables._impl.wire import WireCodec
@@ -128,7 +128,7 @@ def msg_round_trip(proto_rev):
 
     codec = WireCodec(proto_rev)
 
-    def _fn(msg, minver=0x0200, exclude=None):
+    def _fn(msg: Message, minver=0x0200, exclude=None):
 
         out = []
         fp = BytesIO()
@@ -137,11 +137,11 @@ def msg_round_trip(proto_rev):
         if codec.proto_rev < minver:
             # The codec won't have the correct struct set if
             # the version isn't supported
-            Message.write(msg, out, codec)
+            msg.write(out, codec)
             assert not out
             return
 
-        Message.write(msg, out, codec)
+        msg.write(out, codec)
         fp.write(b"".join(out))
         fp.seek(0)
 
@@ -156,7 +156,7 @@ def msg_round_trip(proto_rev):
             args = list(mm)
             for e in exclude:
                 args[e] = msg[e]
-            mm = MessageType(*args)
+            mm = Message(*args)
 
         assert msg == mm
 
