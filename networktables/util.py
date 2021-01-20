@@ -1,8 +1,6 @@
 from typing import Callable, Optional, Sequence
 
-# from pynetworktables._impl.value import Value
-
-from . import NetworkTablesInstance, Value
+from . import NetworkTablesInstance
 
 __all__ = ["ntproperty", "ChooserControl"]
 
@@ -39,6 +37,11 @@ class _NtProperty:
         )
         if self.persistent:
             self.ntvalue.setPersistent()
+
+        if hasattr(self.inst, "_api"):
+            from _pynetworktables import Value
+        else:
+            from . import Value
 
         # this is an optimization, but presumes the value type never changes
         self.mkv = Value.getFactoryByType(self.ntvalue.getType())
