@@ -45,13 +45,15 @@ jobs:
       matrix:
         backend: [pure, pyntcore]
         os: [windows-latest, macos-latest, ubuntu-18.04]
-        python_version: [3.6, 3.7, 3.8, 3.9]
+        python_version: [3.5, 3.6, 3.7, 3.8, 3.9]
         architecture: [x86, x64]
         exclude:
         - os: macos-latest
           architecture: x86
         - os: ubuntu-18.04
           architecture: x86
+        - backend: pyntcore
+          python_version: 3.5
 
     steps:
     - uses: actions/checkout@v1
