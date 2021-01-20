@@ -115,7 +115,7 @@ class _Entry(object):
 
     def isSeqNewerThan(self, other):
         """
-            self > other
+        self > other
         """
         seq_num = self.seq_num
         if seq_num < other:
@@ -127,7 +127,7 @@ class _Entry(object):
 
     def isSeqNewerOrEqual(self, other):
         """
-            self >= other
+        self >= other
         """
         seq_num = self.seq_num
         if seq_num < other:
@@ -141,19 +141,16 @@ class _Entry(object):
         return self.value.type == NT_RPC
 
     def __repr__(self):
-        return (
-            "<_Entry name='%s' value=%s flags=%s id=%s local_id=%s seq_num=%s local_write=%s rpc_uid=%s rpc_call_uid=%s"
-            % (
-                self.name,
-                self.value,
-                self.flags,
-                self.id,
-                self.local_id,
-                self.seq_num,
-                self.local_write,
-                self.rpc_uid,
-                self.rpc_call_uid,
-            )
+        return "<_Entry name='%s' value=%s flags=%s id=%s local_id=%s seq_num=%s local_write=%s rpc_uid=%s rpc_call_uid=%s" % (
+            self.name,
+            self.value,
+            self.flags,
+            self.id,
+            self.local_id,
+            self.seq_num,
+            self.local_write,
+            self.rpc_uid,
+            self.rpc_call_uid,
         )
 
 

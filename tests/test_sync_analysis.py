@@ -57,13 +57,13 @@ def check_results(st, ct1, ct2, **kwargs):
 
 def test_scenario_1(scenario):
     """
-        Single client network drop (disconnect + reconnect)
-        
-        Client1 disconnects from Server
-        Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
-        Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
-        Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
-        Client1 reconnects to server
+    Single client network drop (disconnect + reconnect)
+
+    Client1 disconnects from Server
+    Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
+    Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
+    Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
+    Client1 reconnects to server
     """
     nt_server, nt_client, nt_client2, st, ct1, ct2 = scenario
 
@@ -103,15 +103,15 @@ def test_scenario_1(scenario):
 
 def test_scenario_2(scenario):
     """
-        Server network drop (both clients disconnect + reconnect)
-        
-        Client1 disconnects from Server
-        Client2 disconnects from Server
-        Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
-        Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
-        Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
-        Client1 reconnects to server
-        Client2 reconnects to server
+    Server network drop (both clients disconnect + reconnect)
+
+    Client1 disconnects from Server
+    Client2 disconnects from Server
+    Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
+    Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
+    Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
+    Client1 reconnects to server
+    Client2 reconnects to server
     """
     nt_server, nt_client, nt_client2, st, ct1, ct2 = scenario
 
@@ -154,14 +154,14 @@ def test_scenario_2(scenario):
 
 def test_scenario_3(scenario):
     """
-        Server reboot, reconnect before server-local code makes changes
-        
-        Server restarts (disconnecting both Client1 and Client2)
-        Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
-        Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
-        Client1 reconnects to Server
-        Client2 reconnects to Server
-        Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
+    Server reboot, reconnect before server-local code makes changes
+
+    Server restarts (disconnecting both Client1 and Client2)
+    Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
+    Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
+    Client1 reconnects to Server
+    Client2 reconnects to Server
+    Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
     """
     nt_server, nt_client, nt_client2, st, ct1, ct2 = scenario
 
@@ -221,14 +221,14 @@ def test_scenario_3(scenario):
 
 def test_scenario_4(scenario):
     """
-        Server reboot, reconnect after server-local code makes changes
-        
-        Server restarts (disconnecting both Client1 and Client2)
-        Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
-        Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
-        Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
-        Client1 reconnects to Server
-        Client2 reconnects to Server
+    Server reboot, reconnect after server-local code makes changes
+
+    Server restarts (disconnecting both Client1 and Client2)
+    Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
+    Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
+    Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
+    Client1 reconnects to Server
+    Client2 reconnects to Server
     """
     nt_server, nt_client, nt_client2, st, ct1, ct2 = scenario
 
@@ -274,13 +274,13 @@ def test_scenario_4(scenario):
 
 def test_scenario_5(scenario):
     """
-        Single client reboot
-        
-        Client1 restarts (disconnecting from Server)
-        Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
-        Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
-        Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
-        Client1 reconnects to Server
+    Single client reboot
+
+    Client1 restarts (disconnecting from Server)
+    Client1 updates Client1Only=11, SC1Shared=11, ClientShared=11
+    Server updates ServerOnly=10, SC1Shared=10, SC2Shared=10
+    Client2 updates Client2Only=12, SC2Shared=12, ClientShared=12
+    Client1 reconnects to Server
     """
     nt_server, nt_client, nt_client2, st, ct1, ct2 = scenario
 

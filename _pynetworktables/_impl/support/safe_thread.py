@@ -7,8 +7,8 @@ logger = logging.getLogger("nt.th")
 
 class SafeThread(object):
     """
-        Not exactly the same as wpiutil SafeThread... exists so we don't have
-        to duplicate functionality in a lot of places
+    Not exactly the same as wpiutil SafeThread... exists so we don't have
+    to duplicate functionality in a lot of places
     """
 
     # Name each thread uniquely to make debugging easier
@@ -17,7 +17,7 @@ class SafeThread(object):
 
     def __init__(self, target, name, args=()):
         """
-            Note: thread is automatically started and daemonized
+        Note: thread is automatically started and daemonized
         """
 
         with SafeThread._global_indices_lock:

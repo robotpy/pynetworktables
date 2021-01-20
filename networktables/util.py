@@ -1,8 +1,6 @@
 from typing import Callable, Optional, Sequence
 
-# from pynetworktables._impl.value import Value
-
-from . import NetworkTablesInstance, Value
+from . import NetworkTablesInstance
 
 __all__ = ["ntproperty", "ChooserControl"]
 
@@ -40,6 +38,11 @@ class _NtProperty:
         if self.persistent:
             self.ntvalue.setPersistent()
 
+        if hasattr(self.inst, "_api"):
+            from _pynetworktables import Value
+        else:
+            from . import Value
+
         # this is an optimization, but presumes the value type never changes
         self.mkv = Value.getFactoryByType(self.ntvalue.getType())
 
@@ -63,52 +66,52 @@ def ntproperty(
     inst: NetworkTablesInstance = NetworkTables
 ) -> property:
     """
-        A property that you can add to your classes to access NetworkTables
-        variables like a normal variable.
-        
-        :param key: A full NetworkTables key (eg ``/SmartDashboard/foo``)
-        :param defaultValue: Default value to use if not in the table
-        :type  defaultValue: any
-        :param writeDefault: If True, put the default value to the table,
-                             overwriting existing values
-        :param doc: If given, will be the docstring of the property.
-        :param persistent: If True, persist set values across restarts.
-                           *writeDefault* is ignored if this is True.
-        :param inst: The NetworkTables instance to use.
+    A property that you can add to your classes to access NetworkTables
+    variables like a normal variable.
 
-        Example usage::
-        
-            class Foo(object):
-            
-                something = ntproperty('/SmartDashboard/something', True)
-                
-                ...
-                
-                def do_thing(self):
-                    if self.something:    # reads from value
-                        ...
-                        
-                        self.something = False # writes value
-        
-        .. note:: Does not work with empty lists/tuples.
-        
-                  Getting the value of this property should be reasonably
-                  fast, but setting the value will have just as much overhead
-                  as :meth:`.NetworkTable.putValue`
+    :param key: A full NetworkTables key (eg ``/SmartDashboard/foo``)
+    :param defaultValue: Default value to use if not in the table
+    :type  defaultValue: any
+    :param writeDefault: If True, put the default value to the table,
+                         overwriting existing values
+    :param doc: If given, will be the docstring of the property.
+    :param persistent: If True, persist set values across restarts.
+                       *writeDefault* is ignored if this is True.
+    :param inst: The NetworkTables instance to use.
 
-        .. warning::
+    Example usage::
 
-           This function assumes that the value's type
-           never changes. If it does, you'll get really strange
-           errors... so don't do that.
+        class Foo(object):
 
-        .. versionadded:: 2015.3.0
+            something = ntproperty('/SmartDashboard/something', True)
 
-        .. versionchanged:: 2017.0.6
-            The *doc* parameter.
+            ...
 
-        .. versionchanged:: 2018.0.0
-            The *persistent* parameter.
+            def do_thing(self):
+                if self.something:    # reads from value
+                    ...
+
+                    self.something = False # writes value
+
+    .. note:: Does not work with empty lists/tuples.
+
+              Getting the value of this property should be reasonably
+              fast, but setting the value will have just as much overhead
+              as :meth:`.NetworkTable.putValue`
+
+    .. warning::
+
+       This function assumes that the value's type
+       never changes. If it does, you'll get really strange
+       errors... so don't do that.
+
+    .. versionadded:: 2015.3.0
+
+    .. versionchanged:: 2017.0.6
+        The *doc* parameter.
+
+    .. versionchanged:: 2018.0.0
+        The *persistent* parameter.
     """
     ntprop = _NtProperty(key, defaultValue, writeDefault, persistent, inst)
     try:
@@ -121,8 +124,8 @@ def ntproperty(
 
 class ChooserControl(object):
     """
-        Interacts with a :class:`wpilib.SendableChooser`
-        object over NetworkTables.
+    Interacts with a :class:`wpilib.SendableChooser`
+    object over NetworkTables.
     """
 
     def __init__(
@@ -134,12 +137,12 @@ class ChooserControl(object):
         inst: NetworkTablesInstance = NetworkTables
     ) -> None:
         """
-            :param key: NetworkTables key
-            :param on_choices: A function that will be called when the
-                               choices change.
-            :param on_selection: A function that will be called when the
-                                 selection changes.
-            :param inst: The NetworkTables instance to use.
+        :param key: NetworkTables key
+        :param on_choices: A function that will be called when the
+                           choices change.
+        :param on_selection: A function that will be called when the
+                             selection changes.
+        :param inst: The NetworkTables instance to use.
         """
         self.subtable = inst.getTable("SmartDashboard").getSubTable(key)
 
@@ -156,14 +159,14 @@ class ChooserControl(object):
 
     def getChoices(self) -> Sequence[str]:
         """
-            Returns the current choices. If the chooser doesn't exist, this
-            will return an empty tuple.
+        Returns the current choices. If the chooser doesn't exist, this
+        will return an empty tuple.
         """
         return self.subtable.getStringArray("options", ())
 
     def getSelected(self) -> Optional[str]:
         """
-            Returns the current selection or None
+        Returns the current selection or None
         """
         selected = self.subtable.getString("selected", None)
         if selected is None:
@@ -172,9 +175,9 @@ class ChooserControl(object):
 
     def setSelected(self, selection: str) -> None:
         """
-            Sets the active selection on the chooser
-            
-            :param selection: Active selection name
+        Sets the active selection on the chooser
+
+        :param selection: Active selection name
         """
         self.subtable.putString("selected", selection)
 

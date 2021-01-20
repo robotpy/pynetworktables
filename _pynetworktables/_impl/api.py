@@ -14,12 +14,12 @@ _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
 
 class NtCoreApi(object):
     """
-        Internal NetworkTables API wrapper
+    Internal NetworkTables API wrapper
 
-        In theory you could create multiple instances of this
-        and talk to multiple NT servers or create multiple
-        NT servers... though, I don't really know why one
-        would want to do this.
+    In theory you could create multiple instances of this
+    and talk to multiple NT servers or create multiple
+    NT servers... though, I don't really know why one
+    would want to do this.
     """
 
     def __init__(self, entry_creator, verbose=False):

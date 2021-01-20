@@ -86,7 +86,7 @@ class Dispatcher(object):
 
     def setServer(self, server_or_servers):
         """
-            :param server_or_servers: a tuple of (server, port) or a list of tuples of (server, port)
+        :param server_or_servers: a tuple of (server, port) or a list of tuples of (server, port)
         """
         self._setConnector(server_or_servers)
 

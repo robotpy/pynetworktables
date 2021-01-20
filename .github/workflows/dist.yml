@@ -1,0 +1,93 @@
+---
+name: dist
+
+on:
+  pull_request:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: psf/black@stable
+
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+
+    - name: Install build dependencies
+      run: |
+        python -m pip install wheel
+
+    - uses: robotpy/build-actions/build-sdist@v2021
+    - uses: robotpy/build-actions/build-wheel@v2021
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: dist
+
+  test:
+    needs: [build]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: [pure, pyntcore]
+        os: [windows-latest, macos-latest, ubuntu-18.04]
+        python_version: [3.6, 3.7, 3.8, 3.9]
+        architecture: [x86, x64]
+        exclude:
+        - os: macos-latest
+          architecture: x86
+        - os: ubuntu-18.04
+          architecture: x86
+
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_version }}
+        architecture: ${{ matrix.architecture }}
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: dist
+        path: dist
+
+    - name: Install pyntcore backend
+      if: ${{ matrix.backend == 'pyntcore' }}
+      run: |
+        python -m pip install pyntcore --find-links https://www.tortall.net/\~robotpy/wheels/2021/linux_x86_64/
+
+    - uses: robotpy/build-actions/test-native-wheel@v2021
+#       continue-on-error: ${{ matrix.backend == 'pyntcore' }}
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [check, test]
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: dist
+        path: dist
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.pypi_password }}

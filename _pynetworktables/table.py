@@ -31,23 +31,23 @@ _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
 
 class NetworkTable:
     """
-        This is a NetworkTable object, it allows you to interact with
-        NetworkTables in a table-based manner. You should not directly
-        create a NetworkTable object, but instead use
-        :meth:`.NetworkTables.getTable` to retrieve a NetworkTable instance.
+    This is a NetworkTable object, it allows you to interact with
+    NetworkTables in a table-based manner. You should not directly
+    create a NetworkTable object, but instead use
+    :meth:`.NetworkTables.getTable` to retrieve a NetworkTable instance.
 
-        For example, to interact with the SmartDashboard::
+    For example, to interact with the SmartDashboard::
 
-            from networktables import NetworkTables
-            sd = NetworkTables.getTable('SmartDashboard')
+        from networktables import NetworkTables
+        sd = NetworkTables.getTable('SmartDashboard')
 
-            someNumberEntry = sd.getEntry('someNumber')
-            someNumberEntry.putNumber(1234)
-            ...
+        someNumberEntry = sd.getEntry('someNumber')
+        someNumberEntry.putNumber(1234)
+        ...
 
-        .. seealso::
-           - The examples in the documentation.
-           - :class:`.NetworkTablesInstance`
+    .. seealso::
+       - The examples in the documentation.
+       - :class:`.NetworkTablesInstance`
     """
 
     PATH_SEPARATOR = "/"
