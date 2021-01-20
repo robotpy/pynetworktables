@@ -26,10 +26,10 @@ def test_autoupdatevalue(nt):
 
 def test_ntproperty(nt, nt_flush):
     class Foo(object):
-        robotTime = ntproperty("/SmartDashboard/robotTime", 0, writeDefault=False)
-        dsTime = ntproperty("/SmartDashboard/dsTime", 0, writeDefault=True)
+        robotTime = ntproperty("/SmartDashboard/robotTime", 0, writeDefault=False, inst=nt)
+        dsTime = ntproperty("/SmartDashboard/dsTime", 0, writeDefault=True, inst=nt)
         testArray = ntproperty(
-            "/SmartDashboard/testArray", [1, 2, 3], writeDefault=True
+            "/SmartDashboard/testArray", [1, 2, 3], writeDefault=True, inst=nt
         )
 
     f = Foo()
@@ -54,12 +54,12 @@ def test_ntproperty_emptyarray(nt):
     with pytest.raises(TypeError):
 
         class Foo1(object):
-            testArray = ntproperty("/SmartDashboard/testArray", [], writeDefault=True)
+            testArray = ntproperty("/SmartDashboard/testArray", [], writeDefault=True, inst=nt)
 
     with pytest.raises(TypeError):
 
         class Foo2(object):
-            testArray = ntproperty("/SmartDashboard/testArray", [], writeDefault=False)
+            testArray = ntproperty("/SmartDashboard/testArray", [], writeDefault=False, inst=nt)
 
 
 def test_ntproperty_multitest(nt):
@@ -68,8 +68,8 @@ def test_ntproperty_multitest(nt):
     """
 
     class Foo(object):
-        robotTime = ntproperty("/SmartDashboard/robotTime", 0, writeDefault=False)
-        dsTime = ntproperty("/SmartDashboard/dsTime", 0, writeDefault=True)
+        robotTime = ntproperty("/SmartDashboard/robotTime", 0, writeDefault=False, inst=nt)
+        dsTime = ntproperty("/SmartDashboard/dsTime", 0, writeDefault=True, inst=nt)
 
     for i in range(3):
         print("Iteration", i)
@@ -98,7 +98,7 @@ def test_ntproperty_multitest(nt):
 
 def test_chooser_control(nt):
 
-    c = ChooserControl("Autonomous Mode")
+    c = ChooserControl("Autonomous Mode", inst=nt)
 
     assert c.getChoices() == ()
     assert c.getSelected() is None
