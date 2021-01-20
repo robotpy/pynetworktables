@@ -40,7 +40,7 @@ class TcpConnector(object):
                     th.start()
                     self.threads[item] = th
 
-            self.cond.wait(self.timeout)
+            self.cond.wait(2*self.timeout)
             self.active = False
 
             result = self.result
