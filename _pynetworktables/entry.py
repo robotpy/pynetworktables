@@ -20,15 +20,15 @@ D = TypeVar("D")
 
 class NetworkTableEntry:
     """
-        Holds a value from NetworkTables, and changes it as new entries
-        come in. Do not create this object directly, use
-        :func:`.NetworkTablesInstance.getEntry` or :meth:`.NetworkTable.getEntry`
-        to obtain an instance of this class.
+    Holds a value from NetworkTables, and changes it as new entries
+    come in. Do not create this object directly, use
+    :func:`.NetworkTablesInstance.getEntry` or :meth:`.NetworkTable.getEntry`
+    to obtain an instance of this class.
 
-        Using NetworkTableEntry objects to access/change NT values is more
-        efficient than the getX/putX methods of :class:`.NetworkTable`.
+    Using NetworkTableEntry objects to access/change NT values is more
+    efficient than the getX/putX methods of :class:`.NetworkTable`.
 
-        .. versionadded:: 2018.0.0
+    .. versionadded:: 2018.0.0
     """
 
     __slots__ = ["__api", "_local_id", "key", "_value"]

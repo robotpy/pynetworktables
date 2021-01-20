@@ -67,7 +67,7 @@ def nt_flush(nt):
 
 class NtTestBase(NetworkTablesInstance):
     """
-        Object for managing a live pair of NT server/client
+    Object for managing a live pair of NT server/client
     """
 
     _wait_lock = None

@@ -20,48 +20,48 @@ ServerPortPair = Tuple[str, int]
 
 class NetworkTablesInstance:
     """
-        The object ``networktables.NetworkTables`` is a global singleton that
-        you can use to initialize NetworkTables connections, configure global
-        settings and listeners, and to create table objects which can be used
-        to send data to/from NetworkTable servers and clients.
+    The object ``networktables.NetworkTables`` is a global singleton that
+    you can use to initialize NetworkTables connections, configure global
+    settings and listeners, and to create table objects which can be used
+    to send data to/from NetworkTable servers and clients.
 
-        First, you must initialize NetworkTables::
+    First, you must initialize NetworkTables::
 
-            from networktables import NetworkTables
+        from networktables import NetworkTables
 
-            # As a client to connect to a robot
-            NetworkTables.initialize(server='roborio-XXX-frc.local')
+        # As a client to connect to a robot
+        NetworkTables.initialize(server='roborio-XXX-frc.local')
 
-        Then, to interact with the SmartDashboard you get an instance of the
-        table, and you can call the various methods::
+    Then, to interact with the SmartDashboard you get an instance of the
+    table, and you can call the various methods::
 
-            sd = NetworkTables.getTable('SmartDashboard')
+        sd = NetworkTables.getTable('SmartDashboard')
 
-            sd.putNumber('someNumber', 1234)
-            otherNumber = sd.getNumber('otherNumber')
+        sd.putNumber('someNumber', 1234)
+        otherNumber = sd.getNumber('otherNumber')
 
-        You can create additional NetworkTablesInstance objects.
-        Instances are completely independent from each other.  Table operations on
-        one instance will not be visible to other instances unless the instances are
-        connected via the network.  The main limitation on instances is that you
-        cannot have two servers on the same network port.  The main utility of
-        instances is for unit testing, but they can also enable one program to
-        connect to two different NetworkTables networks.
+    You can create additional NetworkTablesInstance objects.
+    Instances are completely independent from each other.  Table operations on
+    one instance will not be visible to other instances unless the instances are
+    connected via the network.  The main limitation on instances is that you
+    cannot have two servers on the same network port.  The main utility of
+    instances is for unit testing, but they can also enable one program to
+    connect to two different NetworkTables networks.
 
-        The global "default" instance (as returned by :meth:`.NetworkTablesInstance.getDefault`) is
-        always available, and is intended for the common case when there is only
-        a single NetworkTables instance being used in the program.
+    The global "default" instance (as returned by :meth:`.NetworkTablesInstance.getDefault`) is
+    always available, and is intended for the common case when there is only
+    a single NetworkTables instance being used in the program.
 
-        Additional instances can be created with the :meth:`.create` function.
+    Additional instances can be created with the :meth:`.create` function.
 
-        .. seealso::
-           - The examples in the documentation.
-           - :class:`.NetworkTable`
+    .. seealso::
+       - The examples in the documentation.
+       - :class:`.NetworkTable`
     """
 
     class EntryTypes:
         """
-            NetworkTable value types used in :meth:`.NetworkTable.getKeys`
+        NetworkTable value types used in :meth:`.NetworkTable.getKeys`
         """
 
         #: True or False
@@ -87,7 +87,7 @@ class NetworkTablesInstance:
 
     class EntryFlags:
         """
-            NetworkTables entry flags
+        NetworkTables entry flags
         """
 
         #: Indicates a value that will be persisted on the server
@@ -95,7 +95,7 @@ class NetworkTablesInstance:
 
     class NotifyFlags:
         """
-            Bitflags passed to entry callbacks
+        Bitflags passed to entry callbacks
         """
 
         #: Initial listener addition
@@ -118,7 +118,7 @@ class NetworkTablesInstance:
 
     class NetworkModes:
         """
-            Bitflags returend from :meth:`.getNetworkMode`
+        Bitflags returend from :meth:`.getNetworkMode`
         """
 
         #: Not running
@@ -588,19 +588,19 @@ class NetworkTablesInstance:
 
     def getRemoteAddress(self) -> Optional[str]:
         """
-            Only returns a valid address if connected to the server. If
-            this is a server, returns None
+        Only returns a valid address if connected to the server. If
+        this is a server, returns None
 
-            :returns: IP address of server or None
+        :returns: IP address of server or None
 
-            .. versionadded:: 2015.3.2
+        .. versionadded:: 2015.3.2
         """
         return self._api.getRemoteAddress()
 
     def isConnected(self) -> bool:
         """
-            :returns: True if connected to at least one other NetworkTables
-                      instance
+        :returns: True if connected to at least one other NetworkTables
+                  instance
         """
         return self._api.getIsConnected()
 
