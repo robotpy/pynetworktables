@@ -10,10 +10,10 @@ from collections import namedtuple
 
 from .callback_manager import CallbackManager, CallbackThread
 
-_ConnectionCallback = namedtuple("ConnectionCallback", ["callback", "poller_uid"])
+_ConnectionCallback = namedtuple("_ConnectionCallback", ["callback", "poller_uid"])
 
 _ConnectionNotification = namedtuple(
-    "ConnectionNotification", ["connected", "conn_info"]
+    "_ConnectionNotification", ["connected", "conn_info"]
 )
 
 

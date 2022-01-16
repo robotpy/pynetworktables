@@ -10,8 +10,9 @@ from ._impl.constants import (
     NT_STRING_ARRAY,
     NT_PERSISTENT,
 )
-
 from ._impl.value import Value
+
+from .types import ValueT
 
 __all__ = ["NetworkTableEntry"]
 
@@ -171,15 +172,14 @@ class NetworkTableEntry:
 
         :param defaultValue: the value to be returned if no value is found
         :returns: the entry's value or the given default value
-        :rtype: list(float)
         """
         value = self._value
         if not value or value[0] != NT_STRING_ARRAY:
             return defaultValue
         return value[1]
 
-    @classmethod
-    def isValidDataType(cls, data):
+    @staticmethod
+    def isValidDataType(data) -> bool:
         if isinstance(data, (bytes, bytearray)):
             return True
         if isinstance(data, (list, tuple)):
@@ -187,9 +187,9 @@ class NetworkTableEntry:
                 raise ValueError("If you use a list here, cannot be empty")
             data = data[0]
 
-        return isinstance(data, (int, float, str, bool))
+        return isinstance(data, (int, float, str))
 
-    def setDefaultValue(self, defaultValue) -> bool:
+    def setDefaultValue(self, defaultValue: ValueT) -> bool:
         """Sets the entry's value if it does not exist.
 
         :param defaultValue: the default value to set
@@ -267,7 +267,7 @@ class NetworkTableEntry:
         value = Value.makeStringArray(defaultValue)
         return self.__api.setDefaultEntryValueById(self._local_id, value)
 
-    def setValue(self, value) -> bool:
+    def setValue(self, value: ValueT) -> bool:
         """Sets the entry's value
 
         :param value: the value that will be assigned
@@ -345,7 +345,7 @@ class NetworkTableEntry:
         value = Value.makeStringArray(value)
         return self.__api.setEntryValueById(self._local_id, value)
 
-    def forceSetValue(self, value):
+    def forceSetValue(self, value: ValueT):
         """Sets the entry's value
 
         :param value: the value that will be assigned
@@ -456,7 +456,7 @@ class NetworkTableEntry:
 
     def addListener(
         self,
-        listener: Callable[["NetworkTableEntry", str, Any, int], None],
+        listener: Callable[["NetworkTableEntry", str, ValueT, int], None],
         flags: int,
         paramIsNew: bool = True,
     ):
@@ -521,5 +521,5 @@ class NetworkTableEntry:
             "< not allowed on NetworkTableEntry objects. Use the .value attribute instead"
         )
 
-    def __repr__(self):
-        return "<NetworkTableEntry: %s>" % (self._value.__repr__(),)
+    def __repr__(self) -> str:
+        return "<NetworkTableEntry: %r>" % (self._value,)

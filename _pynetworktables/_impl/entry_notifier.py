@@ -19,7 +19,7 @@ from .constants import (
 
 
 _EntryListenerData = namedtuple(
-    "EntryListenerData",
+    "_EntryListenerData",
     [
         "prefix",
         "local_id",  # we don't have entry handles like ntcore has
@@ -31,7 +31,7 @@ _EntryListenerData = namedtuple(
 
 #
 _EntryNotification = namedtuple(
-    "EntryNotification", ["name", "value", "flags", "local_id"]
+    "_EntryNotification", ["name", "value", "flags", "local_id"]
 )
 
 _assign_both = NT_NOTIFY_UPDATE | NT_NOTIFY_FLAGS

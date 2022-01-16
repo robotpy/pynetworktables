@@ -11,7 +11,7 @@
     more efficient.
 """
 
-from collections import namedtuple
+from typing import NamedTuple
 from .constants import (
     NT_BOOLEAN,
     NT_DOUBLE,
@@ -22,9 +22,10 @@ from .constants import (
     NT_STRING_ARRAY,
     NT_RPC,
 )
+from ..types import ValueT
 
 
-class Value(namedtuple("Value", ["type", "value"])):
+class Value(NamedTuple("Value", [("type", bytes), ("value", ValueT)])):
     __slots__ = ()
 
     @classmethod

@@ -12,9 +12,9 @@ import time
 
 try:
     # Python 3.7 only, should be more efficient
-    from queue import SimpleQueue as Queue, Empty
+    from queue import SimpleQueue as Queue
 except ImportError:
-    from queue import Queue, Empty
+    from queue import Queue
 
 from .support.safe_thread import SafeThread
 from .support.uidvector import UidVector
@@ -23,7 +23,7 @@ import logging
 
 logger = logging.getLogger("nt")
 
-_ListenerData = namedtuple("ListenerData", ["callback", "poller_uid"])
+_ListenerData = namedtuple("_ListenerData", ["callback", "poller_uid"])
 
 
 class Poller(object):
