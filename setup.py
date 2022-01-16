@@ -48,6 +48,7 @@ setup(
     url="https://github.com/robotpy/pynetworktables",
     keywords="frc first robotics wpilib networktables",
     packages=find_packages(exclude="tests"),
+    py_modules=["_networktables_types"],
     package_data={
         "networktables": ["py.typed", "__init__.pyi"],
         "_pynetworktables": ["py.typed"],

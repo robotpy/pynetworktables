@@ -1,6 +1,8 @@
 # todo: tracks NetworkTablesInstance.java
 
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Union
+import logging
+import typing
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 from weakref import WeakSet
 
 from ._impl import constants
@@ -8,8 +10,10 @@ from ._impl.api import NtCoreApi
 
 from .entry import NetworkTableEntry
 from .table import NetworkTable
+from .types import ValueT
 
-import logging
+if typing.TYPE_CHECKING:
+    from networktables.util import _NtProperty
 
 logger = logging.getLogger("nt")
 
@@ -48,7 +52,7 @@ class NetworkTablesInstance:
     instances is for unit testing, but they can also enable one program to
     connect to two different NetworkTables networks.
 
-    The global "default" instance (as returned by :meth:`.NetworkTablesInstance.getDefault`) is
+    The global "default" instance (as returned by :meth:`.getDefault`) is
     always available, and is intended for the common case when there is only
     a single NetworkTables instance being used in the program.
 
@@ -164,17 +168,16 @@ class NetworkTablesInstance:
         cls._defaultInstance = cls()
         return cls._defaultInstance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._init()
 
-    def _init(self):
+    def _init(self) -> None:
         self._api = NtCoreApi(self.__createEntry)
-        self._tables = {}
-        self._entry_listeners = {}
-        self._conn_listeners = {}
+        self._tables = {}  # type: typing.Dict[str, NetworkTable]
+        self._conn_listeners = {}  # type: typing.Dict[Callable, List[int]]
 
         if not hasattr(self, "_ntproperties"):
-            self._ntproperties = WeakSet()
+            self._ntproperties = WeakSet()  # type: WeakSet[_NtProperty]
         else:
             for ntprop in self._ntproperties:
                 ntprop.reset()
@@ -202,7 +205,6 @@ class NetworkTablesInstance:
                        starts with this string are returned
         :param types: bitmask of types; 0 is treated as a "don't care"
         :returns: List of matching entries.
-        :rtype: list of :class:`.NetworkTableEntry`
 
         .. versionadded:: 2018.0.0
         """
@@ -263,7 +265,7 @@ class NetworkTablesInstance:
 
     def addEntryListener(
         self,
-        listener: Callable[[str, Any, int], None],
+        listener: Callable[[str, ValueT, int], None],
         immediateNotify: bool = True,
         localNotify: bool = True,
         paramIsNew: bool = True,
@@ -306,7 +308,7 @@ class NetworkTablesInstance:
 
     def addEntryListenerEx(
         self,
-        listener: Callable[[str, Any, int], None],
+        listener: Callable[[str, ValueT, int], None],
         flags: int,
         paramIsNew: bool = True,
     ) -> None:
@@ -341,7 +343,7 @@ class NetworkTablesInstance:
     addGlobalListener = addEntryListener
     addGlobalListenerEx = addEntryListenerEx
 
-    def removeEntryListener(self, listener: Callable[[str, Any, int], None]) -> None:
+    def removeEntryListener(self, listener: Callable[[str, ValueT, int], None]) -> None:
         """Remove an entry listener.
 
         :param listener: Listener to remove
@@ -445,7 +447,7 @@ class NetworkTablesInstance:
         persistFilename: str = "networktables.ini",
         listenAddress: str = "",
         port: int = constants.NT_DEFAULT_PORT,
-    ):
+    ) -> bool:
         """Starts a server using the specified filename, listening address, and port.
 
         :param persistFilename: the name of the persist file to use
@@ -467,7 +469,7 @@ class NetworkTablesInstance:
     def startClient(
         self,
         server_or_servers: Union[str, ServerPortPair, List[ServerPortPair], List[str]],
-    ):
+    ) -> bool:
         """Sets server addresses and port for client (without restarting client).
         The client will attempt to connect to each server in round robin fashion.
 
@@ -479,7 +481,7 @@ class NetworkTablesInstance:
         self.setServer(server_or_servers)
         return self._api.startClient()
 
-    def startClientTeam(self, team: int, port: int = constants.NT_DEFAULT_PORT):
+    def startClientTeam(self, team: int, port: int = constants.NT_DEFAULT_PORT) -> bool:
         """Starts a client using commonly known robot addresses for the specified
         team.
 
@@ -580,7 +582,6 @@ class NetworkTablesInstance:
         If operating as a client, this will return either zero or one values.
 
         :returns: list of connection information
-        :rtype: list
 
         .. versionadded:: 2018.0.0
         """
@@ -657,7 +658,7 @@ class NetworkTablesInstance:
     # These methods are unique to pynetworktables
     #
 
-    def initialize(self, server=None):
+    def initialize(self, server: Optional[str] = None) -> bool:
         """Initializes NetworkTables and begins operations
 
         :param server: If specified, NetworkTables will be set to client
@@ -665,7 +666,6 @@ class NetworkTablesInstance:
                        This is equivalent to executing::
 
                            self.startClient(server)
-        :type server: str
 
         :returns: True if initialized, False if already initialized
 
@@ -691,7 +691,7 @@ class NetworkTablesInstance:
 
         self._init()
 
-    def startTestMode(self, server: bool = True):
+    def startTestMode(self, server: bool = True) -> bool:
         """Setup network tables to run in unit test mode, and enables verbose
         logging.
 
@@ -735,8 +735,6 @@ class NetworkTablesInstance:
         :param key: the full NT path of the value (must start with /)
         :param defaultValue: The default value to return if the key doesn't exist
         :param writeDefault: If True, force the value to the specified default
-
-        :rtype: :class:`.NetworkTableEntry`
 
         .. seealso:: :func:`.ntproperty` is a read-write alternative to this
 

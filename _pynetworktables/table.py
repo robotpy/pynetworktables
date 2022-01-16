@@ -1,6 +1,6 @@
 __all__ = ["NetworkTable"]
 
-from typing import Callable, List, Optional, Sequence
+from typing import Callable, Dict, List, Optional, Sequence, TypeVar, Union
 
 from ._impl.constants import (
     NT_BOOLEAN,
@@ -22,11 +22,14 @@ from ._impl.constants import (
 from ._impl.value import Value
 
 from .entry import NetworkTableEntry
+from .types import ValueT
 
 import logging
 
 logger = logging.getLogger("nt")
 _is_new = NT_NOTIFY_IMMEDIATE | NT_NOTIFY_NEW
+
+D = TypeVar("D")
 
 
 class NetworkTable:
@@ -73,8 +76,6 @@ class NetworkTable:
     def getEntry(self, key: str) -> NetworkTableEntry:
         """Gets the entry for a subkey. This is the preferred API to use
         to access NetworkTable keys.
-
-        :rtype: :class:`.NetworkTableEntry`
 
         .. versionadded:: 2018.0.0
         """
@@ -218,7 +219,7 @@ class NetworkTable:
         .. versionchanged:: 2017.0.0
            Added localNotify parameter
         """
-        notified_tables = {}
+        notified_tables = {}  # type: Dict[str, object]
 
         def _callback(item):
             key, value_, _1, _2 = item
@@ -416,7 +417,6 @@ class NetworkTable:
 
         :param key: the key to be assigned to
         :param defaultValue: the default value to set if key doesn't exist.
-        :type defaultValue: int, float
 
         :returns: False if the table key exists with a different type
 
@@ -466,7 +466,7 @@ class NetworkTable:
         path = self._path + key
         return self._api.setDefaultEntryValue(path, Value.makeString(defaultValue))
 
-    def getString(self, key: str, defaultValue: str) -> str:
+    def getString(self, key: str, defaultValue: D) -> Union[str, D]:
         """Gets the string associated with the given name. If the key does not
         exist or is of different type, it will return the default value.
 
@@ -558,7 +558,6 @@ class NetworkTable:
         of different type, it will return the default value.
 
         :param key: the key to look up
-        :type key: str
         :param defaultValue: the value to be returned if no value is found
 
         :returns: the value associated with the given key or the given default value
@@ -711,7 +710,7 @@ class NetworkTable:
 
         return value.value
 
-    def putValue(self, key: str, value) -> bool:
+    def putValue(self, key: str, value: ValueT) -> bool:
         """Put a value in the table, trying to autodetect the NT type of
         the value. Refer to this table to determine the type mapping:
 
@@ -729,7 +728,6 @@ class NetworkTable:
 
         :param key: the key to be assigned to
         :param value: the value that will be assigned
-        :type value: bool, int, float, str, bytes
 
         :returns: False if the table key already exists with a different type
 
@@ -739,13 +737,12 @@ class NetworkTable:
         path = self._path + key
         return self._api.setEntryValue(path, value)
 
-    def setDefaultValue(self, key: str, defaultValue) -> bool:
+    def setDefaultValue(self, key: str, defaultValue: ValueT) -> bool:
         """If the key doesn't currently exist, then the specified value will
         be assigned to the key.
 
         :param key: the key to be assigned to
         :param defaultValue: the default value to set if key doesn't exist.
-        :type defaultValue: bool, int, float, str, bytes
 
         :returns: False if the table key exists with a different type
 
@@ -757,16 +754,14 @@ class NetworkTable:
         path = self._path + key
         return self._api.setDefaultEntryValue(path, defaultValue)
 
-    def getValue(self, key: str, defaultValue):
+    def getValue(self, key: str, defaultValue: D) -> Union[ValueT, D]:
         """Gets the value associated with a key. This supports all
         NetworkTables types (unlike :meth:`putValue`).
 
         :param key: the key of the value to look up
         :param defaultValue: The default value to return if the key doesn't exist
-        :type defaultValue: any
 
         :returns: the value associated with the given key
-        :rtype: bool, int, float, str, bytes, tuple
 
         .. versionadded:: 2017.0.0
         """
@@ -778,18 +773,15 @@ class NetworkTable:
         return value.value
 
     def getAutoUpdateValue(
-        self, key: str, defaultValue, writeDefault: bool = True
+        self, key: str, defaultValue: ValueT, writeDefault: bool = True
     ) -> NetworkTableEntry:
         """Returns an object that will be automatically updated when the
         value is updated by networktables.
 
         :param key: the key name
         :param defaultValue: Default value to use if not in the table
-        :type  defaultValue: any
         :param writeDefault: If True, put the default value to the table,
                              overwriting existing values
-
-        :rtype: :class:`.NetworkTableEntry`
 
         .. note:: If you modify the returned value, the value will NOT
                   be written back to NetworkTables (though now there are functions

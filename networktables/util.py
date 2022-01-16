@@ -1,5 +1,6 @@
 from typing import Callable, Optional, Sequence
 
+from .types import ValueT
 from . import NetworkTablesInstance
 
 __all__ = ["ntproperty", "ChooserControl"]
@@ -58,7 +59,7 @@ class _NtProperty:
 
 def ntproperty(
     key: str,
-    defaultValue,
+    defaultValue: ValueT,
     writeDefault: bool = True,
     doc: str = None,
     persistent: bool = False,
@@ -71,7 +72,6 @@ def ntproperty(
 
     :param key: A full NetworkTables key (eg ``/SmartDashboard/foo``)
     :param defaultValue: Default value to use if not in the table
-    :type  defaultValue: any
     :param writeDefault: If True, put the default value to the table,
                          overwriting existing values
     :param doc: If given, will be the docstring of the property.

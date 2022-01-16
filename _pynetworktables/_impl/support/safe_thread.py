@@ -1,6 +1,6 @@
-import threading
-
 import logging
+import threading
+from typing import Callable, Dict
 
 logger = logging.getLogger("nt.th")
 
@@ -13,9 +13,9 @@ class SafeThread(object):
 
     # Name each thread uniquely to make debugging easier
     _global_indices_lock = threading.Lock()
-    _global_indices = {}
+    _global_indices = {}  # type: Dict[str, int]
 
-    def __init__(self, target, name, args=()):
+    def __init__(self, target: Callable, name: str, args=()):
         """
         Note: thread is automatically started and daemonized
         """

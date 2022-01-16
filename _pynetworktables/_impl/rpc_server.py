@@ -15,10 +15,10 @@ import logging
 
 logger = logging.getLogger("nt")
 
-_RpcListenerData = namedtuple("RpcListenerData", ["callback", "poller_uid"])
+_RpcListenerData = namedtuple("_RpcListenerData", ["callback", "poller_uid"])
 
 _RpcCall = namedtuple(
-    "RpcCall", ["local_id", "call_uid", "name", "params", "conn_info", "send_response"]
+    "_RpcCall", ["local_id", "call_uid", "name", "params", "conn_info", "send_response"]
 )
 
 
