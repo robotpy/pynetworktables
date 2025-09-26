@@ -17,6 +17,11 @@ versions using Travis-CI.
           SmartDashboard/SFX. It does not have any security, and should never
           be used on untrusted networks.
 
+.. important:: pynetworktables implements the NetworkTables 3 protocol, which is deprecated.
+               It is not compatible with the 2027 control system. Use
+               `pyntcore <https://robotpy.readthedocs.io/projects/pyntcore/en/latest/index.html>`_
+               instead.
+
 .. include:: _sidebar.rst.inc
 
 Indices and tables

@@ -16,6 +16,11 @@ versions using github actions.
 
 .. note:: If you require support for Python 2.7, use pynetworktables 2018.2.0
 
+.. important:: pynetworktables implements the NetworkTables 3 protocol, which is deprecated.
+               It is not compatible with the 2027 control system. Use
+               `pyntcore <https://robotpy.readthedocs.io/projects/pyntcore/en/latest/index.html>`_
+               instead.
+
 Documentation
 -------------
 
